@@ -27,6 +27,8 @@ Features of PPSS are:
 
 = Usage =
 
+A quick look on the help instructions of PPSS show that just three command-line options are required to execute your command in parallel on a collection of items.
+
 {{{ 
 Parallel Processing Shell Script
 Version: 1.0
@@ -46,7 +48,7 @@ Options are:
  	- p [ no of parallel processes ] 	Optional: specifies number of simultaneous processes manually.
 	- j ( enable hyperthreading ) 		Optiona: Enable or disable hyperthreading. Enabled by default.
 
- Example: encoding some wav files to mp3 using lame:
+ Example: encoding some wav files to mp3 using lame with support for hyper-threading:
 
   ppss.sh -c 'lame' -d /path/to/wavfiles -l logfile -j 
 }}}
