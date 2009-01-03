@@ -1,0 +1,52 @@
+#summary One-sentence summary of this page.
+#labels Phase-Requirements
+
+= Introduction =
+
+Most computer systems that are bought over the last couple of years feature at least two processor cores or sometimes even more. Most programs and tasks do not benefit from these extra cpu cores because software must be written in such a way that it benefits from extra CPUs. Most of the time, only one cpu or cpu core is used.
+
+Most users can't benefit from these extra cpu cores, because the programs they use are often not aware of the extra cpu cores. Often, the task they perform by itself cannot be distributed over multiple processors. For example, resizing a photo or converting a file into some different format.
+
+Although many processes by themselves cannot be parallelized, if a large number of these processes must be executed on separate items (for example, files), they can be executed in parallel.
+
+The idea behind PPSS is that, you have a (large) number of items, files for example, and you want to perform some action on them. Instead of processing one item at at time, you want to process 4 items at a time, since you have a nice quad-core cpu. You will need a system that can keep keep track of running separate jobs, start new jobs if previous jobs finished and very important: keep track of which files have been processed. And wouldn't it be nice if any output of those processes is logged, so you can verify if all items are processes correctly? 
+
+= Features = 
+
+Features of PPSS are:
+
+  * Very easy to use. You may be up and running within 5 minutes. 
+  * Will run on any system that supports bash (although only tested on Linux and Mac OS X)
+
+  * Automatically detects the number of cpus and cpu cores and start a worker for each of them.
+  * Supports hyper-threading if available. 
+  * All output of individual processes will be logged for your inspection.
+  * Actions performed by PPSS are logged to a logfile for your inspection.
+  * Can take a text file with one item per line. Items can be what you want. URLs, files, anything.
+  * Can execute any command you like. Can execute your own scripts in parallel. 
+
+= Usage =
+
+{{{ 
+Parallel Processing Shell Script
+Version: 1.0
+
+Description: this script processess files or other items in parallel. It is designed to make
+use of the multi-core CPUs. It will detect the number of available CPUs and start a thread 
+for each CPU core. It will also use hyperthreading if available.
+
+Usage: ppss.sh [ options ]
+
+Options are:
+
+ 	- c [ command ] 			Command to execute. Can be a custom script or just a plain command.
+ 	- d [ directory] 			Directory containing items to be processed.
+ 	- f [ input file ] 			File containing items to be processed. Either -d or -f
+ 	- l [ logfile ] 			Specifies name and location of the logfile.
+ 	- p [ no of parallel processes ] 	Optional: specifies number of simultaneous processes manually.
+	- j ( enable hyperthreading ) 		Optiona: Enable or disable hyperthreading. Enabled by default.
+
+ Example: encoding some wav files to mp3 using lame:
+
+  ppss.sh -c 'lame' -d /path/to/wavfiles -l logfile -j 
+}}}
