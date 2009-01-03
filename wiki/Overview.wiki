@@ -1,5 +1,5 @@
+#summary Introduction about PPSS, its usage and its features.
 #labels Phase-Requirements
-# Introduction about PPSS and its features.
 
 = Introduction =
 
