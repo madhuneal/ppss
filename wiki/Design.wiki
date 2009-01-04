@@ -1,4 +1,4 @@
-#summary Technical overview.
+#summary Design and technical overview.
 #labels Phase-Design
 
 = Introduction =
