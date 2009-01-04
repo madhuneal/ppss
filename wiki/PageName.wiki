@@ -37,3 +37,7 @@ If the list of items have been processed, the get_item function will not return 
 == get_item function ==
 
 All items are read from the user-supplied file or directory into an array. If an item is requested, an item will be read from the array and an array_pointer is increased, so the next time the function is executed, the next item on the list is returned.
+
+== Overview == 
+
+http://home.quicknet.nl/mw/prive/nan1/got/process.png
