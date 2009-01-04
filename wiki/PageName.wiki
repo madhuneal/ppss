@@ -17,27 +17,27 @@ For every item the specified command will be executed with the item as an argume
 
 At any given moment there will be no more commands running in parallel than specified by the command-line or based on the detected number of cpu cores.
 
-== Listener ==
+== Technical design ==
+
+http://home.quicknet.nl/mw/prive/nan1/got/process.png
+
+=== Listener ===
 
 The core of PPSS is a single listener process that listens for incomming messages on a FIFO special file. For every messages that is received, the listener will execute a function (called 'command') as a background process (with '&') with the received message as an argument.
 
-== Command function ==
+=== Command function ===
 
 The command function performs the following tasks:
   * check if a supplied item has been processed already, if so, skip it.
   * execute the user-supplied command with the item as an argument
   * execute the 'start_single_worker' function to start a new job for a new item.
 
-== start_single_worker function ==
+=== start_single_worker function ===
 
 The start_single_worker function will request an item with the get_item function. If the get_item function returns an item, this item will be echoed to the FIFO special file that the listener is reading from. So that item will be picked up by the listener, and the whole cycle will repeat. 
 
 If the list of items have been processed, the get_item function will not return a value and exits with a non-nul return code. No new items will be echoed to the FIFO special file and the cycle will stop.
 
-== get_item function ==
+=== get_item function ===
 
 All items are read from the user-supplied file or directory into an array. If an item is requested, an item will be read from the array and an array_pointer is increased, so the next time the function is executed, the next item on the list is returned.
-
-== Overview == 
-
-http://home.quicknet.nl/mw/prive/nan1/got/process.png
