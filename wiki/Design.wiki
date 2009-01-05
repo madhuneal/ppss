@@ -28,7 +28,7 @@ However, repeated tests have determined that communication between processes usi
 
 http://home.quicknet.nl/mw/prive/nan1/got/process.png
 
-=== Function: get_all_items
+=== Function: get_all_items ===
 
 The first step of PPSS is to read all items that must be processed into an array. This array will be used by the get_item function. 
 
