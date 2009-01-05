@@ -50,5 +50,5 @@ Options are:
 
  Example: encoding some wav files to mp3 using lame with support for hyper-threading:
 
-  ppss.sh -c 'lame' -d /path/to/wavfiles -l logfile -j 
+  ppss.sh -c 'lame ' -d /path/to/wavfiles -l logfile -j 
 }}}
