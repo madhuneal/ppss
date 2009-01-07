@@ -41,7 +41,7 @@ Usage: ppss.sh [ options ]
 
 Options are:
 
- 	- c [ command <space>] 			Command to execute. Can be a custom script or just a plain command.
+ 	- c [ command ] 			Command to execute. Can be a custom script or just a plain command.
  	- d [ directory] 			Directory containing items to be processed.
  	- f [ input file ] 			File containing items to be processed. Either -d or -f
  	- l [ logfile ] 			Specifies name and location of the logfile.
