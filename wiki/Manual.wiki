@@ -1,0 +1,20 @@
+#summary PPSS Manual
+#labels Phase-Deploy
+
+= Introduction =
+
+This page discusses the usage of PPSS with examples. 
+
+= Details =
+
+< TO DO >
+
+It is easy to use, but there are some that must be documented. 
+
+
+Most relevant: 
+
+* log_dir
+* -c option
+* log file
+* creating scripts to be executed by PPSS. 
