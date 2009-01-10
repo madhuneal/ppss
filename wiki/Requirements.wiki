@@ -5,8 +5,4 @@
 
 The sole requirement for PPSS to work is the Bash shell and the availability of the mkfifo command. PPSS is written using features that are specific to the Bash shell and is thus not portable to shells like dash and ksh. 
 
-I think that the requirement to install Bash is not unreasonable. Most unices (but not all) have Bash installed by default. 
-
-In the future, I might consider rewriting PPSS in order to make it 'portable' to other shells. However, I spent some time on it already and It seems that this will be a major effort and even may not be possible. However I will not discard the idea. I like the idea of portability, but not at every cost.
-
-One of the major problems I see is the fact that I use an array and cycle through all items using an 'array pointer' variable. Also, the while read construct of the listening process may be an issue. 
+I think that the requirement to install Bash is not unreasonable. Most unices (but not all) have Bash installed by default. I am aware that this is a limitation of PPSS. I will consider rewriting PPSS for plain posix shell support. 
