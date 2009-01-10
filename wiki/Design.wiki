@@ -40,7 +40,7 @@ For every messages that is received, the listener will execute a function (calle
 
 The whole function is executed as a background process, not just the user-supplied command.
 
-=== Function: start_all_workers
+=== Function: start_all_workers ===
 
 For every available cpu core, a parallel thread will be started. If a user manually specifies a number of threads, that number will override the detected number of cores. 
 
