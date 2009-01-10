@@ -9,3 +9,4 @@ I think that the requirement to install Bash is not unreasonable. Most unices (b
 
 In the future, I might consider rewriting PPSS in order to make it 'portable' to other shells. However, I spent some time on it already and It seems that this will be a major effort and even may not be possible. However I will not discard the idea. I like the idea of portability, but not at every cost.
 
+One of the major problems I see is the fact that I use an array and cycle through all items using an 'array pointer' variable. Also, the while read construct of the listening process may be an issue. 
