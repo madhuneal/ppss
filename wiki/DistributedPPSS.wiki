@@ -1,0 +1,18 @@
+#summary How distributed PPSS will look like
+#labels Phase-Design
+
+= Introduction =
+
+The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host. These hosts will share one list of items to process. The most important aspect will be the way locking of these items will be handled. 
+
+= Details =
+
+The most simple and clean solution to make PPSS is the use of SSH to lock items. If items are files that need to be processed, they can be accessed in two ways:
+
+  * using a network file system such as NFS or SMB or other. 
+  * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. 
+
+A lock directory must be created that will contain all lock files (lock directories) for items that must be processed. A limitation may be the maximum amount of (sub)directories within a single directory that a filesystem can handle.
+
+To determine if an item has been processed, PPSS checks if a log file for an item is present in the directory job_log. This job_log directory should be shared with all hosts that are running PPSS. 
+
