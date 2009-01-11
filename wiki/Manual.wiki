@@ -1,20 +1,53 @@
 #summary PPSS Manual
 #labels Phase-Deploy
 
+ * This page is not finished *
+
 = Introduction =
 
-This page discusses the usage of PPSS with examples. 
+This page discusses the usage of PPSS with examples. It explains how PPSS should be used.
 
-= Details =
+= How to use PPSS =
 
-< TO DO >
+PPSS allows a user to process a collection of items in parallel. That's it. It's sole purpose is to turn a batch job into a parallel batch job. This is relevant, since modern day processors are almost always multi-core and are designed to process jobs in parallel. 
 
-It is easy to use, but there are some that must be documented. 
+Items can be two things: 
+
+  * files within a user-specified directory
+  * arbitrary lines of text within a file
+
+Throughout this manual the word items will be used, but think of them as you please, most often it will be files.
+
+== Comnand line options ==
+
+Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form.
+
+`$ ./ppss.sh -d /path/to/files -c 'gzip /path/to/files/'`
+
+In this example, we can distinguish two options. The -d option specifies the location of the files that must be processed. The names of the files within this directory will be appended to the command that is specified with the -c option. That is all there is to it. PPSS will determine how many parallel commands it must start based on the number of available cpu cores.
+
+*TIP* - the item will be directly appended to the command that is executed, so it may be necessary to specify a *space* within the -c command. Example:
+
+`$ ./ppss.sh -d /path/to/files -c 'touch '` 
+
+In this rather silly example, for each file in /path/to/files, a file will be created with the touch command in the current directory. This example illustrates that a space should be added to a command if the item forms a command line argument by itself and is not appended to a path. This is especially relevant if a script is executed with the item as an argument. 
+
+= logging (must read)= 
+
+There are two separate log mechanisms:
+
+  * the log file of PPSS itself
+  * the log file of each individual item that is processed
+
+_PPSS log file_
+The logfile of PPSS is by default ppss-log.txt. A different name can be chosen with the -l option. It contains all relevant information about what PPSS is doing. 
+
+_Item log file_
+When an item is processed, any output that is generated is logged within its individual log file. This logfile resides within the directory job_log. This directory is created from where PPSS is executed. 
+
+If you tailor your command the right way, or create a (small) script, it is very easy to determine which items have not been processed correctly. A simple grep on 'error' might already give a clue. 
+
+*Important:* If a log file exists for an item, and PPSS is run again, that item will be skipped. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
 
 
-Most relevant: 
 
-  * log_dir
-  * -c option
-  * log file
-  * creating scripts to be executed by PPSS. 
