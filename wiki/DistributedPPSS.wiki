@@ -22,7 +22,7 @@ If items are files that need to be processed, they can be accessed in two ways:
 
 The funny thing is that if scp is used for file distribution, it doesn't matter where clients are physically located. They may be scattered all over the wold. The only thing that is required: enough bandwidth between clients and server.
 
-SMB or NFS will confine PPSS to systems that are located within the local network. Although the local network will often have more bandwidth available. 
+SMB or NFS will confine PPSS to systems that are located within the local network, or a VPN tunnel must be used like OpenVPN. 
 
 == Requirements ==
 
