@@ -32,6 +32,8 @@ In this example, we can distinguish two options. The -d option specifies the loc
 
 In this rather silly example, for each file in /path/to/files, a file will be created with the touch command in the current directory. This example illustrates that a space should be added to a command if the item forms a command line argument by itself and is not appended to a path. This is especially relevant if a script is executed with the item as an argument. 
 
+
+
 = logging (must read)= 
 
 There are two separate log mechanisms:
@@ -40,14 +42,14 @@ There are two separate log mechanisms:
   * the log file of each individual item that is processed
 
 _PPSS log file_
+
 The logfile of PPSS is by default ppss-log.txt. A different name can be chosen with the -l option. It contains all relevant information about what PPSS is doing. 
 
 _Item log file_
+
 When an item is processed, any output that is generated is logged within its individual log file. This logfile resides within the directory job_log. This directory is created from where PPSS is executed. 
 
 If you tailor your command the right way, or create a (small) script, it is very easy to determine which items have not been processed correctly. A simple grep on 'error' might already give a clue. 
 
 *Important:* If a log file exists for an item, and PPSS is run again, that item will be skipped. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
-
-
 
