@@ -1,4 +1,4 @@
-#summary Introduction about PPSS, its usage and its features.
+#summary Introduction about PPSS and its features.
 #labels Phase-Requirements
 
 = Introduction =
@@ -23,32 +23,5 @@ Features of PPSS are:
   * All output of individual processes will be logged for your inspection.
   * Actions performed by PPSS are logged to a logfile for your inspection.
   * Can take a text file with one item per line. Items can be what you want. URLs, files, anything.
-  * Can execute any command you like. Can execute your own scripts in parallel. 
-
-= Usage =
-
-A quick look on the help instructions of PPSS show that just three command-line options are required to execute your command in parallel on a collection of items.
-
-{{{ 
-Parallel Processing Shell Script
-Version: 1.0
-
-Description: this script processess files or other items in parallel. It is designed to make
-use of the multi-core CPUs. It will detect the number of available CPUs and start a thread 
-for each CPU core. It will also use hyperthreading if available.
-
-Usage: ppss.sh [ options ]
-
-Options are:
-
- 	- c [ command ] 			Command to execute. Can be a custom script or just a plain command.
- 	- d [ directory] 			Directory containing items to be processed.
- 	- f [ input file ] 			File containing items to be processed. Either -d or -f
- 	- l [ logfile ] 			Specifies name and location of the logfile.
- 	- p [ no of parallel processes ] 	Optional: specifies number of simultaneous processes manually.
-	- j ( enable hyperthreading ) 		Optiona: Enable or disable hyperthreading. Enabled by default.
-
- Example: encoding some wav files to mp3 using lame with support for hyper-threading:
-
-  ppss.sh -c 'lame ' -d /path/to/wavfiles -l logfile -j 
-}}}
+  * Can execute any command you like. Can execute your own scripts in parallel.
+  * If interrupted, will by default continue where it was left, skipping processed files.
