@@ -34,7 +34,7 @@ In this rather silly example, for each file in /path/to/files, a file will be cr
 
 
 
-= logging (must read)= 
+== logging (must read) == 
 
 There are two separate log mechanisms:
 
