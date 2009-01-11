@@ -7,11 +7,26 @@ The goal is to make PPSS distributed. So a large number of host can be used to p
 
 = Details =
 
-The most simple and clean solution to make PPSS is the use of SSH to lock items. If items are files that need to be processed, they can be accessed in two ways:
+
+== SSH == 
+The most simple and clean solution to make PPSS is the use of SSH to lock items.  A lock directory must be created that will contain all lock files (lock directories) for items that must be processed.
+
+To determine if an item has been processed, PPSS checks if a log file for an item is present in the directory job_log. This job_log directory should be shared with all hosts that are running PPSS. The most logical location for this directory is either within the source directory or within the home directory of the ssh user.
+
+== File distribution == 
+
+If items are files that need to be processed, they can be accessed in two ways:
 
   * using a network file system such as NFS or SMB or other. The -d option must point to the mountpoint of this share.
-  * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. 
+  * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is much more resource intensive than SMB or NFS.
 
-A lock directory must be created that will contain all lock files (lock directories) for items that must be processed. A limitation may be the maximum amount of (sub)directories within a single directory that a filesystem can handle.
 
-To determine if an item has been processed, PPSS checks if a log file for an item is present in the directory job_log. This job_log directory should be shared with all hosts that are running PPSS. 
+= Requirements =
+
+  * A central file server.
+  * The central file server must be accessible through ssh.
+ 
+optional:
+
+  * NFS / SMB share for distributing files / content
+
