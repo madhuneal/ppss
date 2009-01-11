@@ -20,11 +20,13 @@ If items are files that need to be processed, they can be accessed in two ways:
   * using a network file system such as NFS or SMB or other. The -d option must point to the mountpoint of this share.
   * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is much more resource intensive than SMB or NFS.
 
+The funny thing is that if scp is used for file distribution, it doesn't matter where clients are physically located. They may be scattered all over the wold. The only thing that is required: enough bandwidth between clients and server.
 
 == Requirements ==
 
   * A central file server.
   * The central file server must be accessible through ssh.
+  * Enough bandwidth for file distribution (Gigabit?)
  
 optional:
 
