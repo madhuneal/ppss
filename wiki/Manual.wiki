@@ -32,7 +32,7 @@ In this example, we can distinguish two options. The -d option specifies the loc
 
 In this rather silly example, for each file in /path/to/files, a file will be created with the touch command in the current directory. This example illustrates that a space should be added to a command if the item forms a command line argument by itself and is not appended to a path. This is especially relevant if a script is executed with the item as an argument. 
 
-
+$ ./ppss.sh -d /path/to/files -c 'somescript.sh '
 
 == logging (must read) == 
 
