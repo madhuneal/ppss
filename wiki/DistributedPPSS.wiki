@@ -21,7 +21,7 @@ If items are files that need to be processed, they can be accessed in two ways:
   * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is much more resource intensive than SMB or NFS.
 
 
-= Requirements =
+== Requirements ==
 
   * A central file server.
   * The central file server must be accessible through ssh.
@@ -29,4 +29,3 @@ If items are files that need to be processed, they can be accessed in two ways:
 optional:
 
   * NFS / SMB share for distributing files / content
-
