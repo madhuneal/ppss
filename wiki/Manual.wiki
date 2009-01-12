@@ -22,17 +22,23 @@ Throughout this manual the word items will be used, but think of them as you ple
 
 Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form.
 
-`$ ./ppss.sh -d /path/to/files -c 'gzip /path/to/files/'`
+`$ ./ppss.sh -d /path/to/files -c 'gzip '`
 
-In this example, we can distinguish two options. The -d option specifies the location of the files that must be processed. The names of the files within this directory will be appended to the command that is specified with the -c option. That is all there is to it. PPSS will determine how many parallel commands it must start based on the number of available cpu cores.
+In this example, we can distinguish two options. The -d option specifies the location of the files that must be processed. The full path to the file within this directory will be appended to the command that is specified with the -c option. That is all there is to it. PPSS will determine how many parallel commands it must start based on the number of available cpu cores.
 
 *TIP* - the item will be directly appended to the command that is executed, so it may be necessary to specify a *space* within the -c command. Example:
 
 `$ ./ppss.sh -d /path/to/files -c 'touch '` 
 
-In this rather silly example, for each file in /path/to/files, a file will be created with the touch command in the current directory. This example illustrates that a space should be added to a command if the item forms a command line argument by itself and is not appended to a path. This is especially relevant if a script is executed with the item as an argument. 
+In this rather silly example, for each file in /path/to/files, the file will be 'touched' with the touch command. This example illustrates that a space should be added to a command if the item forms a command line argument by itself and is not appended to a path. This is especially relevant if a script is executed with the item as an argument. 
 
 $ ./ppss.sh -d /path/to/files -c 'somescript.sh '
+
+Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
+
+$ ./ppss.sh -f list.txt -c 'wget -q ' -p 5 
+
+In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started. 
 
 == logging (must read) == 
 
