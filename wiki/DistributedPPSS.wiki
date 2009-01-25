@@ -26,10 +26,14 @@ SMB or NFS will confine PPSS to systems that are located within the local networ
 
 == Requirements ==
 
-  * A central file server.
-  * The central file server must be accessible through ssh.
-  * Enough bandwidth for file distribution (Gigabit?)
- 
+  * A central file server (Master).
+    * Accessible through SSH.
+    * Sufficient bandwidth (gigabit? totally depends on your needs.)
+  * One or more slaves.
+    * Must support bash shell.:w
+
 optional:
 
   * NFS / SMB share for distributing files / content
+
+Please note that it is *NOT* required to run PPSS on the central Master server. Only slaves need PPSS installed.
