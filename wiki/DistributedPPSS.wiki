@@ -30,7 +30,7 @@ SMB or NFS will confine PPSS to systems that are located within the local networ
     * Accessible through SSH.
     * Sufficient bandwidth (gigabit? totally depends on your needs.)
   * One or more slaves.
-    * Must support bash shell.:w
+    * Must support bash shell.
 
 optional:
 
