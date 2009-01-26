@@ -5,6 +5,8 @@
 
 The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host. These hosts will share one list of items to process. The most important aspect will be the way locking of these items will be handled. 
 
+http://home.quicknet.nl/mw/prive/nan1/img/distributed-ppss1.png
+
 = Details =
 
 
