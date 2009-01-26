@@ -3,24 +3,28 @@
 
 = Introduction =
 
-The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host. These hosts will share one list of items to process. The most important aspect will be the way locking of these items will be handled. 
+The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host. These hosts will share one list of items to process.
+
+The basic concept is that PPSS is installed on client nodes. The server is used by the clients to communicate which items are in use and/or have been processed. There is nothing more to it.
 
 http://home.quicknet.nl/mw/prive/nan1/img/distributed-ppss1.png
 
+A dedicated server isn't strictly necessary, one of the nodes could act like one. However, if PPSS is used, it is often for jobs that put a heavy load onto a system. So PPSS should better not be run on the master server.
+
+The server can also be used to distribute files to nodes. If configured, PPSS will download an item to the local node and start processing on the local item. The output can be uploaded back to the server, if specified.
+
 = Details =
 
+== Locking of items through SSH == 
+On the master server, a directory exists that contains the lock files for items that are in use or have been processed.  If a PPSS node selects an item and detects a lock file, the next available item will be selected. If there is no lock file for this item, it will be created and PPSS will start processing the item.
 
-== SSH == 
-The most simple and clean solution to make PPSS is the use of SSH to lock items.  A lock directory must be created that will contain all lock files (lock directories) for items that must be processed.
-
-To determine if an item has been processed, PPSS checks if a log file for an item is present in the directory job_log. This job_log directory should be shared with all hosts that are running PPSS. The most logical location for this directory is either within the source directory or within the home directory of the ssh user.
-
-== File distribution == 
+== Item (file) distribution == 
 
 If items are files that need to be processed, they can be accessed in two ways:
 
   * using a network file system such as NFS or SMB or other. The -d option must point to the mountpoint of this share.
-  * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is much more resource intensive than SMB or NFS.
+
+  * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is more resource intensive (CPU) than SMB or NFS.
 
 The funny thing is that if scp is used for file distribution, it doesn't matter where clients are physically located. They may be scattered all over the wold. The only thing that is required: enough bandwidth between clients and server.
 
