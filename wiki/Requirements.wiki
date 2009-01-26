@@ -5,4 +5,4 @@
 
 The sole requirement for PPSS to work is the Bash shell and the availability of the mkfifo command. PPSS is written using features that are specific to the Bash shell and is thus not portable to shells like dash and ksh. 
 
-I think that the requirement to install Bash is not unreasonable. Most unices (but not all) have Bash installed by default. I am aware that this is a limitation of PPSS. I will consider rewriting PPSS for plain posix shell support. 
+For distributed PPSS, a host with SSH access is necessary. Also, clients and server must be configured in order to use SSH keys.
