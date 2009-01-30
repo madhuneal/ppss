@@ -1,6 +1,8 @@
 #summary How distributed PPSS will look like
 #labels Phase-Design
 
+Update - the design below is simple but does not scale well. All nodes should be controlled from a single host, or the administrative burden would become too high. In the current setup you have to copy and execute ppss manually on every node.
+
 = Introduction =
 
 The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host. These hosts will share one list of items to process.
