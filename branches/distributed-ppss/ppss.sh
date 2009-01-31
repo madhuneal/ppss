@@ -38,8 +38,8 @@
 trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
-SCRIPT_NAME="Parallel Processing Shell Script"
-SCRIPT_VERSION="1.10"
+SCRIPT_NAME="Distributed Parallel Processing Shell Script"
+SCRIPT_VERSION="1.90"
 
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
