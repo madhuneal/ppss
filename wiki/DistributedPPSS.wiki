@@ -15,6 +15,23 @@ PPSS is very flexible: the file server can be a different host than the PPSS ser
 
 = Design considerations =
 
+== Node installation ==
+
+Installing PPSS on a larger number of hosts will become an appalling boring repetitive and time consuming task if this is performed manually. The following actions must be performed on a node:
+
+- create a ppss user or use an existing *unprivileged* system account (do not use root). 
+- copy ppss.sh to the node.
+- copy privade ssh key to the node (in a secure way).
+- create a crontab entry to start ppss automatically on the node.
+
+I have to come up with a simple solution to automate this process. Currently, I'm considering creating a separate tool that deploys PPSS. This tool should use a list of IP addresses and/or host names as input and install PPSS on those hosts using SSH and SCP. However, this functionality could also be implemented as a function within PPSS.
+
+== Node control ==
+
+If a larger number of nodes are used, say more than five to ten, it will be a hassle to control these nodes individually by hand. The question is how to control all nodes without having to access nodes manually. Starting new jobs, pausing and stopping jobs should be controlled from a central location. 
+
+The easiest solution that comes to mind is to use a central configuration or instruction file on the central server. Nodes will be able to access this file, read its contents and act accordingly.
+
 == Locking of items through SSH == 
 
 According to many sources on the Internet, the only reliable solution to *atomic* locking is to use the 'mkdir' command to create a file. The fun thing is that this is also true if 'mkdir' is executed through SSH. 
@@ -42,4 +59,3 @@ When using PPSS in a distributed fashion, it should be decided if files can be p
     * Must support Bash shell.
 
 Please note that it is *NOT* required to run PPSS on the central Master server. Only slaves need PPSS installed. Also the central server for inter-node communication (item locking) can (and will often be) the same host as the file server.
-
