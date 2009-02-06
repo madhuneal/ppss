@@ -9,7 +9,7 @@ The goal is to make PPSS distributed. So a large number of host can be used to p
 
 The basic concept is that PPSS is installed on client nodes. The server is used by the clients to communicate which items are in use and/or have been processed. There is nothing more to it.
 
-http://home.quicknet.nl/mw/prive/nan1/img/distributed-ppss1.png
+http://home.quicknet.nl/mw/prive/nan1/img/ppss.png
 
 A dedicated server isn't strictly necessary, one of the nodes could act like one. However, if PPSS is used, it is often for jobs that put a heavy load onto a system. So PPSS should better not be run on the master server.
 
