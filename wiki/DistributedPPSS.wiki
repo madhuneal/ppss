@@ -1,36 +1,35 @@
 #summary How distributed PPSS will look like
 #labels Phase-Design
 
-Update - the design below is simple but does not scale well. All nodes should be controlled from a single host, or the administrative burden would become too high. In the current setup you have to copy and execute ppss manually on every node.
-
 = Introduction =
 
-The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host. These hosts will share one list of items to process.
+The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host (node). These nodes will share a single list of items that they will process in parallel.
 
-The basic concept is that PPSS is installed on client nodes. The server is used by the clients to communicate which items are in use and/or have been processed. There is nothing more to it.
+To keep track of which items have been processed by a node, nodes must be able to communicate with each other. Therefore, a server is necessary. The primary role of the server is just a communication channel for nodes. Nodes use the server to signal to other nodes that an item is being processed is processed. So two nodes will never process the same file. 
 
 http://home.quicknet.nl/mw/prive/nan1/img/ppss.png
 
-A dedicated server isn't strictly necessary, one of the nodes could act like one. However, if PPSS is used, it is often for jobs that put a heavy load onto a system. So PPSS should better not be run on the master server.
+The secondary role of the server is to act as a file server. Assuming that files are processed, files stored on the PPSS server are transfered to the node, that will proces a file and store the result back on the server.
 
-The server can also be used to distribute files to nodes. If configured, PPSS will download an item to the local node and start processing on the local item. The output can be uploaded back to the server, if specified.
+PPSS is very flexible: the file server can be a different host than the PPSS server that is used for inter-node communication. 
 
-= Details =
+= Design considerations =
 
 == Locking of items through SSH == 
-On the master server, a directory exists that contains the lock files for items that are in use or have been processed.  If a PPSS node selects an item and detects a lock file, the next available item will be selected. If there is no lock file for this item, it will be created and PPSS will start processing the item.
+
+According to many sources on the Internet, the only reliable solution to *atomic* locking is to use the 'mkdir' command to create a file. The fun thing is that this is also true if 'mkdir' is executed through SSH. 
+
+So a node tries to lock a file by issueing a mkdir on the server through SSH. If this mkdir fails, the directory and thus the lock already exists and the next item in the list is tried. 
 
 == Item (file) distribution == 
 
 If items are files that need to be processed, they can be accessed in two ways:
 
-  * using a network file system such as NFS or SMB or other. The -d option must point to the mountpoint of this share.
+  * using a network file system such as NFS or SMB or other. The -d option must point to the mountpoint of this share. 
 
   * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is more resource intensive (CPU) than SMB or NFS.
 
-The funny thing is that if scp is used for file distribution, it doesn't matter where clients are physically located. They may be scattered all over the wold. The only thing that is required: enough bandwidth between clients and server.
-
-SMB or NFS will confine PPSS to systems that are located within the local network, or a VPN tunnel must be used like OpenVPN. 
+When using PPSS in a distributed fashion, it should be decided if files can be processed in-place on the file server through the share, or that they must be copied to the node first before being processed. 
 
 == Requirements ==
 
