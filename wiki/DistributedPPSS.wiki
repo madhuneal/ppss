@@ -33,14 +33,13 @@ When using PPSS in a distributed fashion, it should be decided if files can be p
 
 == Requirements ==
 
-  * A central file server (Master).
+  * A central server for inter-node communication (item locking).
     * Accessible through SSH.
-    * Sufficient bandwidth (gigabit? totally depends on your needs.)
+  * A central server for file distribution (optional).
+    * Sufficient bandwidth (gigabit? totally depends on your needs.).
+    *   SCP / NFS / SMB share for distributing files.
   * One or more slaves.
-    * Must support bash shell.
+    * Must support Bash shell.
 
-optional:
+Please note that it is *NOT* required to run PPSS on the central Master server. Only slaves need PPSS installed. Also the central server for inter-node communication (item locking) can (and will often be) the same host as the file server.
 
-  * NFS / SMB share for distributing files / content
-
-Please note that it is *NOT* required to run PPSS on the central Master server. Only slaves need PPSS installed.
