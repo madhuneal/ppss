@@ -41,12 +41,18 @@ trap 'kill_process; ' INT
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
 SCRIPT_VERSION="1.90"
 
+MODE="$1"
+shift
+QUIET="0"
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
-PAUSE_SIGNAL="pause.txt"                # Not implemented yet (pause processing).
+PAUSE_SIGNAL="pause_signal"                # Not implemented yet (pause processing).
+PAUSE_DELAY=20
+STOP_SIGNAL="stop_signal"
 ARRAY_POINTER_FILE="ppss-array-pointer" # 
 JOB_LOG_DIR="JOB_LOG"                   # Directory containing log files of processed items.
 LOGFILE="ppss-log.txt"                  # General PPSS log file. Contains lots of info.
+STOP=9                                  # STOP job.
 MAX_DELAY=2
 PERCENT="0"
 PID="$$"
@@ -93,13 +99,15 @@ showusage () {
     echo -e "\t- k \tSSH key file used for connection with 'PPSS master server'."
     echo -e "\t- t \tTransfer remote item to slave for local processing."
     echo -e "\t- o \tUpload output back to server into this directory."
-    echo -e "\t- n \tDo *not* use scp for item transfer but use cp. "
+    echo -e "\t- b \tDo *not* use scp for item transfer but use cp. "
     echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
     echo -e "$0 -c 'lame ' -d /path/to/wavfiles -l logfile -j (wach out for the space in -c)" 
     echo    
 }
+
+echo mode is $MODE
 
 kill_process () {
 
@@ -158,6 +166,24 @@ does_file_exist () {
     fi
 }
 
+check_for_interrupt () {
+
+    does_file_exist "$STOP_SIGNAL"
+    if [ "$?" == "0" ]
+    then
+        log INFO "STOPPING job. Stop signal found."
+        STOP="1"
+    fi
+
+    does_file_exist "$PAUSE_SIGNAL"
+    if [ "$?" == "0" ]
+    then
+        log INFO "PAUSE: sleeping for 5 minutes."
+        sleep $PAUSE_DELAY
+        check_for_interrupt
+    fi
+
+}
 
 cleanup () {
 
@@ -190,8 +216,6 @@ cleanup () {
 
 }
 
-
-
 # check if ppss is already running.
 is_running () {
 
@@ -205,82 +229,74 @@ is_running () {
 }
 
 # If no arguments are specified, show usage.
-if [ $# -eq 0 ]
-then
-  showusage
-  exit 1
-fi
+#if [ $# -eq 0 ]
+#then
+#  showusage
+#  exit 1
+#fi
 
-# If rubbish is givven as an argument, display usage info."
-echo $1 | grep -e ^- >> /dev/null
-ERROR=$?
-if [ ! "$ERROR" == "0" ]
-then
-  showusage
-  exit 1
-fi
 
-# Process any command-line options that are specified."
-while getopts ":c:d:f:i:jhk:l:no:p:s:tv" OPTIONS
-do
-    case $OPTIONS in
-        f )
-            INPUT_FILE="$OPTARG"
-            ;;
-        d ) 
-            SRC_DIR="$OPTARG"
-            ;; 
-        c ) 
-            COMMAND="$OPTARG"
-            ;;
+    # Process any command-line options that are specified."
+    while getopts ":bc:d:f:i:jhk:l:n:o:p:s:tv" OPTIONS
+    do
+        case $OPTIONS in
+            n ) 
+                NODES_FILE="$OPTARG"
+                ;;
 
-        h )
-            showusage
-            exit 1;;
-        j )
-            HYPERTHREADING=yes
-            ;;
-        l )
-            LOGFILE="$OPTARG"
-            ;;
-        k )
-            SSH_KEY="-i $OPTARG"
-            ;;
-        n )
-            SECURE_COPY=0
-            ;;
-        o )
-            REMOTE_OUTPUT_DIR="$OPTARG"
-            ;;
-            
-        p )
-            TMP="$OPTARG"
-            if [ ! -z "$TMP" ]
-            then
-                MAX_NO_OF_RUNNING_JOBS="$TMP"
-            fi
-            ;;
-        s ) 
-            SSH_SERVER="$OPTARG"
-            ;;
-        t )
-            TRANSFER_TO_SLAVE="1"    
-            ;;
+            f )
+                INPUT_FILE="$OPTARG"
+                ;;
+            d ) 
+                SRC_DIR="$OPTARG"
+                ;; 
+            c ) 
+                COMMAND="$OPTARG"
+                ;;
 
-        v )
-            echo ""
-            echo "$SCRIPT_NAME version $SCRIPT_VERSION"
-            echo ""
-            exit 0
-            ;;
-        * )
-            showusage
-            exit 1;;
-    esac
-done
+            h )
+                showusage
+                exit 1;;
+            j )
+                HYPERTHREADING=yes
+                ;;
+            l )
+                LOGFILE="$OPTARG"
+                ;;
+            k )
+                SSH_KEY="-i $OPTARG"
+                ;;
+            b )
+                SECURE_COPY=0
+                ;;
+            o )
+                REMOTE_OUTPUT_DIR="$OPTARG"
+                ;;
+            p )
+                TMP="$OPTARG"
+                if [ ! -z "$TMP" ]
+                then
+                    MAX_NO_OF_RUNNING_JOBS="$TMP"
+                fi
+                ;;
+            s ) 
+                SSH_SERVER="$OPTARG"
+                ;;
+            t )
+                TRANSFER_TO_SLAVE="1"    
+                ;;
 
-# This function makes local and remote operation transparent.
-
+            v )
+                echo ""
+                echo "$SCRIPT_NAME version $SCRIPT_VERSION"
+                echo ""
+                exit 0
+                ;;
+            * )
+                showusage
+                exit 1;;
+        esac
+    done
 
 # Init all vars
 init_vars () {
@@ -328,7 +344,7 @@ init_vars () {
     fi
 
     does_file_exist "$ITEM_LOCK_DIR"
-    if [ ! "$?" == "0" ]
+    if [ ! "$?" == "0" ] && [ ! -z "$SSH_SERVER" ]
     then
         log DEBUG "Creating remote item lock dir."
         exec_cmd "mkdir $ITEM_LOCK_DIR"
@@ -601,14 +617,17 @@ upload_item () {
 }
 
 lock_item () {
+    
+    if [ ! -z "$SSH_SERVER" ]
+    then
+        ITEM="$1"
+        LOCK_FILE_NAME=`echo $ITEM | sed s/^\\\.//g |sed s/^\\\.\\\.//g | sed s/\\\///g`
+        ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
 
-    ITEM="$1"
-    LOCK_FILE_NAME=`echo $ITEM | sed s/^\\\.//g |sed s/^\\\.\\\.//g | sed s/\\\///g`
-    ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
-
-    exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
-    ERROR="$?"
-    return "$ERROR"
+        exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
+        ERROR="$?"
+        return "$ERROR"
+    fi
 }
 
 release_item () {
@@ -673,6 +692,13 @@ get_all_items () {
 }
 
 get_item () {
+
+    check_for_interrupt
+
+    if [ "$STOP" == "1" ]
+    then
+        return 1
+    fi
 
     get_global_lock
 
@@ -770,7 +796,12 @@ commando () {
            mv $ITEM $ITEM.error
         elif [ "$TRANSFER_TO_SLAVE" == "1" ]      
         then
-           rm $ITEM
+            if [ -e "$ITEM" ]
+            then
+                rm $ITEM
+            else        
+                log DEBUG "ERROR Something went wrong removing item from local work dir."
+            fi
         fi
 
         #release_item "$ITEM"
@@ -814,14 +845,37 @@ start_all_workers () {
 main () {
     
     is_running    
-    init_vars
     log DEBUG "---------------- START ---------------------"
     log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
-    test_server
-    get_all_items
-    listen_for_job "$MAX_NO_OF_RUNNING_JOBS" &
-    LISTENER_PID=$!
-    start_all_workers
+
+    case $MODE in
+        client ) 
+                init_vars
+                test_server
+                get_all_items
+                listen_for_job "$MAX_NO_OF_RUNNING_JOBS" &
+                LISTENER_PID=$!
+                start_all_workers
+                ;;
+        server )
+                init_vars
+                echo "server"
+                ;;
+          stop )
+                #some stop
+                ;;
+        deploy )
+                deploy_ppss
+                #somefunction
+                ;;
+        show )
+                # some show command
+                ;;
+        * )
+                showusage
+                exit 1;;
+    esac
+
 }
 # This command starts the that sets the whole framework in motion.
 main
