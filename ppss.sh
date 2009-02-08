@@ -43,11 +43,11 @@ SCRIPT_VERSION="1.90"
 
 MODE="$1"
 shift
-QUIET="0"
+DAEMON=0
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
 PAUSE_SIGNAL="pause_signal"                # Not implemented yet (pause processing).
-PAUSE_DELAY=20
+PAUSE_DELAY=300
 STOP_SIGNAL="stop_signal"
 ARRAY_POINTER_FILE="ppss-array-pointer" # 
 JOB_LOG_DIR="JOB_LOG"                   # Directory containing log files of processed items.
@@ -58,13 +58,14 @@ PERCENT="0"
 PID="$$"
 LISTENER_PID=""
 IFS_BACKUP="$IFS"
-INTERVAL="15"                           # Polling interval to check if there are running jobs.
+INTERVAL="10"                           # Polling interval to check if there are running jobs.
 
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections over 1 master.
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET -o ControlMaster=auto -o ConnectTimeout=5"
 SSH_MASTER_PID=""
+PPSS_HOME_DIR="ppss"
 ITEM_LOCK_DIR="PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
 PPSS_LOCAL_WORKDIR="PPSS_LOCAL_WORKDIR" # Local directory on slave for local processing.
 TRANSFER_TO_SLAVE="0"                   # Transfer item to slave via (s)cp.
@@ -107,17 +108,15 @@ showusage () {
     echo    
 }
 
-echo mode is $MODE
-
 kill_process () {
 
     kill $LISTENER_PID >> /dev/null 2>&1
     while true
     do
-        JOBS=`ps ax | grep -v grep | grep ppss.sh | wc -l`
+        JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
         if [ "$JOBS" -gt "2" ]
         then
-            for x in `ps ax | grep -v grep | grep ppss.sh | awk '{ print $1 }'`
+            for x in `ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | awk '{ print $1 }'`
             do
                 if [ ! "$x" == "$PID" ] && [ ! "$x" == "$$" ]
                 then
@@ -178,7 +177,7 @@ check_for_interrupt () {
     does_file_exist "$PAUSE_SIGNAL"
     if [ "$?" == "0" ]
     then
-        log INFO "PAUSE: sleeping for 5 minutes."
+        log INFO "PAUSE: sleeping for $PAUSE_DELAY seconds."
         sleep $PAUSE_DELAY
         check_for_interrupt
     fi
@@ -237,7 +236,7 @@ is_running () {
 
 
     # Process any command-line options that are specified."
-    while getopts ":bc:d:f:i:jhk:l:n:o:p:s:tv" OPTIONS
+    while getopts ":Dbc:d:f:i:jhk:l:n:o:p:s:tu:v" OPTIONS
     do
         case $OPTIONS in
             n ) 
@@ -250,6 +249,9 @@ is_running () {
             d ) 
                 SRC_DIR="$OPTARG"
                 ;; 
+            D )
+                DAEMON=1
+                ;;
             c ) 
                 COMMAND="$OPTARG"
                 ;;
@@ -284,6 +286,9 @@ is_running () {
                 ;;
             t )
                 TRANSFER_TO_SLAVE="1"    
+                ;;
+            u )
+                USER="$OPTARG"
                 ;;
 
             v )
@@ -398,7 +403,7 @@ log () {
 
     echo -e "$LOG_MSG" >> "$LOGFILE"
 
-    if [ "$TYPE" == "INFO" ]
+    if [ "$TYPE" == "INFO" ] && [ "$DAEMON" == "0" ]
     then
         echo -e "$LOG_MSG"
     fi
@@ -419,6 +424,67 @@ check_status () {
     fi
 
 }
+
+deploy_ppss () {
+
+    ERROR=0
+
+    set_error () {
+
+        if [ ! "$1" == "0" ]
+        then
+            ERROR=$1 
+        fi
+    }
+    
+    KEY=`echo $SSH_KEY | cut -d " " -f 2` 
+    if [ -z "$KEY" ] || [ ! -e "$KEY" ]
+    then
+        log INFO "ERROR - nodes require a key file."
+        exit 1
+    fi
+
+    if [ ! -e "$NODES_FILE" ]
+    then
+        log INFO "ERROR file $NODES with list of nodes does not exist."
+        exit 1
+    else
+        for NODE in `cat $NODES_FILE` 
+        do
+            ssh -q $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
+            scp -q $SSH_OPTS $0 $USER@$NODE:~/$PPSS_HOME_DIR
+            set_error $?
+            scp -q $KEY $USER@$NODE:~/$PPSS_HOME_DIR
+            set_error $?
+            if [ "$ERROR" == "0" ]
+            then
+                log INFO "PPSS installed on node $NODE."
+            else
+                log INFO "PPSS failed to install on $NODE."
+            fi
+        done
+    fi
+}
+
+start_ppss_on_node () {
+
+    # USER
+    # NODE
+    # PATH OF PPSS
+    # execute with command line args.
+
+    if [ ! -e "$NODES_FILE" ]
+    then
+        log INFO "ERROR file $NODES with list of nodes does not exist."
+        exit 1
+    else
+        for NODE in `cat $NODES_FILE`
+        do
+            ssh $USER@$NODE "cd ./$PPSS_HOME_DIR && $0 $@ &"
+        done
+    fi
+}
+
 
 test_server () {
 
@@ -847,26 +913,27 @@ main () {
     is_running    
     log DEBUG "---------------- START ---------------------"
     log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
+    log INFO `hostname`
 
     case $MODE in
-        client ) 
+        node ) 
                 init_vars
                 test_server
+                log INFO `pwd`
                 get_all_items
                 listen_for_job "$MAX_NO_OF_RUNNING_JOBS" &
                 LISTENER_PID=$!
                 start_all_workers
                 ;;
-        server )
+       start )
                 init_vars
-                echo "server"
+                start_ppss_on_node 
                 ;;
-          stop )
+        stop )
                 #some stop
                 ;;
-        deploy )
+      deploy )
                 deploy_ppss
-                #somefunction
                 ;;
         show )
                 # some show command
@@ -879,27 +946,32 @@ main () {
 }
 # This command starts the that sets the whole framework in motion.
 main
-while true
-do
-    JOBS=`ps ax | grep -v grep | grep ppss.sh | wc -l`
-    if [ "$JOBS" -gt "3" ]
-    then
-        sleep $INTERVAL
-    else
-        echo -en "\033[1B"
-        log INFO "There are no more running jobs, so we must be finished."
-        echo -en "\033[1B"
-        if [ ! -z "$REMOTE_OUTPUT_DIR" ]
+#if [ $MODE == "node" ]
+#then
+    while true
+    do
+        JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
+        log INFO "JOBS is jobs: $JOBS"
+        if [ "$JOBS" -gt "3" ] 
         then
-            log INFO "Transfering all processed items back to server."
-            for x in `ls -1 $PPSS_LOCAL_WORKDIR`
-            do
-                upload_item "$x"
-            done
+            log INFO "Sleeping $INTERVAL..." 
+            sleep $INTERVAL
+        else
+                echo -en "\033[1B"
+                log INFO "There are no more running jobs, so we must be finished."
+                echo -en "\033[1B"
+                if [ ! -z "$REMOTE_OUTPUT_DIR" ]
+                then
+                    log INFO "Transfering all processed items back to server."
+                    for x in `ls -1 $PPSS_LOCAL_WORKDIR`
+                    do
+                        upload_item "$x"
+                    done
+                fi
+                log INFO "Killing listener and remainig processes."
+                log INFO "Dying processes may display an error message."
+                kill_process
         fi
-        log INFO "Killing listener and remainig processes."
-        log INFO "Dying processes may display an error message."
-        kill_process
-    fi
-done
+    done
+#fi
 wait
