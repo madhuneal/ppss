@@ -44,6 +44,7 @@ SCRIPT_VERSION="1.90"
 MODE="$1"
 shift
 ARGS=$@
+CONFIG="config.cfg"
 DAEMON=0
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
@@ -66,12 +67,14 @@ SSH_KEY=""                              # SSH key for ssh account.
 SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections over 1 master.
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET -o ControlMaster=auto -o ConnectTimeout=5"
 SSH_MASTER_PID=""
+
 PPSS_HOME_DIR="ppss"
 ITEM_LOCK_DIR="PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
 PPSS_LOCAL_WORKDIR="PPSS_LOCAL_WORKDIR" # Local directory on slave for local processing.
 TRANSFER_TO_SLAVE="0"                   # Transfer item to slave via (s)cp.
 SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
+
 
 showusage () {
     
@@ -235,64 +238,98 @@ is_running () {
 #  exit 1
 #fi
 
+if [ -e $CONFIG ]
+then
+    echo HOER HOER HOER HOER HOER HOER HOER HOER HOER
+    source $CONFIG
+    echo $COMMAND
+    echo $SSH_SERVER
+    echo $USER
+else
 
     # Process any command-line options that are specified."
-    while getopts ":Dbc:d:f:i:jhk:l:n:o:p:s:tu:v" OPTIONS
+    while [ $# -gt 0 ]
     do
-        case $OPTIONS in
-            n ) 
-                NODES_FILE="$OPTARG"
+        case $1 in
+           -n ) 
+                NODES_FILE="$2"
+                shift 2
                 ;;
 
-            f )
-                INPUT_FILE="$OPTARG"
+            -f )
+                INPUT_FILE="$2"
+                echo -e INPUT_FILE=\"$INPUT_FILE\" >> $CONFIG
+                shift 2
                 ;;
-            d ) 
-                SRC_DIR="$OPTARG"
+            -d ) 
+                SRC_DIR="$2"
+                echo -e SRC_DIR=\"$SRC_DIR\" >> $CONFIG
+                shift 2
                 ;; 
-            D )
+            -D )
                 DAEMON=1
+                echo -e DAEMON=1 >> $CONFIG
+                shift 2
                 ;;
-            c ) 
-                COMMAND="$OPTARG"
+            -c ) 
+                COMMAND="$2"
+                echo -e COMMAND=\'$COMMAND\' >> $CONFIG
+                shift 2
                 ;;
 
-            h )
+            -h )
                 showusage
                 exit 1;;
-            j )
+            -j )
                 HYPERTHREADING=yes
+                echo -e HYPERTHREADING=yes >> $CONFIG 
+                shift 1
                 ;;
-            l )
-                LOGFILE="$OPTARG"
+            -l )
+                LOGFILE="$2"
+                echo -e LOGFILE=\"$LOGFILE\" >> $CONFIG
+                shift 2
                 ;;
-            k )
-                SSH_KEY="-i $OPTARG"
+            -k )
+                SSH_KEY="-i $2"
+                echo -e SSH_KEY=\"$SSH_KEY\"
+                shift 2
                 ;;
-            b )
+            -b )
                 SECURE_COPY=0
+                echo -e SECURE_COPY=0 >> $CONFIG
+                shift 1
                 ;;
-            o )
-                REMOTE_OUTPUT_DIR="$OPTARG"
+            -o )
+                REMOTE_OUTPUT_DIR="$2"
+                echo -e REMOTE_OUTPUT_DIR=\"$REMOTE_OUTPUT_DIR\" >> $CONFIG
+                shift 2
                 ;;
-            p )
-                TMP="$OPTARG"
+            -p )
+                TMP="$2"
                 if [ ! -z "$TMP" ]
                 then
                     MAX_NO_OF_RUNNING_JOBS="$TMP"
+                    echo -e MAX_NO_OF_RUNNING_JOBS=\"$MAX_NO_OF_RUNNING_JOBS\" >> $CONFIG
+                    shift 2
                 fi
                 ;;
-            s ) 
-                SSH_SERVER="$OPTARG"
+            -s ) 
+                SSH_SERVER="$2"
+                echo -e SSH_SERVER=\"$SSH_SERVER\" >> $CONFIG
+                shift 2
                 ;;
-            t )
+            -t )
                 TRANSFER_TO_SLAVE="1"    
+                echo -e TRANSFER_TO_SLAVE=\"$TRANSFER_TO_SLAVE\" >> $CONFIG
                 ;;
-            u )
-                USER="$OPTARG"
+            -u )
+                USER="$2"
+                echo -e USER=\"$USER\" >> $CONFIG
+                shift 2
                 ;;
 
-            v )
+            -v )
                 echo ""
                 echo "$SCRIPT_NAME version $SCRIPT_VERSION"
                 echo ""
@@ -303,6 +340,11 @@ is_running () {
                 exit 1;;
         esac
     done
+fi
+
+    echo $COMMAND
+    echo $SSH_SERVER
+    echo $USER
 
 # Init all vars
 init_vars () {
@@ -365,6 +407,7 @@ init_vars () {
     if [ ! "$?" == "0" ]
     then
         echo "ERROR: remote output dir $REMOTE_OUTPUT_DIR does not exist."
+        cleanup
         exit
     fi
 
