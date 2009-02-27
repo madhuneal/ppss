@@ -43,6 +43,7 @@ SCRIPT_VERSION="1.90"
 
 MODE="$1"
 shift
+ARGS=$@
 DAEMON=0
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
@@ -113,10 +114,10 @@ kill_process () {
     kill $LISTENER_PID >> /dev/null 2>&1
     while true
     do
-        JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
+        JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | grep -i bash | wc -l`
         if [ "$JOBS" -gt "2" ]
         then
-            for x in `ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | awk '{ print $1 }'`
+            for x in `ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | grep -i bash | awk '{ print $1 }'`
             do
                 if [ ! "$x" == "$PID" ] && [ ! "$x" == "$$" ]
                 then
@@ -410,6 +411,8 @@ log () {
 
 }
 
+log INFO "$0 $@"
+
 check_status () {
 
     ERROR="$1"
@@ -480,7 +483,18 @@ start_ppss_on_node () {
     else
         for NODE in `cat $NODES_FILE`
         do
-            ssh $USER@$NODE "cd ./$PPSS_HOME_DIR && $0 $@ &"
+            echo "----> ARGS IS $ARGS"
+            #ssh $USER@$NODE cd $PPSS_HOME_DIR ; screen -S PPSS ./$0 node 
+            CMD=""
+
+            for (( i = 1; i <= $# ; i++ )); do
+              eval ARG=\$$i
+              CMD="$CMD $(echo "$ARG" | awk '{gsub(".", "\\\\&");print}')"
+            done
+
+            
+            #ssh $USER@$NODE "cd $PPSS_HOME_DIR ; pwd ; screen -d -m -S PPSS ./ppss.sh node "$CMD" ; exit"
+            ssh $USER@$NODE "cd $PPSS_HOME_DIR ; pwd ; ./ppss.sh node $CMD" 
         done
     fi
 }
@@ -542,8 +556,15 @@ get_no_of_cpus () {
     then
         if [ `uname` == "Linux" ]
         then
-            NUMBER=`cat /proc/cpuinfo | grep "cpu cores" | cut -d ":" -f 2 | uniq | sed -e s/\ //g`
-            got_cpu_info "$?"
+            RES=`cat /proc/cpuinfo | grep "cpu cores"`
+            if [ "$?" == "0" ]
+            then
+                NUMBER=`cat /proc/cpuinfo | grep "cpu cores" | cut -d ":" -f 2 | uniq | sed -e s/\ //g`
+                got_cpu_info "$?"
+            else
+                NUMBER=`cat /proc/cpuinfo | grep processor | wc -l`
+                got_cpu_info "$?"
+            fi
         elif [ `uname` == "Darwin" ]
         then
             NUMBER=`sysctl -a hw | grep -w physicalcpu | awk '{ print $2 }'`
@@ -919,7 +940,6 @@ main () {
         node ) 
                 init_vars
                 test_server
-                log INFO `pwd`
                 get_all_items
                 listen_for_job "$MAX_NO_OF_RUNNING_JOBS" &
                 LISTENER_PID=$!
@@ -950,6 +970,7 @@ main
 #then
     while true
     do
+        sleep 5
         JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
         log INFO "JOBS is jobs: $JOBS"
         if [ "$JOBS" -gt "3" ] 
