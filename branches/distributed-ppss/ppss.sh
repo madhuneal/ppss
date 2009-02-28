@@ -136,7 +136,6 @@ kill_process () {
             then
                 kill -9 "$SSH_MASTER_PID"
             fi
-            log INFO "Finished."
             echo ""
             exit 0
         fi
@@ -190,7 +189,7 @@ check_for_interrupt () {
 
 cleanup () {
 
-    log DEBUG "$FUNCNAME - Cleaning up all temp files and processes."
+    #log DEBUG "$FUNCNAME - Cleaning up all temp files and processes."
     
     if [ -e "$FIFO" ]
     then 
@@ -231,120 +230,149 @@ is_running () {
     fi
 }
 
-# If no arguments are specified, show usage.
-#if [ $# -eq 0 ]
-#then
-#  showusage
-#  exit 1
-#fi
 
-if [ -e $CONFIG ]
-then
-    echo HOER HOER HOER HOER HOER HOER HOER HOER HOER
-    source $CONFIG
-    echo $COMMAND
-    echo $SSH_SERVER
-    echo $USER
-else
+add_var_to_config () {
+    
+    if [ "$MODE" == "config" ]
+    then
 
-    # Process any command-line options that are specified."
-    while [ $# -gt 0 ]
-    do
-        case $1 in
-           -n ) 
-                NODES_FILE="$2"
-                shift 2
-                ;;
+        VAR="$1"
+        VALUE="$2"
 
-            -f )
-                INPUT_FILE="$2"
-                echo -e INPUT_FILE=\"$INPUT_FILE\" >> $CONFIG
-                shift 2
-                ;;
-            -d ) 
-                SRC_DIR="$2"
-                echo -e SRC_DIR=\"$SRC_DIR\" >> $CONFIG
-                shift 2
-                ;; 
-            -D )
-                DAEMON=1
-                echo -e DAEMON=1 >> $CONFIG
-                shift 2
-                ;;
-            -c ) 
-                COMMAND="$2"
-                echo -e COMMAND=\'$COMMAND\' >> $CONFIG
-                shift 2
-                ;;
+        echo -e "$VAR=$VALUE" >> $CONFIG
+    fi
+}
 
-            -h )
-                showusage
-                exit 1;;
-            -j )
-                HYPERTHREADING=yes
-                echo -e HYPERTHREADING=yes >> $CONFIG 
-                shift 1
-                ;;
-            -l )
-                LOGFILE="$2"
-                echo -e LOGFILE=\"$LOGFILE\" >> $CONFIG
-                shift 2
-                ;;
-            -k )
-                SSH_KEY="-i $2"
-                echo -e SSH_KEY=\"$SSH_KEY\"
-                shift 2
-                ;;
-            -b )
-                SECURE_COPY=0
-                echo -e SECURE_COPY=0 >> $CONFIG
-                shift 1
-                ;;
-            -o )
-                REMOTE_OUTPUT_DIR="$2"
-                echo -e REMOTE_OUTPUT_DIR=\"$REMOTE_OUTPUT_DIR\" >> $CONFIG
-                shift 2
-                ;;
-            -p )
-                TMP="$2"
-                if [ ! -z "$TMP" ]
+# Process any command-line options that are specified."
+while [ $# -gt 0 ]
+do
+    case $1 in
+        -config )
+            CONFIG=$2
+
+            if [ "$MODE" == "config" ]
+            then
+                if [ -e "$CONFIG" ]
                 then
-                    MAX_NO_OF_RUNNING_JOBS="$TMP"
-                    echo -e MAX_NO_OF_RUNNING_JOBS=\"$MAX_NO_OF_RUNNING_JOBS\" >> $CONFIG
-                    shift 2
+                    echo "Do want to overwrite existing config file?"
+                    read yn
+                    if [ "$yn" == "y" ]
+                    then
+                        rm "$CONFIG"
+                    else
+                        echo "Aborting..."
+                        cleanup
+                        exit
+                    fi 
                 fi
-                ;;
-            -s ) 
-                SSH_SERVER="$2"
-                echo -e SSH_SERVER=\"$SSH_SERVER\" >> $CONFIG
-                shift 2
-                ;;
-            -t )
-                TRANSFER_TO_SLAVE="1"    
-                echo -e TRANSFER_TO_SLAVE=\"$TRANSFER_TO_SLAVE\" >> $CONFIG
-                ;;
-            -u )
-                USER="$2"
-                echo -e USER=\"$USER\" >> $CONFIG
-                shift 2
-                ;;
+            fi
 
-            -v )
-                echo ""
-                echo "$SCRIPT_NAME version $SCRIPT_VERSION"
-                echo ""
-                exit 0
-                ;;
-            * )
-                showusage
-                exit 1;;
-        esac
-    done
-fi
+            if [ ! "$MODE" == "config" ]
+            then
+                source $CONFIG
+            fi
 
-    echo $COMMAND
-    echo $SSH_SERVER
-    echo $USER
+            if [ ! -z "$SSH_KEY" ]
+            then
+                SSH_KEY="-i $SSH_KEY"
+            fi
+
+            shift 2
+            ;;
+        -n ) 
+            NODES_FILE="$2"
+            shift 2
+            ;;
+
+        -f )
+            INPUT_FILE="$2"
+            add_var_to_config INPUT_FILE "$INPUT_FILE"
+            shift 2
+            ;;
+        -d ) 
+            SRC_DIR="$2"
+            add_var_to_config SRC_DIR "$SRC_DIR"
+            shift 2
+            ;; 
+        -D )
+            DAEMON=1
+            add_var_to_config DAEMON "$DAEMON"
+            shift 2
+            ;;
+        -c ) 
+            COMMAND=$2
+            COMMAND=\'$COMMAND\'
+            add_var_to_config COMMAND "$COMMAND"
+            shift 2
+            ;;
+
+        -h )
+            showusage
+            exit 1;;
+        -j )
+            HYPERTHREADING=yes
+            add_var_to_config HYPERTHREADING "yes"
+            shift 1
+            ;;
+        -l )
+            LOGFILE="$2"
+            add_var_to_config LOGFILE "$LOGFILE"
+            shift 2
+            ;;
+        -k )
+            SSH_KEY="$2"
+            add_var_to_config SSH_KEY "$SSH_KEY"
+            if [ ! -z "$SSH_KEY" ]
+            then
+                SSH_KEY="-i $SSH_KEY"
+            fi
+            shift 2
+            ;;
+        -b )
+            SECURE_COPY=0
+            add_var_to_config SECURE_COPY "$SECURE_COPY"
+            shift 1
+            ;;
+        -o )
+            REMOTE_OUTPUT_DIR="$2"
+            add_var_to_config REMOTE_OUTPUT_DIR "$REMOTE_OUTPUT_DIR"
+            shift 2
+            ;;
+        -p )
+            TMP="$2"
+            if [ ! -z "$TMP" ]
+            then
+                MAX_NO_OF_RUNNING_JOBS="$TMP"
+                add_var_to_config MAX_NO_OF_RUNNING_JOBS "$MAX_NO_OF_RUNNING_JOBS" 
+                shift 2
+            fi
+            ;;
+        -s ) 
+            SSH_SERVER="$2"
+            add_var_to_config SSH_SERVER "$SSH_SERVER"
+            shift 2
+            ;;
+        -t )
+            TRANSFER_TO_SLAVE="1"    
+            add_var_to_config TRANSFER_TO_SLAVE "$TRANSFER_TO_SLAVE"
+            ;;
+        -u )
+            USER="$2"
+            add_var_to_config USER "$USER"
+            shift 2
+            ;;
+
+        -v )
+            echo ""
+            echo "$SCRIPT_NAME version $SCRIPT_VERSION"
+            echo ""
+            exit 0
+            ;;
+        * )
+            showusage
+            exit 1;;
+    esac
+done
 
 # Init all vars
 init_vars () {
@@ -502,6 +530,8 @@ deploy_ppss () {
             set_error $?
             scp -q $KEY $USER@$NODE:~/$PPSS_HOME_DIR
             set_error $?
+            scp -q $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
+            set_error $?
             if [ "$ERROR" == "0" ]
             then
                 log INFO "PPSS installed on node $NODE."
@@ -514,32 +544,12 @@ deploy_ppss () {
 
 start_ppss_on_node () {
 
-    # USER
-    # NODE
-    # PATH OF PPSS
-    # execute with command line args.
+    NODE="$1"
 
-    if [ ! -e "$NODES_FILE" ]
-    then
-        log INFO "ERROR file $NODES with list of nodes does not exist."
-        exit 1
-    else
-        for NODE in `cat $NODES_FILE`
-        do
-            echo "----> ARGS IS $ARGS"
-            #ssh $USER@$NODE cd $PPSS_HOME_DIR ; screen -S PPSS ./$0 node 
-            CMD=""
-
-            for (( i = 1; i <= $# ; i++ )); do
-              eval ARG=\$$i
-              CMD="$CMD $(echo "$ARG" | awk '{gsub(".", "\\\\&");print}')"
-            done
-
-            
-            #ssh $USER@$NODE "cd $PPSS_HOME_DIR ; pwd ; screen -d -m -S PPSS ./ppss.sh node "$CMD" ; exit"
-            ssh $USER@$NODE "cd $PPSS_HOME_DIR ; pwd ; ./ppss.sh node $CMD" 
-        done
-    fi
+    #ssh $USER@$NODE cd $PPSS_HOME_DIR ; screen -S PPSS ./$0 node 
+    
+    #ssh $USER@$NODE "cd $PPSS_HOME_DIR ; pwd ; screen -d -m -S PPSS ./ppss.sh node "$CMD" ; exit"
+    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; hostname ; screen -d -m -S PPSS ./ppss.sh node -config $CONFIG" 
 }
 
 
@@ -988,10 +998,29 @@ main () {
                 LISTENER_PID=$!
                 start_all_workers
                 ;;
-       start )
+        server )
+                # This option only starts all nodes.
                 init_vars
-                start_ppss_on_node 
+                
+                if [ ! -e "$NODES_FILE" ]
+                then
+                    log INFO "ERROR file $NODES with list of nodes does not exist."
+                    cleanup
+                    exit 1
+                else
+                    for NODE in `cat $NODES_FILE`
+                    do
+                        start_ppss_on_node "$NODE"
+                    done
+                fi
                 ;;
+        config )
+
+                log INFO "Generating configuration file $CONFIG"
+                cleanup
+                exit
+                ;;
+
         stop )
                 #some stop
                 ;;
