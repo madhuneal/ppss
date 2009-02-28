@@ -568,10 +568,11 @@ deploy_ppss () {
             set_error $?
             scp -q $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
             set_error $?
-            scp -q $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
-            set_error $?
-
-            
+            if [ ! -z "$INPUT_FILE" ]
+            then
+                scp -q $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+                set_error $?
+            fi
 
             if [ "$ERROR" == "0" ]
             then
