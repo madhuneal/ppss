@@ -47,6 +47,7 @@ ARGS=$@
 CONFIG="config.cfg"
 DAEMON=0
 HOSTNAME=`hostname`
+ARCH=`uname`
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
 PAUSE_SIGNAL="pause_signal"                # Not implemented yet (pause processing).
@@ -75,6 +76,7 @@ PPSS_LOCAL_WORKDIR="PPSS_LOCAL_WORKDIR" # Local directory on slave for local pro
 TRANSFER_TO_SLAVE="0"                   # Transfer item to slave via (s)cp.
 SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
+SCRIPT=""                               # Custom user script that is executed by ppss.
 
 
 showusage () {
@@ -185,7 +187,6 @@ check_for_interrupt () {
         sleep $PAUSE_DELAY
         check_for_interrupt
     fi
-
 }
 
 cleanup () {
@@ -353,6 +354,11 @@ do
             add_var_to_config SSH_SERVER "$SSH_SERVER"
             shift 2
             ;;
+        -S )
+            SCRIPT="$2"
+            add_var_to_config SCRIPT "$SCRIPT"
+            shift 2
+            ;;
         -t )
             TRANSFER_TO_SLAVE="1"    
             add_var_to_config TRANSFER_TO_SLAVE "$TRANSFER_TO_SLAVE"
@@ -517,12 +523,21 @@ deploy_ppss () {
     if [ -z "$KEY" ] || [ ! -e "$KEY" ]
     then
         log INFO "ERROR - nodes require a key file."
+        cleanup
+        exit 1
+    fi
+
+    if [ ! -e "$SCRIPT" ]
+    then
+        log INFO "ERROR - script $SCRIPT not found."
+        cleanup
         exit 1
     fi
 
     if [ ! -e "$NODES_FILE" ]
     then
         log INFO "ERROR file $NODES with list of nodes does not exist."
+        cleanup
         exit 1
     else
         for NODE in `cat $NODES_FILE` 
@@ -536,6 +551,13 @@ deploy_ppss () {
             set_error $?
             scp -q known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
             set_error $?
+            scp -q $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+            set_error $?
+            scp -q $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+            set_error $?
+
+            
+
             if [ "$ERROR" == "0" ]
             then
                 log INFO "PPSS installed on node $NODE."
@@ -590,16 +612,16 @@ get_no_of_cpus () {
 
     if [ "$HPT" == "yes" ]
     then
-        if [ `uname` == "Linux" ]
+        if [ "$ARCH" == "Linux" ]
         then
             NUMBER=`cat /proc/cpuinfo | grep processor | wc -l`
             got_cpu_info "$?"
             
-        elif [ `uname` == "Darwin" ]
+        elif [ "$ARCH" == "Darwin" ]
         then
             NUMBER=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
             got_cpu_info "$?"
-        elif [ `uname` == "FreeBSD" ]
+        elif [ "$ARCH" == "FreeBSD" ]
         then
             NUMBER=`sysctl hw.ncpu | awk '{ print $2 }'`
             got_cpu_info "$?"
@@ -609,7 +631,7 @@ get_no_of_cpus () {
         fi
     elif [ "$HPT" == "no" ]
     then
-        if [ `uname` == "Linux" ]
+        if [ "$ARCH" == "Linux" ]
         then
             RES=`cat /proc/cpuinfo | grep "cpu cores"`
             if [ "$?" == "0" ]
@@ -620,11 +642,11 @@ get_no_of_cpus () {
                 NUMBER=`cat /proc/cpuinfo | grep processor | wc -l`
                 got_cpu_info "$?"
             fi
-        elif [ `uname` == "Darwin" ]
+        elif [ "$ARCH" == "Darwin" ]
         then
             NUMBER=`sysctl -a hw | grep -w physicalcpu | awk '{ print $2 }'`
             got_cpu_info "$?"
-        elif [ `uname` == "FreeBSD" ]
+        elif [ "$ARCH" == "FreeBSD" ]
         then
             NUMBER=`sysctl hw.ncpu | awk '{ print $2 }'`
             got_cpu_info "$?"
@@ -811,8 +833,13 @@ get_all_items () {
     else
         if [ ! -z "$SSH_SERVER" ] # Are we running stand-alone or as a slave?"
         then
-            scp -q $SSH_OPTS "$SSH_KEY" "$USER@$SSH_SERVER:~/$INPUT_FILE" >> /dev/null 2>&!
-            check_status "$?" "$FUNCNAME" "Could not copy input file."
+            log DEBUG "Running as slave, input file has been pushed (hopefully)."
+            if [ ! -e "$INPUT_FILE" ]
+            then
+                log INFO "ERROR - input file $INPUT_FILE does not exist."
+            fi
+            #scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:~/"$INPUT_FILE" >> /dev/null 2>&1
+            #check_status "$?" "$FUNCNAME" "Could not copy input file $INPUT_FILE."
         fi
     
         exec 10<$INPUT_FILE
@@ -1049,33 +1076,45 @@ main () {
 }
 # This command starts the that sets the whole framework in motion.
 main
-#if [ $MODE == "node" ]
-#then
-    while true
-    do
-        sleep 5
-        JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
-        log INFO "JOBS is jobs: $JOBS"
-        if [ "$JOBS" -gt "3" ] 
-        then
-            log INFO "Sleeping $INTERVAL..." 
-            sleep $INTERVAL
-        else
-                echo -en "\033[1B"
-                log INFO "There are no more running jobs, so we must be finished."
-                echo -en "\033[1B"
-                if [ ! -z "$REMOTE_OUTPUT_DIR" ]
-                then
-                    log INFO "Transfering all processed items back to server."
-                    for x in `ls -1 $PPSS_LOCAL_WORKDIR`
-                    do
-                        upload_item "$x"
-                    done
-                fi
-                log INFO "Killing listener and remainig processes."
-                log INFO "Dying processes may display an error message."
-                kill_process
-        fi
-    done
-#fi
+
+# Either start new jobs or exit, sleep in the meantime.
+while true
+do
+    sleep 5
+    JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
+    log INFO "JOBS is jobs: $JOBS"
+    
+    MIN_JOBS=3
+
+    if [ "$ARCH" == "Darwin" ]
+    then
+        MIN_JOBS=4
+    elif [ "$ARCH" == "Linux" ]
+    then
+        MIN_JOBS=3
+    fi
+
+    if [ "$JOBS" -gt "$MIN_JOBS" ] 
+    then
+        log INFO "Sleeping $INTERVAL..." 
+        sleep $INTERVAL
+    else
+            echo -en "\033[1B"
+            log INFO "There are no more running jobs, so we must be finished."
+            echo -en "\033[1B"
+            if [ ! -z "$REMOTE_OUTPUT_DIR" ]
+            then
+                log INFO "Transfering all processed items back to server."
+                for x in `ls -1 $PPSS_LOCAL_WORKDIR`
+                do
+                    upload_item "$x"
+                done
+            fi
+            log INFO "Killing listener and remainig processes."
+            log INFO "Dying processes may display an error message."
+            kill_process
+    fi
+done
+
+# Exit after all processes have finished.
 wait
