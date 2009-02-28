@@ -514,10 +514,10 @@ erase_ppss () {
 
     if [ "$YN" == "y" ]
     then
-        for x in `cat $NODES_FILE`
+        for NODE in `cat $NODES_FILE`
         do
-            log INFO "Erasing PPSS from node $x."
-            exec_cmd "rm -rf $PPSS_HOME_DIR"
+            log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
+            ssh $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     fi
 }
@@ -901,7 +901,7 @@ get_item () {
     ARRAY_POINTER=`cat $ARRAY_POINTER_FILE`
 
     # Gives a status update on the current progress..
-    PERCENT=`echo "100 * $ARRAY_POINTER / $SIZE_OF_ARRAY" | bc`
+    PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
     log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
     echo -en "\033[1A"
 
@@ -1049,10 +1049,9 @@ show_status () {
     fi
     
     PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"`
-    #STATUS=`echo "100 * $PROCESSED / $ITEMS" | bc`
     STATUS=$((100 * $PROCESSED / $ITEMS))
 
-    echo "$STATUS percent complete."
+    log INFO "$STATUS percent complete."
 
 }
 
@@ -1113,9 +1112,11 @@ main () {
                     erase_ppss
                     cleanup
                     exit 0
+                    ;;
         * )
                     showusage
-                    exit 1;;
+                    exit 1
+                    ;;
     esac
 
 }
