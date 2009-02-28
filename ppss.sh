@@ -356,6 +356,7 @@ do
         -t )
             TRANSFER_TO_SLAVE="1"    
             add_var_to_config TRANSFER_TO_SLAVE "$TRANSFER_TO_SLAVE"
+            shift 1
             ;;
         -u )
             USER="$2"
@@ -549,10 +550,8 @@ start_ppss_on_node () {
 
     NODE="$1"
 
-    #ssh $USER@$NODE cd $PPSS_HOME_DIR ; screen -S PPSS ./$0 node 
-    
-    #ssh $USER@$NODE "cd $PPSS_HOME_DIR ; pwd ; screen -d -m -S PPSS ./ppss.sh node "$CMD" ; exit"
-    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; hostname ; screen -d -m -S PPSS ./ppss.sh node -config $CONFIG" 
+    log INFO "Starting PPSS on node $NODE."
+    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node -config $CONFIG" 
 }
 
 
@@ -717,9 +716,11 @@ download_item () {
         log DEBUG "Transfering item $ITEM to local disk."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:$ITEM_WITH_PATH $PPSS_LOCAL_WORKDIR
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_WORKDIR
+            log DEBUG "Exit code of transfer is $?"
         else
-            cp $ITEM_WITH_PATH $PPSS_LOCAL_WORKDIR 
+            cp "$ITEM_WITH_PATH" $PPSS_LOCAL_WORKDIR 
+            log DEBUG "Exit code of transfer is $?"
         fi
     fi
 }
@@ -766,7 +767,7 @@ lock_item () {
         ITEM="$1"
         LOCK_FILE_NAME=`echo $ITEM | sed s/^\\\.//g |sed s/^\\\.\\\.//g | sed s/\\\///g`
         ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
-
+        log DEBUG "Trying to lock item $ITEM."
         exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
         ERROR="$?"
         return "$ERROR"
@@ -887,6 +888,7 @@ get_item () {
             release_global_lock
             get_item
         else
+            log DEBUG "Got lock on $ITEM, processing."
             release_global_lock
             download_item "$ITEM"
             return 0
@@ -974,12 +976,16 @@ listen_for_job () {
 # This starts an number of parallel workers based on the # of parallel jobs allowed.
 start_all_workers () {
 
-    log INFO "Starting $MAX_NO_OF_RUNNING_JOBS workers."
+    if [ "$MAX_NO_OF_RUNNING_JOBS" == "1" ]
+    then
+        log INFO "Starting $MAX_NO_OF_RUNNING_JOBS worker."
+    else
+        log INFO "Starting $MAX_NO_OF_RUNNING_JOBS workers."
+    fi
 
     i=0
     while [ "$i" -lt "$MAX_NO_OF_RUNNING_JOBS" ]
     do
-        log DEBUG "$FUNCNAME - NO OF WORKERS is $i"
         start_single_worker
         ((i++))
     done
