@@ -46,6 +46,7 @@ shift
 ARGS=$@
 CONFIG="config.cfg"
 DAEMON=0
+HOSTNAME=`hostname`
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
 PAUSE_SIGNAL="pause_signal"                # Not implemented yet (pause processing).
@@ -65,7 +66,7 @@ INTERVAL="10"                           # Polling interval to check if there are
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections over 1 master.
-SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET -o ControlMaster=auto -o ConnectTimeout=5"
+SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET -o GlobalKnownHostsFile=./known_hosts -o ControlMaster=auto -o ConnectTimeout=5"
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
@@ -149,7 +150,7 @@ exec_cmd () {
 
     if [ ! -z "$SSH_SERVER" ]
     then
-        ssh $SSH_OPTS $SSH_KEY $SSH_SERVER $CMD
+        ssh $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER $CMD
     else
         eval "$CMD"
     fi
@@ -532,6 +533,8 @@ deploy_ppss () {
             set_error $?
             scp -q $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
             set_error $?
+            scp -q known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
+            set_error $?
             if [ "$ERROR" == "0" ]
             then
                 log INFO "PPSS installed on node $NODE."
@@ -561,7 +564,7 @@ test_server () {
         exec_cmd "date >> /dev/null"
         check_status "$?" "$FUNCNAME" "Server $SSH_SERVER could not be reached"
 
-        ssh -N -M $SSH_OPTS $SSH_KEY $SSH_SERVER &
+        ssh -N -M $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER &
         SSH_MASTER_PID="$!"
     else
         log DEBUG "No remote server specified, assuming stand-alone mode."
@@ -714,7 +717,7 @@ download_item () {
         log DEBUG "Transfering item $ITEM to local disk."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $SSH_SERVER:$ITEM_WITH_PATH $PPSS_LOCAL_WORKDIR
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:$ITEM_WITH_PATH $PPSS_LOCAL_WORKDIR
         else
             cp $ITEM_WITH_PATH $PPSS_LOCAL_WORKDIR 
         fi
@@ -737,7 +740,7 @@ upload_item () {
         log DEBUG "Uploading item $ITEM."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_WORKDIR/"$ITEM" $SSH_SERVER:$REMOTE_OUTPUT_DIR
+            scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_WORKDIR/"$ITEM" $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
             ERROR="$?"
             if [ ! "$ERROR" == "0" ]
             then
@@ -807,7 +810,7 @@ get_all_items () {
     else
         if [ ! -z "$SSH_SERVER" ] # Are we running stand-alone or as a slave?"
         then
-            scp -q $SSH_OPTS "$SSH_KEY" "$SSH_SERVER:~/$INPUT_FILE" >> /dev/null 2>&!
+            scp -q $SSH_OPTS "$SSH_KEY" "$USER@$SSH_SERVER:~/$INPUT_FILE" >> /dev/null 2>&!
             check_status "$?" "$FUNCNAME" "Could not copy input file."
         fi
     
@@ -910,6 +913,7 @@ start_single_worker () {
 commando () {
 
     ITEM="$1"
+    log DEBUG "Processing item $ITEM"
 
     if [ -z "$INPUT_FILE" ] && [ "$TRANSFER_TO_SLAVE" == "0" ]
     then
@@ -926,8 +930,9 @@ commando () {
     then
         log DEBUG "Skipping item $ITEM - already processed." 
     else
+        echo "HOST = $HOSTNAME" > "$ITEM_LOG_FILE"
         
-        EXECME='$COMMAND"$ITEM" > "$ITEM_LOG_FILE" 2>&1'
+        EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
         eval "$EXECME"
         ERROR="$?"
 
@@ -944,19 +949,19 @@ commando () {
             fi
         fi
 
-        #release_item "$ITEM"
-
         if [ ! -z "$SSH_SERVER" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $SSH_SERVER:~/$JOB_LOG_DIR 
+            log DEBUG "Uploading item log file $ITEM_LOG_FILE to master."
+            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR 
         fi
     fi
 
-    
     start_single_worker
     return $?
 }
 
+# This is the listener service. It listens on the pipe for events.
+# A job is executed for every event received.
 listen_for_job () {
 
     log INFO "Listener started."
