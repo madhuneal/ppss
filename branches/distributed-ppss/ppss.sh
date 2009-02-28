@@ -250,7 +250,7 @@ while [ $# -gt 0 ]
 do
     case $1 in
         -config )
-            CONFIG=$2
+            CONFIG="$2"
 
             if [ "$MODE" == "config" ]
             then
@@ -505,6 +505,21 @@ check_status () {
         exit 1
     fi
 
+}
+
+erase_ppss () {
+
+    echo "Are you realy sure you want to erase PPSS from all nades!?"
+    read YN
+
+    if [ "$YN" == "y" ]
+    then
+        for x in `cat $NODES_FILE`
+        do
+            log INFO "Erasing PPSS from node $x."
+            exec_cmd "rm -rf $PPSS_HOME_DIR"
+        done
+    fi
 }
 
 deploy_ppss () {
@@ -1018,6 +1033,29 @@ start_all_workers () {
     done
 }
 
+show_status () {
+
+    source $CONFIG
+    if [ ! -z "$SSH_KEY" ]
+    then
+        SSH_KEY="-i $SSH_KEY"
+    fi
+
+    if [ -z "$INPUT_FILE" ]
+    then
+        ITEMS=`exec_cmd "ls -1 $SRC_DIR | wc -l"`
+    else
+        ITEMS=`exec_cmd "cat $INPUT_FILE | wc -l"` 
+    fi
+    
+    PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"`
+    #STATUS=`echo "100 * $PROCESSED / $ITEMS" | bc`
+    STATUS=$((100 * $PROCESSED / $ITEMS))
+
+    echo "$STATUS percent complete."
+
+}
+
 
 # If this is called, the whole framework will execute.
 main () {
@@ -1029,48 +1067,55 @@ main () {
 
     case $MODE in
         node ) 
-                init_vars
-                test_server
-                get_all_items
-                listen_for_job "$MAX_NO_OF_RUNNING_JOBS" &
-                LISTENER_PID=$!
-                start_all_workers
-                ;;
+                    init_vars
+                    test_server
+                    get_all_items
+                    listen_for_job "$MAX_NO_OF_RUNNING_JOBS" &
+                    LISTENER_PID=$!
+                    start_all_workers
+                    ;;
         server )
-                # This option only starts all nodes.
-                init_vars
+                    # This option only starts all nodes.
+                    init_vars
                 
-                if [ ! -e "$NODES_FILE" ]
-                then
-                    log INFO "ERROR file $NODES with list of nodes does not exist."
-                    cleanup
-                    exit 1
-                else
-                    for NODE in `cat $NODES_FILE`
-                    do
-                        start_ppss_on_node "$NODE"
-                    done
-                fi
-                ;;
+                    if [ ! -e "$NODES_FILE" ]
+                    then
+                        log INFO "ERROR file $NODES with list of nodes does not exist."
+                        cleanup
+                        exit 1
+                    else
+                        for NODE in `cat $NODES_FILE`
+                        do
+                            start_ppss_on_node "$NODE"
+                        done
+                    fi
+                    ;;
         config )
 
-                log INFO "Generating configuration file $CONFIG"
-                cleanup
-                exit
-                ;;
+                    log INFO "Generating configuration file $CONFIG"
+                    cleanup
+                    exit 0
+                    ;;
 
         stop )
-                #some stop
-                ;;
-      deploy )
-                deploy_ppss
-                ;;
-        show )
-                # some show command
-                ;;
+                    #some stop
+                    ;;
+        deploy )
+                    deploy_ppss
+                    cleanup
+                    exit 0
+                    ;;
+        status )
+                    show_status
+                    # some show command
+                    ;;
+        erase )
+                    erase_ppss
+                    cleanup
+                    exit 0
         * )
-                showusage
-                exit 1;;
+                    showusage
+                    exit 1;;
     esac
 
 }
