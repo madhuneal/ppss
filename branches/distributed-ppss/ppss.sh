@@ -990,7 +990,7 @@ commando () {
             then
                 rm $ITEM
             else        
-                log DEBUG "ERROR Something went wrong removing item from local work dir."
+                log DEBUG "ERROR Something went wrong removing item $ITEM from local work dir."
             fi
         fi
 
@@ -1107,6 +1107,8 @@ main () {
                     ;;
         status )
                     show_status
+                    cleanup
+                    exit 0
                     # some show command
                     ;;
         erase )
