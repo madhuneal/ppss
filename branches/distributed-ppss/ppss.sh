@@ -780,7 +780,7 @@ upload_item () {
     if [ "$SECURE_COPY" == "1" ]
     then
         #scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM"/* $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
-        scp $SSH_OPTS $SSH_KEY "$ITEM" $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR >> HOEBA 2>&1
+        scp $SSH_OPTS $SSH_KEY $ITEM $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR >> HOEBA 2>&1
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
