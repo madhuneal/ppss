@@ -776,17 +776,11 @@ upload_item () {
 
     ITEM="$1"
 
-    echo "$ITEM" | grep -i ".error" >> /dev/null 2>&1
-    if [ "$?" == "0" ]
-    then
-        log DEBUG "NOT uploading files with errors ($ITEM)."
-        return 1
-    fi
-
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-        scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM"/* $USER@$SSH_SERVER:~/$REMOTE_OUTPUT_DIR
+        #scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM"/* $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
+        scp $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM"/* $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR >> HOEBA 2>&1
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
@@ -973,7 +967,7 @@ commando () {
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
 
-    mkdir $PPSS_LOCAL_OUTPUT/"$ITEM"
+    mkdir $PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
 
     does_file_exist "$ITEM_LOG_FILE"
     if [ "$?" == "0" ]
@@ -1023,7 +1017,7 @@ commando () {
 
         if [ ! -z "$REMOTE_OUTPUT_DIR" ]
         then
-            upload "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
+            upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
         fi
 
         if [ ! -z "$SSH_SERVER" ]
