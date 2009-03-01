@@ -39,7 +39,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="1.90"
+SCRIPT_VERSION="1.99"
 
 MODE="$1"
 shift
