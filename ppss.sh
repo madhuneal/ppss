@@ -250,139 +250,134 @@ add_var_to_config () {
 while [ $# -gt 0 ]
 do
     case $1 in
-        -config )
-            CONFIG="$2"
+        --config )
+                        CONFIG="$2"
 
-            if [ "$MODE" == "config" ]
-            then
-                if [ -e "$CONFIG" ]
-                then
-                    echo "Do want to overwrite existing config file?"
-                    read yn
-                    if [ "$yn" == "y" ]
-                    then
-                        rm "$CONFIG"
-                    else
-                        echo "Aborting..."
-                        cleanup
-                        exit
-                    fi 
-                fi
-            fi
+                        if [ "$MODE" == "config" ]
+                        then
+                            if [ -e "$CONFIG" ]
+                            then
+                                echo "Do want to overwrite existing config file?"
+                                read yn
+                                if [ "$yn" == "y" ]
+                                then
+                                    rm "$CONFIG"
+                                else
+                                    echo "Aborting..."
+                                    cleanup
+                                    exit
+                                fi 
+                            fi
+                        fi
 
-            if [ ! "$MODE" == "config" ]
-            then
-                source $CONFIG
-            fi
+                        if [ ! "$MODE" == "config" ]
+                        then
+                            source $CONFIG
+                        fi
 
-            if [ ! -z "$SSH_KEY" ]
-            then
-                SSH_KEY="-i $SSH_KEY"
-            fi
+                        if [ ! -z "$SSH_KEY" ]
+                        then
+                            SSH_KEY="-i $SSH_KEY"
+                        fi
 
-            shift 2
-            ;;
-        -n ) 
-            NODES_FILE="$2"
-            shift 2
-            ;;
+                        shift 2
+                        ;;
+        --nodes ) 
+                        NODES_FILE="$2"
+                        shift 2
+                        ;;
 
-        -f )
-            INPUT_FILE="$2"
-            add_var_to_config INPUT_FILE "$INPUT_FILE"
-            shift 2
-            ;;
-        -d ) 
-            SRC_DIR="$2"
-            add_var_to_config SRC_DIR "$SRC_DIR"
-            shift 2
-            ;; 
-        -D )
-            DAEMON=1
-            add_var_to_config DAEMON "$DAEMON"
-            shift 2
-            ;;
-        -c ) 
-            COMMAND=$2
-            if [ "$MODE" == "config" ]
-            then
-                COMMAND=\'$COMMAND\'
-                add_var_to_config COMMAND "$COMMAND"
-            fi
-            shift 2
-            ;;
+        --sourcefile )
+                        INPUT_FILE="$2"
+                        add_var_to_config INPUT_FILE "$INPUT_FILE"
+                        shift 2
+                        ;;
+        --sourcedir ) 
+                        SRC_DIR="$2"
+                        add_var_to_config SRC_DIR "$SRC_DIR"
+                        shift 2
+                        ;; 
+        --command ) 
+                        COMMAND=$2
+                        if [ "$MODE" == "config" ]
+                        then
+                            COMMAND=\'$COMMAND\'
+                            add_var_to_config COMMAND "$COMMAND"
+                        fi
+                        shift 2
+                        ;;
 
-        -h )
-            showusage
-            exit 1;;
-        -j )
-            HYPERTHREADING=yes
-            add_var_to_config HYPERTHREADING "yes"
-            shift 1
-            ;;
-        -l )
-            LOGFILE="$2"
-            add_var_to_config LOGFILE "$LOGFILE"
-            shift 2
-            ;;
-        -k )
-            SSH_KEY="$2"
-            add_var_to_config SSH_KEY "$SSH_KEY"
-            if [ ! -z "$SSH_KEY" ]
-            then
-                SSH_KEY="-i $SSH_KEY"
-            fi
-            shift 2
-            ;;
-        -b )
-            SECURE_COPY=0
-            add_var_to_config SECURE_COPY "$SECURE_COPY"
-            shift 1
-            ;;
-        -o )
-            REMOTE_OUTPUT_DIR="$2"
-            add_var_to_config REMOTE_OUTPUT_DIR "$REMOTE_OUTPUT_DIR"
-            shift 2
-            ;;
-        -p )
-            TMP="$2"
-            if [ ! -z "$TMP" ]
-            then
-                MAX_NO_OF_RUNNING_JOBS="$TMP"
-                add_var_to_config MAX_NO_OF_RUNNING_JOBS "$MAX_NO_OF_RUNNING_JOBS" 
-                shift 2
-            fi
-            ;;
-        -s ) 
-            SSH_SERVER="$2"
-            add_var_to_config SSH_SERVER "$SSH_SERVER"
-            shift 2
-            ;;
-        -S )
-            SCRIPT="$2"
-            add_var_to_config SCRIPT "$SCRIPT"
-            shift 2
-            ;;
-        -t )
-            TRANSFER_TO_SLAVE="1"    
-            add_var_to_config TRANSFER_TO_SLAVE "$TRANSFER_TO_SLAVE"
-            shift 1
-            ;;
-        -u )
-            USER="$2"
-            add_var_to_config USER "$USER"
-            shift 2
-            ;;
+        --help )
+                        showusage
+                        exit 1;;
+        --hyperthreading )
+                        HYPERTHREADING=yes
+                        add_var_to_config HYPERTHREADING "yes"
+                        shift 1
+                        ;;
+        --log )
+                        LOGFILE="$2"
+                        add_var_to_config LOGFILE "$LOGFILE"
+                        shift 2
+                        ;;
+        --key )
+                        SSH_KEY="$2"
+                        add_var_to_config SSH_KEY "$SSH_KEY"
+                        if [ ! -z "$SSH_KEY" ]
+                        then
+                            SSH_KEY="-i $SSH_KEY"
+                        fi
+                        shift 2
+                        ;;
+        --no-secure-copy )
+                        SECURE_COPY=0
+                        add_var_to_config SECURE_COPY "$SECURE_COPY"
+                        shift 1
+                        ;;
+        --outputdir )
+                        REMOTE_OUTPUT_DIR="$2"
+                        add_var_to_config REMOTE_OUTPUT_DIR "$REMOTE_OUTPUT_DIR"
+                        shift 2
+                        ;;
+        --processes )
+                        TMP="$2"
+                        if [ ! -z "$TMP" ]
+                        then
+                            MAX_NO_OF_RUNNING_JOBS="$TMP"
+                            add_var_to_config MAX_NO_OF_RUNNING_JOBS "$MAX_NO_OF_RUNNING_JOBS" 
+                            shift 2
+                        fi
+                        ;;
+        --server ) 
+                        SSH_SERVER="$2"
+                        add_var_to_config SSH_SERVER "$SSH_SERVER"
+                        shift 2
+                        ;;
+        --script )
+                        SCRIPT="$2"
+                        add_var_to_config SCRIPT "$SCRIPT"
+                        shift 2
+                        ;;
+        --transfer )
+                        TRANSFER_TO_SLAVE="1"    
+                        add_var_to_config TRANSFER_TO_SLAVE "$TRANSFER_TO_SLAVE"
+                        shift 1
+                        ;;
+        --user )
+                        USER="$2"
+                        add_var_to_config USER "$USER"
+                        shift 2
+                        ;;
 
-        -v )
-            echo ""
-            echo "$SCRIPT_NAME version $SCRIPT_VERSION"
-            echo ""
-            exit 0
-            ;;
+        --version )
+                        echo ""
+                        echo "$SCRIPT_NAME version $SCRIPT_VERSION"
+                        echo ""
+                        exit 0
+                        ;;
         * )
-            showusage
-            exit 1;;
+                        showusage
+                        exit 1;;
     esac
 done
 
