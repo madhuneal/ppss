@@ -631,7 +631,7 @@ get_no_of_cpus () {
     got_cpu_info () {
 
     ERROR="$1"
-    check_status "$ERROR" "$FUNCNAME" "cannot determine number of cpu cores. Please specify a number of parallell processes manually with -p." 
+    check_status "$ERROR" "$FUNCNAME" "cannot determine number of cpu cores. Specify with -p." 
 
     }
 
@@ -783,27 +783,22 @@ upload_item () {
         return 1
     fi
 
-    if [ -e "$PPSS_LOCAL_OUTPUT/$ITEM" ]
+    log DEBUG "Uploading item $ITEM."
+    if [ "$SECURE_COPY" == "1" ]
     then
-        log DEBUG "Uploading item $ITEM."
-        if [ "$SECURE_COPY" == "1" ]
+        scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM"/* $USER@$SSH_SERVER:~/$REMOTE_OUTPUT_DIR
+        ERROR="$?"
+        if [ ! "$ERROR" == "0" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM" $USER@$SSH_SERVER:~/$REMOTE_OUTPUT_DIR
-            ERROR="$?"
-            if [ ! "$ERROR" == "0" ]
-            then
-                log DEBUG "ERROR - uploading of $ITEM failed."
-            fi
-        else    
-            cp "$PPSS_LOCAL_OUTPUT/$ITEM" $REMOTE_OUTPUT_DIR
-            ERROR="$?"
-            if [ ! "$ERROR" == "0" ]
-            then
-                log DEBUG "ERROR - uploading of $ITEM failed."
-            fi
+            log DEBUG "ERROR - uploading of $ITEM failed."
         fi
     else    
-        log DEBUG "ERROR: item $ITEM does not exist."
+        cp "$PPSS_LOCAL_OUTPUT/$ITEM" $REMOTE_OUTPUT_DIR
+        ERROR="$?"
+        if [ ! "$ERROR" == "0" ]
+        then
+            log DEBUG "ERROR - uploading of $ITEM failed."
+        fi
     fi
 }
 
@@ -834,9 +829,6 @@ release_item () {
 get_all_items () {
 
     count=0
-
-    #does_file_exist "$SRC_DIR"
-    #check_status "$0" "$FUNCNAME" "ERROR - source dir $SRC_DIR does not exist."
 
     if [ -z "$INPUT_FILE" ]
     then
@@ -967,6 +959,8 @@ start_single_worker () {
 commando () {
 
     ITEM="$1"
+    ITEM_NO_PATH="$1"
+
     log DEBUG "Processing item $ITEM"
 
     if [ -z "$INPUT_FILE" ] && [ "$TRANSFER_TO_SLAVE" == "0" ]
@@ -978,6 +972,8 @@ commando () {
 
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
+
+    mkdir $PPSS_LOCAL_OUTPUT/"$ITEM"
 
     does_file_exist "$ITEM_LOG_FILE"
     if [ "$?" == "0" ]
@@ -1022,6 +1018,12 @@ commando () {
             else        
                 log DEBUG "ERROR Something went wrong removing item $ITEM from local work dir."
             fi
+
+        fi
+
+        if [ ! -z "$REMOTE_OUTPUT_DIR" ]
+        then
+            upload "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
         fi
 
         if [ ! -z "$SSH_SERVER" ]
@@ -1185,11 +1187,6 @@ do
             echo -en "\033[1B"
             log INFO "There are no more running jobs, so we must be finished."
             echo -en "\033[1B"
-            if [ ! -z "$REMOTE_OUTPUT_DIR" ]
-            then
-                log INFO "Transfering all processed items back to server."
-                upload_item "$x"
-            fi
             log INFO "Killing listener and remainig processes."
             log INFO "Dying processes may display an error message."
             kill_process
