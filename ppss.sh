@@ -976,7 +976,7 @@ commando () {
         ITEM="$PPSS_LOCAL_TMPDIR/$ITEM"
     fi
 
-    LOG_FILE_NAME=`echo $ITEM | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
+    LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
 
     does_file_exist "$ITEM_LOG_FILE"
@@ -984,24 +984,26 @@ commando () {
     then
         log DEBUG "Skipping item $ITEM - already processed." 
     else
-        echo "HOST = $HOSTNAME" > "$ITEM_LOG_FILE"
         
-        TMP=`echo $COMMAND | grep -i "%ITEM%"`
+        ERROR=""
+        TMP=`echo $COMMAND | grep -i '$ITEM'`
         if [ "$?" == "0"  ]
         then 
-            echo "ITEM IS $ITEM"
-            ESCAPED=`echo $ITEM | sed -e s:\\\\\/:\\\\\\\\/:g`
-            echo "ESCAPED is $ESCAPED"
-            COMMAND=`echo $COMMAND | sed -e s:%ITEM%:$ESCAPED:g`
-            echo "COMMAND = $COMMAND"
-            EXECME='$COMMAND >> "$ITEM_LOG_FILE" 2>&1'
-            echo EXECME is "$EXECME"
+            echo "=================" > "$ITEM_LOG_FILE"
+            echo "HOST = $HOSTNAME" >> "$ITEM_LOG_FILE"
+            echo "ITEM = $ITEM" >> "$ITEM_LOG_FILE"
+            ##ESCAPED=`echo "$ITEM" | sed -e s:\\\\\/:\\\\\\\\/:g`
+            #COMMAND=`echo $COMMAND | sed -e s:%ITEM%:"$ESCAPED":g`
+            #echo "COMMAND is $COMMAND" >> "$ITEM_LOG_FILE"
+
+            eval "$COMMAND" >> "$ITEM_LOG_FILE" 2>&1
+            ERROR="$?"
         else
             EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
             echo EXECME is "$EXECME"
+            eval "$EXECME"
+            ERROR="$?"
         fi
-        eval "$EXECME"
-        ERROR="$?"
 
         if [ ! "$ERROR" == "0" ] && [ "$TRANSFER_TO_SLAVE" == "1" ]
         then
