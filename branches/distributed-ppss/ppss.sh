@@ -72,7 +72,8 @@ SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
 ITEM_LOCK_DIR="PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
-PPSS_LOCAL_WORKDIR="PPSS_LOCAL_WORKDIR" # Local directory on slave for local processing.
+PPSS_LOCAL_TMPDIR="PPSS_LOCAL_TMPDIR" # Local directory on slave for local processing.
+PPSS_LOCAL_OUTPUT="PPSS_LOCAL_OUTPUT" # Local directory on slave for local output.
 TRANSFER_TO_SLAVE="0"                   # Transfer item to slave via (s)cp.
 SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
@@ -303,8 +304,11 @@ do
             ;;
         -c ) 
             COMMAND=$2
-            COMMAND=\'$COMMAND\'
-            add_var_to_config COMMAND "$COMMAND"
+            if [ "$MODE" == "config" ]
+            then
+                COMMAND=\'$COMMAND\'
+                add_var_to_config COMMAND "$COMMAND"
+            fi
             shift 2
             ;;
 
@@ -447,9 +451,14 @@ init_vars () {
         exit
     fi
 
-    if [ ! -e "$PPSS_LOCAL_WORKDIR" ] && [ ! -z "$SSH_SERVER" ]
+    if [ ! -e "$PPSS_LOCAL_TMPDIR" ] && [ ! -z "$SSH_SERVER" ]
     then
-        mkdir "$PPSS_LOCAL_WORKDIR"
+        mkdir "$PPSS_LOCAL_TMPDIR"
+    fi
+
+    if [ ! -e "$PPSS_LOCAL_OUTPUT" ] && [ ! -z "$SSH_SERVER" ]
+    then
+        mkdir "$PPSS_LOCAL_OUTPUT"
     fi
 }
 
@@ -754,10 +763,10 @@ download_item () {
         log DEBUG "Transfering item $ITEM to local disk."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_WORKDIR
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of transfer is $?"
         else
-            cp "$ITEM_WITH_PATH" $PPSS_LOCAL_WORKDIR 
+            cp "$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR 
             log DEBUG "Exit code of transfer is $?"
         fi
     fi
@@ -774,19 +783,19 @@ upload_item () {
         return 1
     fi
 
-    if [ -e "$PPSS_LOCAL_WORKDIR/$ITEM" ]
+    if [ -e "$PPSS_LOCAL_OUTPUT/$ITEM" ]
     then
         log DEBUG "Uploading item $ITEM."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_WORKDIR/"$ITEM" $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
+            scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM" $USER@$SSH_SERVER:~/$REMOTE_OUTPUT_DIR
             ERROR="$?"
             if [ ! "$ERROR" == "0" ]
             then
                 log DEBUG "ERROR - uploading of $ITEM failed."
             fi
         else    
-            cp "$PPSS_LOCAL_WORKDIR/$ITEM" $REMOTE_OUTPUT_DIR
+            cp "$PPSS_LOCAL_OUTPUT/$ITEM" $REMOTE_OUTPUT_DIR
             ERROR="$?"
             if [ ! "$ERROR" == "0" ]
             then
@@ -964,7 +973,7 @@ commando () {
     then
         ITEM="$SRC_DIR/$ITEM"
     else
-        ITEM="$PPSS_LOCAL_WORKDIR/$ITEM"
+        ITEM="$PPSS_LOCAL_TMPDIR/$ITEM"
     fi
 
     LOG_FILE_NAME=`echo $ITEM | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
@@ -977,7 +986,20 @@ commando () {
     else
         echo "HOST = $HOSTNAME" > "$ITEM_LOG_FILE"
         
-        EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
+        TMP=`echo $COMMAND | grep -i "%ITEM%"`
+        if [ "$?" == "0"  ]
+        then 
+            echo "ITEM IS $ITEM"
+            ESCAPED=`echo $ITEM | sed -e s:\\\\\/:\\\\\\\\/:g`
+            echo "ESCAPED is $ESCAPED"
+            COMMAND=`echo $COMMAND | sed -e s:%ITEM%:$ESCAPED:g`
+            echo "COMMAND = $COMMAND"
+            EXECME='$COMMAND >> "$ITEM_LOG_FILE" 2>&1'
+            echo EXECME is "$EXECME"
+        else
+            EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
+            echo EXECME is "$EXECME"
+        fi
         eval "$EXECME"
         ERROR="$?"
 
@@ -1089,10 +1111,14 @@ main () {
                             start_ppss_on_node "$NODE"
                         done
                     fi
+                    cleanup
+                    exit 0
                     ;;
         config )
 
                     log INFO "Generating configuration file $CONFIG"
+                    add_var_to_config PPSS_LOCAL_TMPDIR "$PPSS_LOCAL_TMPDIR"
+                    add_var_to_config PPSS_LOCAL_OUTPUT "$PPSS_LOCAL_OUTPUT"
                     cleanup
                     exit 0
                     ;;
@@ -1154,10 +1180,7 @@ do
             if [ ! -z "$REMOTE_OUTPUT_DIR" ]
             then
                 log INFO "Transfering all processed items back to server."
-                for x in `ls -1 $PPSS_LOCAL_WORKDIR`
-                do
-                    upload_item "$x"
-                done
+                upload_item "$x"
             fi
             log INFO "Killing listener and remainig processes."
             log INFO "Dying processes may display an error message."
