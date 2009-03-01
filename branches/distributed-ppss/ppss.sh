@@ -163,7 +163,7 @@ exec_cmd () {
 does_file_exist () {
 
     FILE="$1"
-    `exec_cmd "ls -1 $FILE >> /dev/null 2>&1"`
+    `exec_cmd "ls -1 $FILE" >> /dev/null 2>&1`
     if [ "$?" == "0" ]
     then
         return 0
@@ -986,29 +986,35 @@ commando () {
     else
         
         ERROR=""
+
+        # Some formatting of item log files. 
+        DATE=`date +%b\ %d\ %H:%M:%S`
+        echo "=== PPSS Item Log File ===" > "$ITEM_LOG_FILE"
+        echo -e "Host:\t$HOSTNAME" >> "$ITEM_LOG_FILE"
+        echo -e "Date:\t$DATE" >> "$ITEM_LOG_FILE"
+        echo -e "Item:\t$ITEM" >> "$ITEM_LOG_FILE"
+
+        # The actual execution of the command.
         TMP=`echo $COMMAND | grep -i '$ITEM'`
         if [ "$?" == "0"  ]
         then 
-            echo "=================" > "$ITEM_LOG_FILE"
-            echo "HOST = $HOSTNAME" >> "$ITEM_LOG_FILE"
-            echo "ITEM = $ITEM" >> "$ITEM_LOG_FILE"
-            ##ESCAPED=`echo "$ITEM" | sed -e s:\\\\\/:\\\\\\\\/:g`
-            #COMMAND=`echo $COMMAND | sed -e s:%ITEM%:"$ESCAPED":g`
-            #echo "COMMAND is $COMMAND" >> "$ITEM_LOG_FILE"
-
             eval "$COMMAND" >> "$ITEM_LOG_FILE" 2>&1
             ERROR="$?"
         else
             EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
-            echo EXECME is "$EXECME"
             eval "$EXECME"
             ERROR="$?"
         fi
 
-        if [ ! "$ERROR" == "0" ] && [ "$TRANSFER_TO_SLAVE" == "1" ]
+        # Some error logging. Success or fail.
+        if [ ! "$ERROR" == "0" ] 
         then
-           mv $ITEM $ITEM.error
-        elif [ "$TRANSFER_TO_SLAVE" == "1" ]      
+           echo -e "Status:\tError - something went wrong." >> "$ITEM_LOG_FILE"
+        else
+           echo -e "Status:\tSucces - item has been processed." >> "$ITEM_LOG_FILE"
+        fi
+
+        if [ "$TRANSFER_TO_SLAVE" == "1" ]      
         then
             if [ -e "$ITEM" ]
             then
