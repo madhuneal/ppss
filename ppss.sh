@@ -250,7 +250,7 @@ add_var_to_config () {
 while [ $# -gt 0 ]
 do
     case $1 in
-        --config )
+        --config|-C )
                         CONFIG="$2"
 
                         if [ "$MODE" == "config" ]
@@ -282,22 +282,22 @@ do
 
                         shift 2
                         ;;
-        --nodes ) 
+        --node|-n ) 
                         NODES_FILE="$2"
                         shift 2
                         ;;
 
-        --sourcefile )
+        --sourcefile|-f )
                         INPUT_FILE="$2"
                         add_var_to_config INPUT_FILE "$INPUT_FILE"
                         shift 2
                         ;;
-        --sourcedir ) 
+        --sourcedir|-d ) 
                         SRC_DIR="$2"
                         add_var_to_config SRC_DIR "$SRC_DIR"
                         shift 2
                         ;; 
-        --command ) 
+        --command|-c ) 
                         COMMAND=$2
                         if [ "$MODE" == "config" ]
                         then
@@ -307,20 +307,20 @@ do
                         shift 2
                         ;;
 
-        --help )
+        --help|-h )
                         showusage
                         exit 1;;
-        --hyperthreading )
+        --enable-ht|-j )
                         HYPERTHREADING=yes
                         add_var_to_config HYPERTHREADING "yes"
                         shift 1
                         ;;
-        --log )
+        --log|-l )
                         LOGFILE="$2"
                         add_var_to_config LOGFILE "$LOGFILE"
                         shift 2
                         ;;
-        --key )
+        --key|-k )
                         SSH_KEY="$2"
                         add_var_to_config SSH_KEY "$SSH_KEY"
                         if [ ! -z "$SSH_KEY" ]
@@ -329,17 +329,17 @@ do
                         fi
                         shift 2
                         ;;
-        --no-secure-copy )
+        --no-secure-copy|-b )
                         SECURE_COPY=0
                         add_var_to_config SECURE_COPY "$SECURE_COPY"
                         shift 1
                         ;;
-        --outputdir )
+        --outputdir|-o )
                         REMOTE_OUTPUT_DIR="$2"
                         add_var_to_config REMOTE_OUTPUT_DIR "$REMOTE_OUTPUT_DIR"
                         shift 2
                         ;;
-        --processes )
+        --processes|-p )
                         TMP="$2"
                         if [ ! -z "$TMP" ]
                         then
@@ -348,28 +348,28 @@ do
                             shift 2
                         fi
                         ;;
-        --server ) 
+        --server|-s ) 
                         SSH_SERVER="$2"
                         add_var_to_config SSH_SERVER "$SSH_SERVER"
                         shift 2
                         ;;
-        --script )
+        --script|-S )
                         SCRIPT="$2"
                         add_var_to_config SCRIPT "$SCRIPT"
                         shift 2
                         ;;
-        --transfer )
+        --transfer|-t )
                         TRANSFER_TO_SLAVE="1"    
                         add_var_to_config TRANSFER_TO_SLAVE "$TRANSFER_TO_SLAVE"
                         shift 1
                         ;;
-        --user )
+        --user|-u )
                         USER="$2"
                         add_var_to_config USER "$USER"
                         shift 2
                         ;;
 
-        --version )
+        --version|-v )
                         echo ""
                         echo "$SCRIPT_NAME version $SCRIPT_VERSION"
                         echo ""
@@ -593,7 +593,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node -config $CONFIG" 
+    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
 }
 
 
@@ -774,7 +774,6 @@ upload_item () {
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-        #scp -q $SSH_OPTS $SSH_KEY $PPSS_LOCAL_OUTPUT/"$ITEM"/* $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
         scp -q $SSH_OPTS $SSH_KEY $ITEM $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
@@ -965,7 +964,7 @@ commando () {
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
 
-    mkdir $PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
+    mkdir -p $PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
 
     does_file_exist "$ITEM_LOG_FILE"
     if [ "$?" == "0" ]
@@ -1013,7 +1012,7 @@ commando () {
 
         fi
 
-        if [ ! -z "$REMOTE_OUTPUT_DIR" ]
+        if [ ! -z "$REMOTE_OUTPUT_DIR" ] && [ ! -z "$SSH_SERVER" ] 
         then
             upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
         fi
@@ -1021,7 +1020,7 @@ commando () {
         if [ ! -z "$SSH_SERVER" ]
         then
             log DEBUG "Uploading item log file $ITEM_LOG_FILE to master."
-            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR 
+            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
         fi
     fi
 
