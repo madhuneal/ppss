@@ -151,7 +151,7 @@ exec_cmd () {
 
     CMD="$1"
 
-    if [ ! -z "$SSH_SERVER" ]
+    if [ ! -z "$SSH_SERVER" ] && [ "$SECURE_COPY" == "1" ]
     then
         ssh $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER $CMD
     else
@@ -184,7 +184,7 @@ check_for_interrupt () {
     does_file_exist "$PAUSE_SIGNAL"
     if [ "$?" == "0" ]
     then
-        log INFO "PAUSE: sleeping for $PAUSE_DELAY seconds."
+        log INFO "PAUSE: sleeping for $PAUSE_DELAY SECONDS."
         sleep $PAUSE_DELAY
         check_for_interrupt
     fi
@@ -784,7 +784,7 @@ upload_item () {
             rm $ITEM
         fi
     else    
-        cp "$PPSS_LOCAL_OUTPUT/$ITEM" $REMOTE_OUTPUT_DIR
+        cp "$ITEM" $REMOTE_OUTPUT_DIR
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
@@ -803,6 +803,10 @@ lock_item () {
         log DEBUG "Trying to lock item $ITEM."
         exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
         ERROR="$?"
+        if [ -e "$ITEM_LOCK_FILE" ]
+        then
+            exec_cmd "touch $ITEM_LOCK_FILE/$HOSTNAME"
+        fi
         return "$ERROR"
     fi
 }
@@ -830,8 +834,8 @@ get_all_items () {
         else 
             ITEMS=`ls -1 $SRC_DIR`
         fi
-        IFS="
-"
+        IFS=$'\n'
+
         for x in $ITEMS
         do
             ARRAY[$count]="$x"
@@ -845,9 +849,9 @@ get_all_items () {
             if [ ! -e "$INPUT_FILE" ]
             then
                 log INFO "ERROR - input file $INPUT_FILE does not exist."
+                cleanup 
+                exit 1
             fi
-            #scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:~/"$INPUT_FILE" >> /dev/null 2>&1
-            #check_status "$?" "$FUNCNAME" "Could not copy input file $INPUT_FILE."
         fi
     
         exec 10<$INPUT_FILE
@@ -864,7 +868,7 @@ get_all_items () {
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     if [ "$SIZE_OF_ARRAY" -le "0" ]
     then
-        echo "ERROR: source file/dir seems to be empty."
+        log INFO "ERROR: source file/dir seems to be empty."
         cleanup
         exit 1
     fi
@@ -947,6 +951,23 @@ start_single_worker () {
     fi
 }
 
+
+elapsed () {
+
+    BEFORE="$1"
+    AFTER="$2"
+
+    ELAPSED="$(expr $AFTER - $BEFORE)"
+
+    REMAINDER="$(expr $ELAPSED % 3600)"
+    HOURS="$(expr $(expr $ELAPSED - $REMAINDER) / 3600)"
+
+    SECS="$(expr $REMAINDER % 60)"
+    MINS="$(expr $(expr $REMAINDER - $SECS) / 60)"
+
+    echo "Elapsed time (h:m:s): $HOURS:$MINS:$SECS"
+}
+
 commando () {
 
     ITEM="$1"
@@ -976,29 +997,36 @@ commando () {
 
         # Some formatting of item log files. 
         DATE=`date +%b\ %d\ %H:%M:%S`
-        echo "=== PPSS Item Log File ===" > "$ITEM_LOG_FILE"
-        echo -e "Host:\t$HOSTNAME" >> "$ITEM_LOG_FILE"
-        echo -e "Date:\t$DATE" >> "$ITEM_LOG_FILE"
-        echo -e "Item:\t$ITEM" >> "$ITEM_LOG_FILE"
-
+        echo "===== PPSS Item Log File =====" > "$ITEM_LOG_FILE"
+        echo -e "Host:\t\t$HOSTNAME" >> "$ITEM_LOG_FILE"
+        echo -e "Item:\t\t$ITEM" >> "$ITEM_LOG_FILE"
+        echo -e "Start date:\t$DATE" >> "$ITEM_LOG_FILE"
+        echo -e "" >> "$ITEM_LOG_FILE"
+        
         # The actual execution of the command.
         TMP=`echo $COMMAND | grep -i '$ITEM'`
         if [ "$?" == "0"  ]
         then 
+            BEFORE="$(date +%s)"
             eval "$COMMAND" >> "$ITEM_LOG_FILE" 2>&1
             ERROR="$?"
+            AFTER="$(date +%s)"
         else
             EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
+            BEFORE="$(date +%s)"
             eval "$EXECME"
             ERROR="$?"
+            AFTER="$(date +%s)"
         fi
+
+        echo -e "" >> "$ITEM_LOG_FILE"
 
         # Some error logging. Success or fail.
         if [ ! "$ERROR" == "0" ] 
         then
-           echo -e "Status:\tError - something went wrong." >> "$ITEM_LOG_FILE"
+           echo -e "Status:\t\tError - something went wrong." >> "$ITEM_LOG_FILE"
         else
-           echo -e "Status:\tSucces - item has been processed." >> "$ITEM_LOG_FILE"
+           echo -e "Status:\t\tSucces - item has been processed." >> "$ITEM_LOG_FILE"
         fi
 
         if [ "$TRANSFER_TO_SLAVE" == "1" ]      
@@ -1016,6 +1044,11 @@ commando () {
         then
             upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
         fi
+        
+        log INFO "Before $BEFORE After $AFTER"
+
+        elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
+        echo -e "" >> "$ITEM_LOG_FILE"
 
         if [ ! -z "$SSH_SERVER" ]
         then
