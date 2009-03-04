@@ -423,7 +423,7 @@ init_vars () {
         log INFO "Job log directory $JOB_lOG_DIR does not exist. Creating."
         exec_cmd "mkdir $JOB_LOG_DIR"
     else
-        log INFO "Job log directory $JOB_LOG_DIR exists, if it contains logs for items, these items will be skipped."
+        log INFO "Job log directory $JOB_LOG_DIR exists, skipping items for which logs are present."
     fi
 
     does_file_exist "$ITEM_LOCK_DIR"
@@ -1045,8 +1045,6 @@ commando () {
             upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
         fi
         
-        log INFO "Before $BEFORE After $AFTER"
-
         elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
         echo -e "" >> "$ITEM_LOG_FILE"
 
@@ -1122,7 +1120,7 @@ main () {
     log INFO `hostname`
 
     case $MODE in
-        node ) 
+    node|standalone ) 
                     init_vars
                     test_server
                     get_all_items
