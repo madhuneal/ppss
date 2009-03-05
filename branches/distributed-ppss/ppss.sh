@@ -1,38 +1,37 @@
 #!/usr/bin/env bash
-#*
-#* PPSS, the Parallel Processing Shell Script
-#* 
-#* Copyright (c) 2009, Louwrentius
-#* All rights reserved.
-#*
-#* Redistribution and use in source and binary forms, with or without
-#* modification, are permitted provided that the following conditions are met:
-#*     * Redistributions of source code must retain the above copyright
-#*       notice, this list of conditions and the following disclaimer.
-#*     * Redistributions in binary form must reproduce the above copyright
-#*       notice, this list of conditions and the following disclaimer in the
-#*       documentation and/or other materials provided with the distribution.
-#*     * Neither the name of the <organization> nor the
-#*       names of its contributors may be used to endorse or promote products
-#*       derived from this software without specific prior written permission.
-#*
-#* THIS SOFTWARE IS PROVIDED BY Louwrentius ''AS IS'' AND ANY
-#* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-#* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#* DISCLAIMED. IN NO EVENT SHALL Louwrentius BE LIABLE FOR ANY
-#* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-#* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-#* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-#* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# PPSS, the Parallel Processing Shell Script
+# 
+# Copyright (c) 2009, Louwrentius
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY Louwrentius ''AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL Louwrentius BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-#------------------------------------------------------
-# It should not be necessary to edit antyhing.
-# Ofcource you can if it is necesary for your needs.
+#------------------------------------------------------------------------------
+# It should not be necessary to edit antyhing in this script..
+# Ofcource you can if it is necessary for your needs.
 # Send a patch if your changes may benefit others.
-#------------------------------------------------------
+#------------------------------------------------------------------------------
 
 # Handling control-c for a clean shutdown.
 trap 'kill_process; ' INT
@@ -41,11 +40,12 @@ trap 'kill_process; ' INT
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
 SCRIPT_VERSION="1.999"
 
+# The first argument to this script is always the 'mode'.
 MODE="$1"
 shift
+
 ARGS=$@
 CONFIG="config.cfg"
-DAEMON=0
 HOSTNAME=`hostname`
 ARCH=`uname`
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
@@ -62,12 +62,15 @@ PERCENT="0"
 PID="$$"
 LISTENER_PID=""
 IFS_BACKUP="$IFS"
-INTERVAL="10"                           # Polling interval to check if there are running jobs.
+INTERVAL="30"                           # Polling interval to check if there are running jobs.
 
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections over 1 master.
-SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET -o GlobalKnownHostsFile=./known_hosts -o ControlMaster=auto -o ConnectTimeout=5"
+SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
+                           -o GlobalKnownHostsFile=./known_hosts \
+                           -o ControlMaster=auto \
+                           -o ConnectTimeout=5"
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
@@ -86,29 +89,67 @@ showusage () {
     echo "$SCRIPT_NAME"
     echo "Version: $SCRIPT_VERSION"
     echo 
-    echo "Description: this script processess files or other items in parallel. It is designed to make"
-    echo "use of the multi-core CPUs. It will detect the number of available CPUs and start a thread "
-    echo "for each CPU core. It will also use hyperthreading if available." It has also support for
-    echo "distributed usage, using a Master server in conjunction with (multiple) slaves."
+    echo "PPSS is a Bash shell script that processes a list of items, such as files in a"
+    echo "directory, in parallel."
     echo 
-    echo "Usage: $0 [ options ]"
+    echo "Usage: $0 MODE [ options ]"
+    echo " or "
+    echo "Usage: $0 MODE -c <config file>"
+    echo 
+    echo "Modes are:"
+    echo 
+    echo " standalone   For execution of PPSS on a single host."
+    echo " node         For execution of PPSS on a node, that is part of a 'cluster'."
+    echo " server       Starting PPSS on nodes."
+    echo " config       Generate a config file based on the supplied option parameters."
+    echo " deploy       Deploy PPSS and related files on the specified nodes."
+    echo " erase        Erase PPSS and related files from the specified nodes."
     echo 
     echo "Options are:"
     echo 
-    echo -e "\t- c \tCommand to execute. Can be a custom script or just a plain command."
-    echo -e "\t- d \tDirectory containing items to be processed."
-    echo -e "\t- f \tFile containing items to be processed. (Alternative to -d)" 
-    echo -e "\t- l \tSpecifies name and location of the logfile."
-    echo -e "\t- p \tSpecifies number of simultaneous processes manually. (optional)"
-    echo -e "\t- j \tEnable or disable hyperthreading. Enabled by default. (optional)"
-    echo
-    echo "Options for distributed usage:"
+    echo -e "--command | -c     Command to execute. Syntax: '<command> ' including the single quotes."
+    echo -e "                   Example: -c 'ls -alh '. It is also possible to specify where an item "
+    echo -e "                   must be inserted: 'cp \"\$ITEM\" /somedir'."
     echo 
-    echo -e "\t- s \tUsername@server domain name or IP-address of 'PPSS master server'."
-    echo -e "\t- k \tSSH key file used for connection with 'PPSS master server'."
-    echo -e "\t- t \tTransfer remote item to slave for local processing."
-    echo -e "\t- o \tUpload output back to server into this directory."
-    echo -e "\t- b \tDo *not* use scp for item transfer but use cp. "
+    echo -e "--sourcedir | -d   Directory that contains files that must be processed. Individual files" 
+    echo -e "                   are fed as an argument to the command that has been specified with -c." 
+    echo 
+    echo -e "--sourcefile | -f  Each single line of the supplied file will be fed as an item to the"
+    echo -e "                   command that has been specified with -c."
+    echo 
+    echo -e "--config | -c      If the mode is config, a config file with the specified name will be"
+    echo -e "                   generated based on all the options specified. In the other modes". 
+    echo -e "                   this option will result in PPSS reading the config file and start"
+    echo -e "                   processing items based on the settings of this file."
+    echo
+    echo -e "--enable-ht | -j   Enable hyperthreading. Is disabled by default."
+    echo 
+    echo -e "--log | -l         Sets the name of the log file. The default is ppss-log.txt."
+    echo
+    echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
+    echo -e "                   CPU's."
+    echo
+    echo -e "The following options are used for distributed execution of PPSS."
+    echo 
+    echo -e "--server | -s      Specifies the SSH server that is used for communication between nodes."
+    echo -e "                   Using SSH, file locks are created, informing other nodes that an item "
+    echo -e "                   is locked. Also, often items, such as files, reside on this host. SCP "
+    echo -e "                   is used to transfer files from this host to nodes for local procesing."
+    echo
+    echo -e "--node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS "
+    echo -e "                   name per line."
+    echo
+    echo -e "--key | -k         The SSH key that a node uses to connect to the server."
+    echo
+    echo -e "--user | -u        The SSH user name that is used when logging in into the master SSH"
+    echo -e "                   server."
+    echo 
+    echo -e "--script | -s      Specifies the script/program that must be copied to the nodes for "
+    echo -e "                   execution by the nodes through PPSS. Only used in the deploy mode."
+    echo -e "                   This option should be specified if necessary when generating a config."
+    echo
+    echo -e "--transfer | -t    This option specifies that an item will be downloaded by the node "
+    echo -e "                   from the server or share to the local node for processing."
     echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
@@ -310,6 +351,12 @@ do
         --help|-h )
                         showusage
                         exit 1;;
+        --homedir|-H)
+                        PPSS_HOME_DIR="$2"
+                        add_Var_to_config PPSS_HOME_DIR $PPSS_HOME_DIR
+                        shift 2
+                        ;;
+                        
         --enable-ht|-j )
                         HYPERTHREADING=yes
                         add_var_to_config HYPERTHREADING "yes"
@@ -487,7 +534,7 @@ log () {
 
     echo -e "$LOG_MSG" >> "$LOGFILE"
 
-    if [ "$TYPE" == "INFO" ] && [ "$DAEMON" == "0" ]
+    if [ "$TYPE" == "INFO" ] 
     then
         echo -e "$LOG_MSG"
     fi
