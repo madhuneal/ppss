@@ -16,7 +16,7 @@ Items can be two things:
 
 Throughout this manual the word items will be used, but think of them as you please, most often it will be files.
 
-== Command line options ==
+== Basic command line options ==
 
 Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form.
 
@@ -34,9 +34,15 @@ Sometimes, the item should not be appended to the command, but inserted somewher
 
 Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
 
-$ ./ppss.sh standalone -f list.txt -c 'wget -q ' 
+`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q '` 
 
-In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started. 
+In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
+
+`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q "$ITEM"'`
+
+
+
+
 
 == logging (must read) == 
 
