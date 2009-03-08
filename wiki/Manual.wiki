@@ -14,7 +14,6 @@ Items can be two things:
   * files within a user-specified directory
   * arbitrary lines of text within a file
 
-
 When PPSS has finished, it has produced a log file of its operation. By default, this file is called ppss-log.txt.
 
 Also, a directory is created, by default JOB_LOG. Within this directory a logfile exists for each item that has been processed. If a log file is present for an item, and PPSS is re-run, these items will be skipped.
@@ -44,10 +43,12 @@ In this example, a list of URLs is provided by the file list.txt. These urls are
 `$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q "$ITEM"'`
 
 
+== Advanced command line options ==
 
 
 
-== logging (must read) == 
+
+== Logging (must read) == 
 
 There are two separate log mechanisms:
 
@@ -61,6 +62,18 @@ The logfile of PPSS is by default ppss-log.txt. A different name can be chosen w
 _Item log file_
 
 When an item is processed, any output that is generated is logged within its individual log file. This logfile resides within the directory job_log. This directory is created from where PPSS is executed. 
+
+{{{
+===== PPSS Item Log File =====
+Host:		imac-2.local
+Item:		PPSS_LOCAL_TMPDIR/20080602.wav
+Start date:	Mar 03 00:10:32
+
+Encode of PPSS_LOCAL_TMPDIR/20080602.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:4:48
+}}}
 
 If you tailor your command the right way, or create a (small) script, it is very easy to determine which items have not been processed correctly. A simple grep on 'error' might already give a clue. 
 
