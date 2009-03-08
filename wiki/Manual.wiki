@@ -1,15 +1,13 @@
-#summary PPSS Manual
+#summary PPSS Manual (Stand-alone)
 #labels Phase-Deploy
-
- * This page is not finished *
 
 = Introduction =
 
-This page discusses the usage of PPSS with examples. It explains how PPSS should be used.
+This page discusses the usage of PPSS on a single host. Examples show how PPSS is used. 
 
 = How to use PPSS =
 
-PPSS allows a user to process a collection of items in parallel. That's it. It's sole purpose is to turn a batch job into a parallel batch job. This is relevant, since modern day processors are almost always multi-core and are designed to process jobs in parallel. 
+PPSS allows a user to execute commands, scripts or programs in parallel. That's it. It's sole purpose is to turn a batch job into a parallel batch job. This is relevant, since modern day processors are almost always multi-core and are designed to process jobs in parallel, so why not use it?
 
 Items can be two things: 
 
@@ -22,21 +20,21 @@ Throughout this manual the word items will be used, but think of them as you ple
 
 Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form.
 
-`$ ./ppss.sh -d /path/to/files -c 'gzip '`
+`$ ./ppss.sh standalone -d /path/to/files -c 'gzip '`
 
-In this example, we can distinguish two options. The -d option specifies the location of the files that must be processed. The full path to the file within this directory will be appended to the command that is specified with the -c option. That is all there is to it. PPSS will determine how many parallel commands it must start based on the number of available cpu cores.
+In this example, we can distinguish a 'mode' and two options. The mode speaks for itself: PPSS is not part of a cluster, it is just running on the host. 
 
-*TIP* - the item will be directly appended to the command that is executed, so it may be necessary to specify a *space* within the -c command. Example:
+The -d option specifies the directory where the files reside that must be processed. 
 
-`$ ./ppss.sh -d /path/to/files -c 'touch '` 
+The -c option specifies the command that will be executed by PPSS in parallel for each file within the directory specified by -d. In this example the command has a *trailing space*, which is necessary since the command will expand to 'gzip example.tar' when executed. If the space is omitted, an error will occur. 
 
-In this rather silly example, for each file in /path/to/files, the file will be 'touched' with the touch command. This example illustrates that a space should be added to a command if the item forms a command line argument by itself and is not appended to a path. This is especially relevant if a script is executed with the item as an argument. 
+Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
 
-$ ./ppss.sh -d /path/to/files -c './somescript.sh '
+`$ ./ppss.sh standalone -d /path/to/files -c 'cp "$ITEM" /destination/dir '`
 
 Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
 
-$ ./ppss.sh -f list.txt -c 'wget -q ' -p 5 
+$ ./ppss.sh standalone -f list.txt -c 'wget -q ' 
 
 In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started. 
 
