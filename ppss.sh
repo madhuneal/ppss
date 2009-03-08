@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="1.999"
+SCRIPT_VERSION="2.0"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -145,7 +145,7 @@ showusage () {
     echo -e "                   server."
     echo 
     echo -e "--script | -s      Specifies the script/program that must be copied to the nodes for "
-    echo -e "                   execution by the nodes through PPSS. Only used in the deploy mode."
+    echo -e "                   execution through PPSS. Only used in the deploy mode."
     echo -e "                   This option should be specified if necessary when generating a config."
     echo
     echo -e "--transfer | -t    This option specifies that an item will be downloaded by the node "
@@ -153,6 +153,10 @@ showusage () {
     echo 
     echo -e "--no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a"
     echo -e "                   network file system (NFS/SMB) is mounted under a local mountpoint."
+    echo 
+    echo -e "--outputdir | -o   Directory on server where processed files are put. If the result of "
+    echo -e "                   encoding a wav file is an mp3 file, the mp3 file is put in the "
+    echo -e "                   directory specified with this option."
     echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
@@ -356,9 +360,12 @@ do
                         showusage
                         exit 1;;
         --homedir|-H)
-                        PPSS_HOME_DIR="$2"
-                        add_Var_to_config PPSS_HOME_DIR $PPSS_HOME_DIR
-                        shift 2
+                        if [ ! -z "$2" ]
+                        then
+                            PPSS_HOME_DIR="$2"
+                            add_var_to_config PPSS_HOME_DIR $PPSS_HOME_DIR
+                            shift 2
+                        fi
                         ;;
                         
         --enable-ht|-j )
@@ -1239,6 +1246,7 @@ main () {
                     exit
                     ;;
         deploy )
+                    log INFO "Deploying PPSS on nodes."
                     deploy_ppss
                     cleanup
                     exit 0
@@ -1250,6 +1258,7 @@ main () {
                     # some show command
                     ;;
         erase )
+                    log INFO "Erasing PPSS from all nodes."
                     erase_ppss
                     cleanup
                     exit 0
@@ -1269,7 +1278,7 @@ while true
 do
     sleep 5
     JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
-    log INFO "JOBS is jobs: $JOBS"
+    log INFO "There are $JOBS running processes. "
     
     MIN_JOBS=3
 
@@ -1283,7 +1292,7 @@ do
 
     if [ "$JOBS" -gt "$MIN_JOBS" ] 
     then
-        log INFO "Sleeping $INTERVAL..." 
+        log INFO "Sleeping $INTERVAL seconds." 
         sleep $INTERVAL
     else
             echo -en "\033[1B"
