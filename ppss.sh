@@ -151,6 +151,9 @@ showusage () {
     echo -e "--transfer | -t    This option specifies that an item will be downloaded by the node "
     echo -e "                   from the server or share to the local node for processing."
     echo 
+    echo -e "--no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a"
+    echo -e "                   network file system (NFS/SMB) is mounted under a local mountpoint."
+    echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
     echo -e "$0 -c 'lame ' -d /path/to/wavfiles -l logfile -j (wach out for the space in -c)" 
@@ -376,7 +379,7 @@ do
                         fi
                         shift 2
                         ;;
-        --no-secure-copy|-b )
+        --no-scp |-b )
                         SECURE_COPY=0
                         add_var_to_config SECURE_COPY "$SECURE_COPY"
                         shift 1
