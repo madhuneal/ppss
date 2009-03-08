@@ -14,7 +14,10 @@ Items can be two things:
   * files within a user-specified directory
   * arbitrary lines of text within a file
 
-Throughout this manual the word items will be used, but think of them as you please, most often it will be files.
+
+When PPSS has finished, it has produced a log file of its operation. By default, this file is called ppss-log.txt.
+
+Also, a directory is created, by default JOB_LOG. Within this directory a logfile exists for each item that has been processed. If a log file is present for an item, and PPSS is re-run, these items will be skipped.
 
 == Basic command line options ==
 
