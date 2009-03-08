@@ -15,6 +15,5 @@ For distributed PPSS, a host with SSH access is necessary, that will act as a se
   * SSH(D)
   * Screen
 
-  * on the server, an unprivileged user
-  * on the nodes, an unprivileged user
+  * On both node and server, an unprivileged user is required.
   * SSH key with no pass-phrase for node -> server connection. 
