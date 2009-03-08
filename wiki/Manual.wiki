@@ -45,9 +45,12 @@ In this example, a list of URLs is provided by the file list.txt. These urls are
 
 == Advanced command line options ==
 
+*must be expanded*
 
-
-
+  * -p <configure manually number of parallel processes>
+  * -j <enable hyper threading>
+  * -l <PPSS log file>
+  
 == Logging (must read) == 
 
 There are two separate log mechanisms:
