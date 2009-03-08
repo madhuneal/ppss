@@ -21,7 +21,7 @@ Also, a directory is created, by default JOB_LOG. Within this directory a logfil
 
 == Basic command line options ==
 
-Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form.
+Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form. In this example, some files are compressed with gzip. 
 
 `$ ./ppss.sh standalone -d /path/to/files -c 'gzip '`
 
