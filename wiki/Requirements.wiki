@@ -1,6 +1,4 @@
-#summary What is required in order to run PPSS?
 #labels Phase-Requirements
-
 = Requirements =
 
 The sole requirement for PPSS to work is the Bash shell and the availability of the mkfifo command. PPSS is written using features that are specific to the Bash shell and is thus not portable to shells like dash and ksh. 
