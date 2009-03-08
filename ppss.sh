@@ -328,6 +328,7 @@ do
                         ;;
         --node|-n ) 
                         NODES_FILE="$2"
+                        add_var_to_config NODES_FILE "$NODES_FILE"
                         shift 2
                         ;;
 
@@ -579,7 +580,6 @@ erase_ppss () {
 deploy_ppss () {
 
     ERROR=0
-
     set_error () {
 
         if [ ! "$1" == "0" ]
@@ -587,6 +587,13 @@ deploy_ppss () {
             ERROR=$1 
         fi
     }
+
+    if [ -z "$NODES_FILE" ]
+    then
+        log INFO "ERROR - are you using the right option? -C ?"
+        cleanup 
+        exit 1
+    fi
     
     KEY=`echo $SSH_KEY | cut -d " " -f 2` 
     if [ -z "$KEY" ] || [ ! -e "$KEY" ]
@@ -1178,7 +1185,7 @@ main () {
                     LISTENER_PID=$!
                     start_all_workers
                     ;;
-        server )
+        start )
                     # This option only starts all nodes.
                     init_vars
                 
@@ -1206,7 +1213,30 @@ main () {
                     ;;
 
         stop )
-                    #some stop
+                    log INFO "Stopping PPSS on all nodes."
+                    exec_cmd "touch $STOP_SIGNAL"
+                    cleanup
+                    exit
+                    ;;
+        pause )
+                    log INFO "Pausing PPSS on all nodes."
+                    exec_cmd "touch $PAUSE_SIGNAL"
+                    cleanup
+                    exit
+                    ;;
+        continue )
+                    if does_file_exist "$STOP_SIGNAL"
+                    then
+                        log INFO "Continuing processing, please use $0 start to start PPSS on al nodes."
+                        exec_cmd "rm -f $STOP_SIGNAL"
+                    fi
+                    if does_file_exist "$PAUSE_SIGNAL"
+                    then
+                        log INFO "Continuing PPSS on all nodes."
+                        exec_cmd "rm -f $PAUSE_SIGNAL"
+                    fi
+                    cleanup
+                    exit
                     ;;
         deploy )
                     deploy_ppss
