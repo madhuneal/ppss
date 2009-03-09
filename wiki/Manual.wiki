@@ -163,7 +163,9 @@ There are two separate log mechanisms:
 
 _PPSS log file_
 
+
 The logfile of PPSS is by default ppss-log.txt. A different name can be chosen with the -l option. It contains all relevant information about what PPSS is doing. 
+
 
 _Item log file_
 
