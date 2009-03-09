@@ -9,8 +9,9 @@ This page discusses the usage of PPSS on a single host. Examples show how PPSS i
 
 The following output is displayed by PPSS when executed without any options:
 
-{{{
-Distributed Parallel Processing Shell Script
+{{{ 
+
+'Distributed Parallel Processing Shell Script
 Version: 2.0
 
 PPSS is a Bash shell script that executes commands in parallel on a set  
@@ -54,7 +55,7 @@ Options are:
 --log | -l         Sets the name of the log file. The default is ppss-log.txt.
 
 --processes | -p   Start the specified number of processes. Ignore the number of available
-                   CPU's.
+                   CPUs.
 
 The following options are used for distributed execution of PPSS.
 
@@ -95,7 +96,7 @@ Running PPSS based on a configuration file.
 
 Running PPSS on a client as part of a cluster.
 
-./ppss.sh node -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key
+./ppss.sh node -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key'
 }}}
 A detailed explanation based on examples will follow. 
 
@@ -139,11 +140,19 @@ In this example, a list of URLs is provided by the file list.txt. These urls are
 
 == Advanced command line options ==
 
-*must be expanded*
+In this paragraph, some additional options are discussed.
 
-  * -p <configure manually number of parallel processes>
-  * -j <enable hyper threading>
-  * -l <PPSS log file>
+* -p <configure manually number of parallel processes>*
+
+This option allows you to specify how many parallel proceses should be started. Thus, automatic detection of CPUs and cores is overruled. This is useful, for example, when downloading a bunch of files in parallel, or other tasks that are not bound by the number of available CPUs. 
+
+* -j <enable hyper threading>*
+
+If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core 7i quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
+
+* -l <PPSS log file>*
+
+This option allows you to specify a custom name for the log file that is used by PPSS itself. 
   
 == Logging (must read) == 
 
