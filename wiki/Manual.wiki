@@ -10,7 +10,7 @@ This page discusses the usage of PPSS on a single host. Examples show how PPSS i
 The following output is displayed by PPSS when executed without any options:
 
 {{{
-istributed Parallel Processing Shell Script
+Distributed Parallel Processing Shell Script
 Version: 2.0
 
 PPSS is a Bash shell script that executes commands in parallel on a set  
@@ -96,7 +96,7 @@ Running PPSS based on a configuration file.
 Running PPSS on a client as part of a cluster.
 
 ./ppss.sh node -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key
-}}
+}}}
 
 A detailed explanation based on examples will follow. 
 
