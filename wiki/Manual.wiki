@@ -171,6 +171,8 @@ _Item log file_
 
 When an item is processed, any output that is generated is logged within its individual log file. This logfile resides within the directory job_log. This directory is created from where PPSS is executed. 
 
+An example of the output of a single log file for a single item is shown below:
+
 {{{
 ===== PPSS Item Log File =====
 Host:		imac-2.local
