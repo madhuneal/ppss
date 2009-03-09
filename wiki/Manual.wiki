@@ -97,7 +97,6 @@ Running PPSS on a client as part of a cluster.
 
 ./ppss.sh node -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key
 }}}
-
 A detailed explanation based on examples will follow. 
 
 = How to use PPSS =
