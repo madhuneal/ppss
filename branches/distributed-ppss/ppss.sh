@@ -89,8 +89,8 @@ showusage () {
     echo "$SCRIPT_NAME"
     echo "Version: $SCRIPT_VERSION"
     echo 
-    echo "PPSS is a Bash shell script that processes a list of items, such as files in a"
-    echo "directory, in parallel."
+    echo "PPSS is a Bash shell script that executes commands in parallel on a set  "
+    echo "of items, such as files, or lines in a file."
     echo 
     echo "Usage: $0 MODE [ options ]"
     echo " or "
@@ -100,10 +100,13 @@ showusage () {
     echo 
     echo " standalone   For execution of PPSS on a single host."
     echo " node         For execution of PPSS on a node, that is part of a 'cluster'."
-    echo " server       Starting PPSS on nodes."
     echo " config       Generate a config file based on the supplied option parameters."
     echo " deploy       Deploy PPSS and related files on the specified nodes."
     echo " erase        Erase PPSS and related files from the specified nodes."
+    echo
+    echo " start        Starting PPSS on nodes."
+    echo " pause        Pausing PPSS on all nodes."
+    echo " stop         Stopping PPSS on all nodes."
     echo 
     echo "Options are:"
     echo 
@@ -160,7 +163,15 @@ showusage () {
     echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
-    echo -e "$0 -c 'lame ' -d /path/to/wavfiles -l logfile -j (wach out for the space in -c)" 
+    echo -e "$0 standalone -c 'lame ' -d /path/to/wavfiles -j " 
+    echo 
+    echo -e "Running PPSS based on a configuration file."
+    echo
+    echo -e "$0 node -C config.cfg"
+    echo 
+    echo -e "Running PPSS on a client as part of a cluster."
+    echo 
+    echo -e "$0 node -d /somedir -c 'cp "$ITEM" /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key"
     echo    
 }
 
@@ -1179,12 +1190,12 @@ show_status () {
 main () {
     
     is_running    
-    log DEBUG "---------------- START ---------------------"
-    log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
-    log INFO `hostname`
 
     case $MODE in
     node|standalone ) 
+                    log DEBUG "---------------- START ---------------------"
+                    log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
+                    log INFO `hostname`
                     init_vars
                     test_server
                     get_all_items
