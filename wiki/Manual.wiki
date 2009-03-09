@@ -5,6 +5,101 @@
 
 This page discusses the usage of PPSS on a single host. Examples show how PPSS is used. 
 
+= Overview of modes and options =
+
+The following output is displayed by PPSS when executed without any options:
+
+{{{
+istributed Parallel Processing Shell Script
+Version: 2.0
+
+PPSS is a Bash shell script that executes commands in parallel on a set  
+of items, such as files, or lines in a file.
+
+Usage: ./ppss.sh MODE [ options ]
+ or 
+Usage: ./ppss.sh MODE -c <config file>
+
+Modes are:
+
+ standalone   For execution of PPSS on a single host.
+ node         For execution of PPSS on a node, that is part of a 'cluster'.
+ config       Generate a config file based on the supplied option parameters.
+ deploy       Deploy PPSS and related files on the specified nodes.
+ erase        Erase PPSS and related files from the specified nodes.
+
+ start        Starting PPSS on nodes.
+ pause        Pausing PPSS on all nodes.
+ stop         Stopping PPSS on all nodes.
+
+Options are:
+
+--command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
+                   Example: -c 'ls -alh '. It is also possible to specify where an item 
+                   must be inserted: 'cp "$ITEM" /somedir'.
+
+--sourcedir | -d   Directory that contains files that must be processed. Individual files
+                   are fed as an argument to the command that has been specified with -c.
+
+--sourcefile | -f  Each single line of the supplied file will be fed as an item to the
+                   command that has been specified with -c.
+
+--config | -c      If the mode is config, a config file with the specified name will be
+                   generated based on all the options specified. In the other modes.
+                   this option will result in PPSS reading the config file and start
+                   processing items based on the settings of this file.
+
+--enable-ht | -j   Enable hyperthreading. Is disabled by default.
+
+--log | -l         Sets the name of the log file. The default is ppss-log.txt.
+
+--processes | -p   Start the specified number of processes. Ignore the number of available
+                   CPU's.
+
+The following options are used for distributed execution of PPSS.
+
+--server | -s      Specifies the SSH server that is used for communication between nodes.
+                   Using SSH, file locks are created, informing other nodes that an item 
+                   is locked. Also, often items, such as files, reside on this host. SCP 
+                   is used to transfer files from this host to nodes for local procesing.
+
+--node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS 
+                   name per line.
+
+--key | -k         The SSH key that a node uses to connect to the server.
+
+--user | -u        The SSH user name that is used when logging in into the master SSH
+                   server.
+
+--script | -s      Specifies the script/program that must be copied to the nodes for 
+                   execution through PPSS. Only used in the deploy mode.
+                   This option should be specified if necessary when generating a config.
+
+--transfer | -t    This option specifies that an item will be downloaded by the node 
+                   from the server or share to the local node for processing.
+
+--no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a
+                   network file system (NFS/SMB) is mounted under a local mountpoint.
+
+--outputdir | -o   Directory on server where processed files are put. If the result of 
+                   encoding a wav file is an mp3 file, the mp3 file is put in the 
+                   directory specified with this option.
+
+Example: encoding some wav files to mp3 using lame:
+
+./ppss.sh standalone -c 'lame ' -d /path/to/wavfiles -j 
+
+Running PPSS based on a configuration file.
+
+./ppss.sh node -C config.cfg
+
+Running PPSS on a client as part of a cluster.
+
+./ppss.sh node -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key
+}}
+
+A detailed explanation based on examples will follow. 
+
 = How to use PPSS =
 
 PPSS allows a user to execute commands, scripts or programs in parallel. That's it. It's sole purpose is to turn a batch job into a parallel batch job. This is relevant, since modern day processors are almost always multi-core and are designed to process jobs in parallel, so why not use it?
