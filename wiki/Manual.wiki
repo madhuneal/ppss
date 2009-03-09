@@ -80,4 +80,4 @@ Elapsed time (h:m:s): 0:4:48
 
 If you tailor your command the right way, or create a (small) script, it is very easy to determine which items have not been processed correctly. A simple grep on 'error' might already give a clue. 
 
-*Important:* If a log file exists for an item, and PPSS is run again, that item will be skipped. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
+*Important:* If a log file exists for an item, within the job_log directory, and PPSS is run again, that item will be skipped. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
