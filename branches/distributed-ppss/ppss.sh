@@ -459,9 +459,9 @@ init_vars () {
         rm $LOGFILE
     fi
 
-    log DEBUG "---------------------------------------------------------"
+    log INFO "---------------------------------------------------------"
     log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
-    log DEBUG "---------------------------------------------------------"
+    log INDO "---------------------------------------------------------"
     log INFO "Hostname: $HOSTNAME"
 
     if [ -z "$COMMAND" ]
@@ -492,15 +492,15 @@ init_vars () {
         MAX_NO_OF_RUNNING_JOBS=`get_no_of_cpus $HYPERTHREADING`
     fi
 
-    log DEBUG "---------------------------------------------------------"
+    log INFO "---------------------------------------------------------"
 
     does_file_exist "$JOB_LOG_DIR"
     if [ ! "$?" == "0" ]
     then
-        log INFO "Job log directory $JOB_lOG_DIR does not exist. Creating."
+        log DEBUG "Job log directory $JOB_lOG_DIR does not exist. Creating."
         exec_cmd "mkdir $JOB_LOG_DIR"
     else
-        log INFO "Job log directory $JOB_LOG_DIR exists, skipping items for which logs are present."
+        log DEBUG "Job log directory $JOB_LOG_DIR exists."
     fi
 
     does_file_exist "$ITEM_LOCK_DIR"
