@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.0"
+SCRIPT_VERSION="2.03"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -459,6 +459,11 @@ init_vars () {
         rm $LOGFILE
     fi
 
+    log DEBUG "---------------------------------------------------------"
+    log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
+    log DEBUG "---------------------------------------------------------"
+    log INFO "Hostname: $HOSTNAME"
+
     if [ -z "$COMMAND" ]
     then
         echo
@@ -486,6 +491,8 @@ init_vars () {
     then 
         MAX_NO_OF_RUNNING_JOBS=`get_no_of_cpus $HYPERTHREADING`
     fi
+
+    log DEBUG "---------------------------------------------------------"
 
     does_file_exist "$JOB_LOG_DIR"
     if [ ! "$?" == "0" ]
@@ -563,8 +570,6 @@ log () {
     fi
 
 }
-
-log INFO "$0 $@"
 
 check_status () {
 
@@ -725,6 +730,7 @@ get_no_of_cpus () {
             NUMBER=`grep ^processor $CPUINFO | wc -l`
             got_cpu_info "$?"
         fi
+        log DEBUG "Found $NUMBER logic processors."
     elif [ "$HPT" == "no" ]
     then
         log DEBUG "Hyperthreading is disabled."
@@ -734,24 +740,23 @@ get_no_of_cpus () {
             if [ "$?" == "0" ]
             then
                 PHYSICAL=`grep 'physical id' $CPUINFO | sort | uniq | wc -l`
-                log DEBUG "Detected $PHYSICAL CPU(s)"
-                TMP=`grep 'cpu cores' $CPUINFO` 
+                log DEBUG "Detected $PHYSICAL physical CPU(s)"
+                TMP=`grep 'core id' $CPUINFO` 
                 if [ "$?" == "0" ]
                 then
-                    MULTICORE=`grep 'cpu cores' $CPUINFO | sort | uniq | cut -d ":" -f 2 | sed s/\ //g` 
-                    log DEBUG "Detected $MULTICORE cores per CPU."
-                    NUMBER=$(($PHYSICAL*$MULTICORE))
+                    log DEBUG "Starting job only for each physical core on all physical CPU(s)."
+                    NUMBER=`grep 'core id' $CPUINFO | sort | uniq | wc -l` 
+                    log DEBUG "Found $NUMBER physical cores."
                 else
-                    log DEBUG "Starting job only for each physical CPU."
+                    log DEBUG "Single core processor(s) detected (or you found a bug)."
+                    log DEBUG "Starting job (only) for each physical CPU."
                     NUMBER=$PHYSICAL
                 fi
             else
-                log DEBUG "No 'physical id' section found in $CPUINFO."            
+                log DEBUG "No 'physical id' section found in $CPUINFO, is this a bug?."            
                 NUMBER=`grep ^processor $CPUINFO | wc -l`
                 got_cpu_info "$?"
             fi
-                
-
         elif [ "$ARCH" == "Darwin" ]
         then
             NUMBER=`sysctl -a hw | grep -w physicalcpu | awk '{ print $2 }'`
@@ -1206,11 +1211,9 @@ main () {
     
     is_running    
 
+
     case $MODE in
     node|standalone ) 
-                    log DEBUG "---------------- START ---------------------"
-                    log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
-                    log INFO `hostname`
                     init_vars
                     test_server
                     get_all_items
@@ -1220,7 +1223,6 @@ main () {
                     ;;
         start )
                     # This option only starts all nodes.
-                    init_vars
                 
                     if [ ! -e "$NODES_FILE" ]
                     then
@@ -1304,7 +1306,7 @@ while true
 do
     sleep 5
     JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
-    log INFO "There are $JOBS running processes. "
+    log DEBUG "There are $JOBS running processes. "
     
     MIN_JOBS=3
 
@@ -1318,7 +1320,7 @@ do
 
     if [ "$JOBS" -gt "$MIN_JOBS" ] 
     then
-        log INFO "Sleeping $INTERVAL seconds." 
+        log DEBUG "Sleeping $INTERVAL seconds." 
         sleep $INTERVAL
     else
             echo -en "\033[1B"
