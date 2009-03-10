@@ -28,3 +28,11 @@ Please note that usage of SSH keys without pass phrases may pose a security thre
 == Create a PPSS configuration file ==
 
 *TODO*
+
+== Deploy PPSS to nodes ==
+
+*TODO*
+
+== Start PPSS on nodes ==
+
+*TODO*
