@@ -23,7 +23,7 @@ The following preparations must be made in order to use PPSS in a distributed fa
   # Place PPSS on the server within the PPSS home directory. 
 
 *Security* 
-Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
+Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with this setup is acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
 
 == Create a PPSS configuration file ==
 
