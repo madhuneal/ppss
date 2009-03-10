@@ -4,7 +4,7 @@
 
 To use PPSS in a distributed fasion, The following steps must be performed:
 
- # Make the necessary preparations on server and nodes.
+ # Setup SSH access on server and nodes.
  # Create a configuration file for PPSS, that will be distributed to nodes.
  # Deploy PPSS to the nodes.
  # Start PPSS on all nodes. 
