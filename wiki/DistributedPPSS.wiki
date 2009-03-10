@@ -1,46 +1,35 @@
-#summary How distributed PPSS will look like
+#summary How distributed PPSS works
 #labels Phase-Design
 
 = Introduction =
 
-The goal is to make PPSS distributed. So a large number of host can be used to process items, not just a single host (node). These nodes will share a single list of items that they will process in parallel.
+PPSS allows you to distribute jobs to multiple hosts, thus allowing for distributed processing. So a large number of host can be used to process items, not just a single host (node). These nodes will share a single list of items that they will process in parallel.
 
-To keep track of which items have been processed by a node, nodes must be able to communicate with each other. Therefore, a server is necessary. The primary role of the server is just a communication channel for nodes. Nodes use the server to signal to other nodes that an item is being processed is processed. So two nodes will never process the same file. 
+To keep track of which items have been processed by a node, nodes must be able to communicate with each other. Therefore, a server is necessary. The primary role of the server is just a communication channel for nodes. Nodes use the server to signal to other nodes that an item is being processed or has been processed. So nodes will never process the same file. 
 
 http://home.quicknet.nl/mw/prive/nan1/img/ppss.png
 
-The secondary role of the server is to act as a file server. Assuming that files are processed, files stored on the PPSS server are transfered to the node, that will proces a file and store the result back on the server.
+The secondary role of the server is to act as a file server. Assuming that files are processed, files stored on the PPSS server are transferred to the node, that will process a file and store the result back on the server.
 
-PPSS is very flexible: the file server can be a different host than the PPSS server that is used for inter-node communication. 
+PPSS is very flexible: the file server can be a different host than the PPSS server that is used for inter-node communication. Beware: currently, this is only possible based on NFS/SMB shares, not for usage of SSH/SCP. 
 
 = Design considerations =
 
 == Node installation ==
 
-Installing PPSS on a larger number of hosts will become an appalling boring repetitive and time consuming task if this is performed manually. The following actions must be performed on a node:
-
-  * create a ppss user or use an existing *unprivileged* system account (do not use root). 
-  * copy ppss.sh to the node.
-  * copy privade ssh key to the node (in a secure way).
-  * create a crontab entry to start ppss automatically on the node.
-
-I have to come up with a simple solution to automate this process. Currently, I'm considering creating a separate tool that deploys PPSS. This tool should use a list of IP addresses and/or host names as input and install PPSS on those hosts using SSH and SCP. However, this functionality could also be implemented as a function within PPSS.
+Installing PPSS on a larger number of hosts will become an appalling boring repetitive and time consuming task if this is performed manually. Therefore, PPSS has a mode called 'deploy'. In this mode, PPSS connects to each node using SSH and deploys PPSS on this node. If you want to remove PPSS, use the mode 'erase'. 
 
 == Node control ==
 
 If a larger number of nodes are used, say more than five to ten, it will be a hassle to control these nodes individually by hand. The question is how to control all nodes without having to access nodes manually. Starting new jobs, pausing and stopping jobs should be controlled from a central location. 
 
-The easiest solution that comes to mind is to use a central configuration or instruction file on the central server. Nodes will be able to access this file, read its contents and act accordingly.
+The modes 'start', 'pause', and 'stop', implement this functionality. They signal to nodes that PPSS must start, pause or stop.
 
 == Node status ==
 
 If a larger number of nodes are used, it would be nice if some simple overview could be generated about the current status of nodes and the overal progress of the entire process.
 
-== Locking of items through SSH == 
-
-According to many sources on the Internet, the only reliable solution to *atomic* locking is to use the 'mkdir' command to create a file. The fun thing is that this is also true if 'mkdir' is executed through SSH. 
-
-So a node tries to lock a file by issueing a mkdir on the server through SSH. If this mkdir fails, the directory and thus the lock already exists and the next item in the list is tried. 
+Currently, there is no status of specific hosts, but the 'status' mode displays the overall progress of PPSS.
 
 == Item (file) distribution == 
 
@@ -50,16 +39,27 @@ If items are files that need to be processed, they can be accessed in two ways:
 
   * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is more resource intensive (CPU) than SMB or NFS.
 
-When using PPSS in a distributed fashion, it should be decided if files can be processed in-place on the file server through the share, or that they must be copied to the node first before being processed. 
+When using PPSS in a distributed fashion, it should be decided if files can be processed in-place on the file server through the share, or that they must be copied to the node first before being processed. The latter is the most robust solution.
+
+= Technical background = 
+
+== Locking of items through SSH == 
+
+According to many sources on the Internet, the only reliable solution to *atomic* locking is to use the 'mkdir' command to create a file. The fun thing is that this is also true if 'mkdir' is executed through SSH. 
+
+So a node tries to lock a file by issueing a mkdir on the server through SSH. If this mkdir fails, the directory and thus the lock already exists and the next item in the list is tried. 
 
 == Requirements ==
 
   * A central server for inter-node communication (item locking).
     * Accessible through SSH.
+
   * A central server for file distribution (optional).
     * Sufficient bandwidth (gigabit? totally depends on your needs.).
     *   SCP / NFS / SMB share for distributing files.
-  * One or more slaves.
+
+  * One or more nodes.
+    * Accessible through SSH.
     * Must support Bash shell.
 
 Please note that it is *NOT* required to run PPSS on the central Master server. Only slaves need PPSS installed. Also the central server for inter-node communication (item locking) can (and will often be) the same host as the file server.
