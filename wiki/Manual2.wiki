@@ -9,8 +9,6 @@ To use PPSS in a distributed fasion, The following steps must be performed:
  # Deploy PPSS to the nodes.
  # Start PPSS on all nodes. 
 
-some preparations need to be made.
-
 == Preparation of server and nodes ==
 
 The following preparations must be made in order to use PPSS in a distributed fasion:
