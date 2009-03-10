@@ -869,7 +869,7 @@ upload_item () {
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-        scp -q $SSH_OPTS $SSH_KEY "$ITEM" $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
+        scp -q $SSH_OPTS $SSH_KEY $ITEM $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
