@@ -1,5 +1,5 @@
 #summary PPSS Manual (Stand-alone)
-#labels Phase-Deploy
+#labels Deprecated
 
 = Introduction =
 
