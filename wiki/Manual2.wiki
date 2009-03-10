@@ -2,12 +2,29 @@
 
 = Introduction =
 
-* Under construction *
+To use PPSS in a distributed fasion, The following steps must be performed:
 
+ # Make the necessary preparations on server and nodes.
+ # Create a configuration file for PPSS, that will be distributed to nodes.
+ # Deploy PPSS to the nodes.
+ # Start PPSS on all nodes. 
 
-= Details =
+some preparations need to be made.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== Preparation of server and nodes ==
+
+The following preparations must be made in order to use PPSS in a distributed fasion:
+
+  # Create an unprivileged user 'ppss' on the server.
+  # Create an unprivileged user 'ppss' on each node.
+  # Generate a SSH key without a pass phrase.
+  # Add the SSH key to the authorized_keys file of the 'ppss' user on the server.
+  # Add the SSH key to the authorized_keys file of the 'ppss' user on the client.  
+  # Place PPSS on the server within the PPSS home directory. 
+
+*Security* 
+Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
+
+== Create a PPSS configuration file ==
+
+*TODO*
