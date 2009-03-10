@@ -1,4 +1,4 @@
-#summary PPSS Manual (Stand-alone) read me first.
+#summary PPSS Manual (Standalone) read me first.
 
 = Introduction =
 
