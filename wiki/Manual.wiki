@@ -50,7 +50,7 @@ Options are:
                    this option will result in PPSS reading the config file and start
                    processing items based on the settings of this file.
 
---enable-ht | -j   Enable hyperthreading. Is disabled by default.
+--disable-ht | -j   Disable hyperthreading. Is enabled by default.
 
 --log | -l         Sets the name of the log file. The default is ppss-log.txt.
 
@@ -146,9 +146,11 @@ In this paragraph, some additional options are discussed.
 
 This option allows you to specify how many parallel proceses should be started. Thus, automatic detection of CPUs and cores is overruled. This is useful, for example, when downloading a bunch of files in parallel, or other tasks that are not bound by the number of available CPUs. 
 
-* -j <enable hyper threading>*
+* -j <disable hyper threading>*
 
 If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core 7i quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
+
+Please note that this mechanism depends on what /proc/cpu (linux) reports. For exampe, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why whould you do that anyway) only one processor is used. So  test this option if you need it. 
 
 * -l <PPSS log file>*
 
