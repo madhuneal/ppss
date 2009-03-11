@@ -156,6 +156,16 @@ Please note that this mechanism depends on what /proc/cpu (linux) reports. For e
 
 This option allows you to specify a custom name for the log file that is used by PPSS itself. 
   
+== Creating and using a config file ==
+
+A config file is created when PPSS is called with the 'config' mode.  In this mode, PPSS does not execute any job, instead, all command line options are used to create a config file. An example:
+
+`./ppss.sh create -C config.cfg -d /source/dir -c 'gzip ' -j` 
+
+This command creates a config file config.cfg that can be used in stead of re-entering the command line options like this:
+
+`./ppss.sh standalone -C config.cfg`
+
 == Logging (must read) == 
 
 There are two separate log mechanisms:
