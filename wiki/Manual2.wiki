@@ -195,4 +195,18 @@ mrt 10 23:52:18: DEBUG  - Processing item 20060831.wav
 }}}
 
   * An individual log file containing information and output of each processed item. these files are uploaded to the SSH server to the 'job_log' directory. For every item, a log file must be present.
+
+{{{
+===== PPSS Item Log File =====
+Host:		MacBoek.local
+Item:		PPSS_LOCAL_TMPDIR/20060831.wav
+Start date:	mrt 10 23:52:18
+
+Encode of PPSS_LOCAL_TMPDIR/20060831.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:5:23
+
+}}}
  
+As you can see, with a few simple grep commands, it is possible to quickly determine which items have failed to process. 
