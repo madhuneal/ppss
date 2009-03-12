@@ -154,3 +154,45 @@ mrt 12 21:06:17: INFO   - Hostname: MacBoek.local
 mrt 12 21:06:17: INFO   - 56 percent complete.
 
 }}}
+
+== Logging ==
+
+An important feature of PPSS is its extensive logging. There are two types of log files. 
+
+  * A single log file created by PPSS itself. This file is found on the local nodes. Using tail -f on these files, it is possible to monitor what PPSS is currently doing. 
+
+{{{
+mrt 10 23:51:15: INFO   - ---------------------------------------------------------
+mrt 10 23:51:15: INFO   - Distributed Parallel Processing Shell Script version 2.03
+mrt 10 23:51:15: INDO   - ---------------------------------------------------------
+mrt 10 23:51:15: INFO   - Hostname: MacBoek.local
+mrt 10 23:51:15: DEBUG  - Found 2 logic processors.
+mrt 10 23:51:15: INFO   - ---------------------------------------------------------
+mrt 10 23:51:17: DEBUG  - Job log directory JOB_LOG exists.
+mrt 10 23:51:18: INFO   - Listener started.
+mrt 10 23:51:18: INFO   - Starting 2 workers.
+mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 0 of 625 items.
+mrt 10 23:51:18: DEBUG  - Trying to lock item 20060731.wav.
+mrt 10 23:51:18: DEBUG  - Item 20060731.wav is locked.
+mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 1 of 625 items.
+mrt 10 23:51:18: DEBUG  - Trying to lock item 20060801.wav.
+mrt 10 23:51:18: DEBUG  - Item 20060801.wav is locked.
+mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 2 of 625 items.
+mrt 10 23:51:18: DEBUG  - Trying to lock item 20060802.wav.
+mrt 10 23:51:18: DEBUG  - Item 20060802.wav is locked.
+mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 3 of 625 items.
+mrt 10 23:51:18: DEBUG  - Trying to lock item 20060803.wav.
+mrt 10 23:51:18: DEBUG  - Item 20060803.wav is locked.
+............
+mrt 10 23:51:23: DEBUG  - Item 20060830.wav is locked.
+mrt 10 23:51:23: INFO   - Currently 3 percent complete. Processed 23 of 625 items.
+mrt 10 23:51:23: DEBUG  - Trying to lock item 20060831.wav.
+mrt 10 23:51:23: DEBUG  - Got lock on 20060831.wav, processing.
+mrt 10 23:51:23: DEBUG  - Transfering item 20060831.wav to local disk.
+mrt 10 23:52:18: DEBUG  - Exit code of transfer is 0
+mrt 10 23:52:18: DEBUG  - Processing item 20060831.wav
+
+}}}
+
+  * An individual log file containing information and output of each processed item. these files are uploaded to the SSH server to the 'job_log' directory. For every item, a log file must be present.
+ 
