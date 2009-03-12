@@ -451,6 +451,15 @@ do
     esac
 done
 
+display_header () {
+
+    log INFO "---------------------------------------------------------"
+    log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
+    log INDO "---------------------------------------------------------"
+    log INFO "Hostname: $HOSTNAME"
+}
+
+
 # Init all vars
 init_vars () {
 
@@ -458,11 +467,8 @@ init_vars () {
     then
         rm $LOGFILE
     fi
-
-    log INFO "---------------------------------------------------------"
-    log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
-    log INDO "---------------------------------------------------------"
-    log INFO "Hostname: $HOSTNAME"
+    
+    display_header
 
     if [ -z "$COMMAND" ]
     then
@@ -1223,7 +1229,7 @@ main () {
                     ;;
         start )
                     # This option only starts all nodes.
-                
+                    display_header
                     if [ ! -e "$NODES_FILE" ]
                     then
                         log INFO "ERROR file $NODES with list of nodes does not exist."
@@ -1239,7 +1245,7 @@ main () {
                     exit 0
                     ;;
         config )
-
+                    display_header
                     log INFO "Generating configuration file $CONFIG"
                     add_var_to_config PPSS_LOCAL_TMPDIR "$PPSS_LOCAL_TMPDIR"
                     add_var_to_config PPSS_LOCAL_OUTPUT "$PPSS_LOCAL_OUTPUT"
@@ -1248,18 +1254,21 @@ main () {
                     ;;
 
         stop )
+                    display_header
                     log INFO "Stopping PPSS on all nodes."
                     exec_cmd "touch $STOP_SIGNAL"
                     cleanup
                     exit
                     ;;
         pause )
+                    display_header
                     log INFO "Pausing PPSS on all nodes."
                     exec_cmd "touch $PAUSE_SIGNAL"
                     cleanup
                     exit
                     ;;
         continue )
+                    display_header
                     if does_file_exist "$STOP_SIGNAL"
                     then
                         log INFO "Continuing processing, please use $0 start to start PPSS on al nodes."
@@ -1274,18 +1283,21 @@ main () {
                     exit
                     ;;
         deploy )
+                    display_header
                     log INFO "Deploying PPSS on nodes."
                     deploy_ppss
                     cleanup
                     exit 0
                     ;;
         status )
+                    display_header
                     show_status
                     cleanup
                     exit 0
                     # some show command
                     ;;
         erase )
+                    display_header
                     log INFO "Erasing PPSS from all nodes."
                     erase_ppss
                     cleanup
