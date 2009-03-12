@@ -1,4 +1,5 @@
 #summary PPSS Manual (Distributed)
+#labels Featured
 
 = Introduction =
 
@@ -106,7 +107,7 @@ mrt 12 22:18:22: INFO   - ------------------------------------------------------
 mrt 12 22:18:22: INFO   - Distributed Parallel Processing Shell Script version 2.03
 mrt 12 22:18:22: INFO   - Hostname: MacBoek.local
 mrt 12 22:18:22: INFO   - Deploying PPSS on nodes.
-mrt 12 22:18:24: INFO   - PPSS installed on node  192.168.1.14.
+mrt 12 22:18:24: INFO   - PPSS installed on node 192.168.1.14.
 mrt 12 22:18:28: INFO   - PPSS installed on node 192.168.1.12.
 mrt 12 22:18:29: INFO   - PPSS installed on node 192.168.1.4.
 mrt 12 22:18:31: INFO   - PPSS installed on node 192.168.1.31.
@@ -116,15 +117,33 @@ Deployment of PPSS is serialised, not parallel. Maybe it should be performed in 
 
 == Start PPSS on nodes ==
 
-*TODO*
+Just as simple as deploying PPSS, PPSS is started on all nodes.
+
+`./ppss.sh start -C config`
+
+{{{
+mrt 12 22:21:17: INFO   - ---------------------------------------------------------
+mrt 12 22:21:17: INFO   - Distributed Parallel Processing Shell Script version 2.03
+mrt 12 22:21:17: INFO   - Hostname: MacBoek.local
+mrt 12 22:21:17: INFO   - Starting PPSS on node 10.0.0.14.
+mrt 12 22:21:17: INFO   - Starting PPSS on node 10.0.0.12.
+mrt 12 22:21:20: INFO   - Starting PPSS on node 10.0.0.4.
+mrt 12 22:21:20: INFO   - Starting PPSS on node 10.0.0.31.
+}}}
 
 == Stop pause and continue PPSS on nodes ==
 
-*TODO*
+To stop, pause or continue processing on all nodes, use the following commands:
+
+`./ppss.sh stop -C config.cfg`
+`./ppss.sh pause -C config.cfg`
+`./ppss.sh continue -C config.cfg`
+
+Please note that nodes will continue processing the current item they are working on, they just stop processing new items if stop or pause is selected.
 
 == Show progress ==
 
-
+The overall process of the 'cluster' is determined by the number of files present in the input and output directories on the server.
 
 {{{
 
@@ -132,6 +151,6 @@ bash-3.2$ ./ppss.sh status -C config.cfg
 mrt 12 21:06:17: INFO   - ---------------------------------------------------------
 mrt 12 21:06:17: INFO   - Distributed Parallel Processing Shell Script version 2.03
 mrt 12 21:06:17: INFO   - Hostname: MacBoek.local
-mrt 12 21:06:17: INFO   - 100 percent complete.
+mrt 12 21:06:17: INFO   - 56 percent complete.
 
 }}}
