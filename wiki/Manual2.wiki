@@ -5,10 +5,11 @@
 To use PPSS in a distributed fasion, The following steps must be performed:
 
  # Setup SSH access on server and nodes.
+ # Create a list of all nodes. 
  # Create a configuration file for PPSS, that will be distributed to nodes.
  # Deploy PPSS to the nodes.
  # Start PPSS on all nodes. 
-
+ 
 == Preparation of server and nodes ==
 
 The following preparations must be made in order to use PPSS in a distributed fasion:
@@ -23,9 +24,73 @@ The following preparations must be made in order to use PPSS in a distributed fa
 *Security* 
 Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with this setup is acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
 
+== Create a list of nodes == 
+
+A file must be created containing the hostnames (DNS) and/or IP-addresses of all nodes. The file must contain one node per line, such as:
+
+{{{
+192.168.0.100
+192.168.0.101
+host.domain.com
+...
+}}}
+
 == Create a PPSS configuration file ==
 
-*TODO*
+This is the most important part of setting up distributed PPSS. It is exactly the same as setting up a configuration file for standalone mode, except that more options are necessary. 
+
+The best way to explain how to create a configuration file for distributed PPSS is to provide an example. In this example, a script is used to encode WAV files to MP3. This script is called 'encode.sh' and takes a filename as an argument. 
+
+`./ppss config -C config.cfg -c 'encode.sh ' -d /source/dir -s 192.168.1.100 -u ppss -k ppss-key.key -S ./encode.sh -n nodes.txt  -t -o /some/output/dir` 
+
+It is quite a long command line, however, it is executed only once. Afther that, the config file config.cfg can be used for all further commands. 
+
+*Mode*
+
+The first option sets the mode, in this case 'config' to generate a configuration file. 
+
+*Configuration file*
+
+The second option, -C, specifies the name of the configuration file to be created.
+
+*Command*
+
+The third option, -c,  specifies the command to be executed. *Please take special note of the single quotes and the space behind the commad.* You can read -c 'encode.sh ' also as -c 'encode.sh "$ITEM"'.
+
+*Source directory*
+
+This option specifies the location on the *server* where the files reside that must be processed. These files will be transfered using SCP to the nodes for local processing. 
+
+*Server*
+
+The -s option specifies the SSH server that acts as both fileserver and SSH server for communication between nodes.  The SSH server is mainly used for file-locking: nodes know that locked files are already processed or being processed, so another unlocked file must be selected.
+
+If the server acts both as a file server and SSH server, it is not recommended to use it also as a node, in this case for encoding. Filetransers using SSH can take quite some processing power. 
+
+*User name*
+This is the name of the local system user that is used by the nodes to logon to the server. For deployment, such a user must also be present on the nodes.
+
+*SSH Key*
+
+Scripts using SSH require an SSH key withouth a passphrase. This key must be uploaded to the nodes an the nodes must know which key to use, so it must be specified. 
+
+*Script or program that must be uploaded*
+
+The -S option specifies the script or program that should be uploaded to the node because it must be executed by the node for distributed computing. In this case, the encode.sh script must be deployed on all nodes and thus specified. 
+
+*List of nodes*
+
+The -n option specifies the file containing all nodes. For every node, PPSS will perform actions such as deploy, start, stop and pause.
+
+*Transfer files to local host*
+
+If this option is specified, the file is copied from the source directory to a local temporary working directory for local processing. This is necessary if SCP is used to access files that must be processed. 
+
+If files are distributed over NFS or SMB, the files seem to be present on the local system, because it is just a mount point and thus just a part of the local file system. In this case, the -t option can be omitted, however it it is specified, files are copied to a local directory using 'cp'. 
+
+*The output directory*
+
+If the -t option is used, the -o option specifies the destination directory on the server. The results are uploaded to this directory. If the -t option is not specified, the command 'cp' is used to transfer files back to the specified output directory. 
 
 == Deploy PPSS to nodes ==
 
@@ -34,3 +99,21 @@ Please note that usage of SSH keys without pass phrases may pose a security thre
 == Start PPSS on nodes ==
 
 *TODO*
+
+== Stop pause and continue PPSS on nodes ==
+
+*TODO*
+
+== Show progress ==
+
+
+
+{{{
+
+bash-3.2$ ./ppss.sh status -C config.cfg
+mrt 12 21:06:17: INFO   - ---------------------------------------------------------
+mrt 12 21:06:17: INFO   - Distributed Parallel Processing Shell Script version 2.03
+mrt 12 21:06:17: INFO   - Hostname: MacBoek.local
+mrt 12 21:06:17: INFO   - 100 percent complete.
+
+}}}
