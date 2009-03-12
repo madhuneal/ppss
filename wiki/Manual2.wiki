@@ -94,7 +94,25 @@ If the -t option is used, the -o option specifies the destination directory on t
 
 == Deploy PPSS to nodes ==
 
-*TODO*
+Once SSH access is setup and the configuration file is generated, PPSS can be deployed to the nodes. This is very simple, as this example demonstrates:
+
+`./ppss.sh deploy -C config.cfg
+
+During the phase when we generated the configuration file, a nodes file was specified. Thus PPSS knows, just by reading this configuration file, which file contains a list of nodes.
+
+{{{
+bash-3.2$ ./ppss.sh deploy -C config.cfg
+mrt 12 22:18:22: INFO   - ---------------------------------------------------------
+mrt 12 22:18:22: INFO   - Distributed Parallel Processing Shell Script version 2.03
+mrt 12 22:18:22: INFO   - Hostname: MacBoek.local
+mrt 12 22:18:22: INFO   - Deploying PPSS on nodes.
+mrt 12 22:18:24: INFO   - PPSS installed on node  192.168.1.14.
+mrt 12 22:18:28: INFO   - PPSS installed on node 192.168.1.12.
+mrt 12 22:18:29: INFO   - PPSS installed on node 192.168.1.4.
+mrt 12 22:18:31: INFO   - PPSS installed on node 192.168.1.31.
+}}}
+
+Deployment of PPSS is serialised, not parallel. Maybe it should be performed in parallel. This is a to-do.
 
 == Start PPSS on nodes ==
 
