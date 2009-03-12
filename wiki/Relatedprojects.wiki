@@ -21,3 +21,5 @@ Middleman uses a different approach to accomplish the same thing as PPSS: parall
 Use the tool you need. So take a look at the following link to learn more about Middleman:
 
 http://mdm.berlios.de/
+
+Some slides about Middleman: http://mdm.berlios.de/data/csgsc-talk-slides.pdf
