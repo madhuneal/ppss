@@ -162,27 +162,27 @@ An important feature of PPSS is its extensive logging. There are two types of lo
   * A single log file created by PPSS itself. This file is found on the local nodes. Using tail -f on these files, it is possible to monitor what PPSS is currently doing. 
 
 {{{
-mrt 10 23:51:15: INFO   - ---------------------------------------------------------
-mrt 10 23:51:15: INFO   - Distributed Parallel Processing Shell Script version 2.03
-mrt 10 23:51:15: INDO   - ---------------------------------------------------------
-mrt 10 23:51:15: INFO   - Hostname: MacBoek.local
-mrt 10 23:51:15: DEBUG  - Found 2 logic processors.
-mrt 10 23:51:15: INFO   - ---------------------------------------------------------
-mrt 10 23:51:17: DEBUG  - Job log directory JOB_LOG exists.
-mrt 10 23:51:18: INFO   - Listener started.
-mrt 10 23:51:18: INFO   - Starting 2 workers.
-mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 0 of 625 items.
-mrt 10 23:51:18: DEBUG  - Trying to lock item 20060731.wav.
-mrt 10 23:51:18: DEBUG  - Item 20060731.wav is locked.
-mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 1 of 625 items.
-mrt 10 23:51:18: DEBUG  - Trying to lock item 20060801.wav.
-mrt 10 23:51:18: DEBUG  - Item 20060801.wav is locked.
-mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 2 of 625 items.
-mrt 10 23:51:18: DEBUG  - Trying to lock item 20060802.wav.
-mrt 10 23:51:18: DEBUG  - Item 20060802.wav is locked.
-mrt 10 23:51:18: INFO   - Currently 0 percent complete. Processed 3 of 625 items.
-mrt 10 23:51:18: DEBUG  - Trying to lock item 20060803.wav.
-mrt 10 23:51:18: DEBUG  - Item 20060803.wav is locked.
+Mar 12 22:57:19: INFO   - ---------------------------------------------------------
+Mar 12 22:57:19: INFO   - Distributed Parallel Processing Shell Script version 2.03
+Mar 12 22:57:19: INDO   - ---------------------------------------------------------
+Mar 12 22:57:19: INFO   - Hostname: Beest
+Mar 12 22:57:19: DEBUG  - Found 8 logic processors.
+Mar 12 22:57:19: INFO   - CPU: Intel(R) Core(TM) i7 CPU         920  @ 2.67GHz
+Mar 12 22:57:19: INFO   - ---------------------------------------------------------
+Mar 12 22:57:19: DEBUG  - Job log directory JOB_LOG exists.
+Mar 12 22:57:20: INFO   - Listener started.
+Mar 12 22:57:20: INFO   - Starting 8 workers.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 0 of 625 items.
+Mar 12 22:57:20: DEBUG  - Trying to lock item 20060731.wav.
+Mar 12 22:57:20: DEBUG  - Item 20060731.wav is locked.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 1 of 625 items.
+Mar 12 22:57:20: DEBUG  - Trying to lock item 20060801.wav.
+Mar 12 22:57:20: DEBUG  - Item 20060801.wav is locked.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 2 of 625 items.
+Mar 12 22:57:20: DEBUG  - Trying to lock item 20060802.wav.
+Mar 12 22:57:20: DEBUG  - Item 20060802.wav is locked.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 3 of 625 items.
+
 ............
 mrt 10 23:51:23: DEBUG  - Item 20060830.wav is locked.
 mrt 10 23:51:23: INFO   - Currently 3 percent complete. Processed 23 of 625 items.
