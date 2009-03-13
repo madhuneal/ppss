@@ -57,7 +57,7 @@ The second option, -C, specifies the name of the configuration file to be create
 
 *Command*
 
-The third option, -c,  specifies the command to be executed. *Please take special note of the single quotes and the space behind the commad.* You can read -c 'encode.sh ' also as -c 'encode.sh "$ITEM"'.
+The third option, -c,  specifies the command to be executed. *Please take special note of the single quotes and the space behind the command.* You can read -c 'encode.sh ' also as -c 'encode.sh "$ITEM"'.
 
 *Source directory*
 
