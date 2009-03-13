@@ -1,5 +1,7 @@
 #summary Related projects
 
+
+=== Project Middleman ===
 Through Linux Magazine, I found a project called "Linux Middleman". 
 
 A quote from it's main page:
@@ -23,3 +25,9 @@ Use the tool you need. So take a look at the following link to learn more about 
 http://mdm.berlios.de/
 
 Some slides about Middleman: http://mdm.berlios.de/data/csgsc-talk-slides.pdf
+
+=== "parallel" ===
+
+Seems also very useful. Written in Perl. See:  
+
+https://savannah.nongnu.org/projects/parallel/
