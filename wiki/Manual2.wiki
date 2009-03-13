@@ -109,8 +109,6 @@ TMP=`basename $ITEM`
 
 source config.cfg
 
-PATH=$PATH:/opt/local/bin:~/bin
-
 lame -a "$ITEM" "$PPSS_LOCAL_OUTPUT/$TMP/$TMP.mp3" --preset standard --quiet
 ERROR="$?"
 
