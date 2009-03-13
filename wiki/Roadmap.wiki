@@ -7,7 +7,7 @@ PPSS Roadmap.
 
 = Details =
 
-  * The distributed mechanism basically requires some script to be written in order to be able to upload content back to the server. This shouldt not be a requirement. The same must be accomplished by just using the -c command line option. 
+  * The distributed mechanism basically requires some script to be written in order to be able to upload content back to the server. This shouldt not be a requirement. The same must be accomplished by just using the -c command line option. (COMPLETED)
 
   * Better status monitoring of nodes. Nodes should periodically write some status information to the server, that can provide some insight in the current status of the jobs that are running.
 
