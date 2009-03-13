@@ -144,6 +144,20 @@ Take notice of the basename command. Items are provided with full path. Basename
   * As with any decent shell script, use exit codes. Exit code 0 reflects successful execution, any other value a faillure. 
   * Echo some information about what the script is doing. If something fails, echo what is wrong. This is caught by PPSS and logged in the logfile of the item that is processed.
 
+For example, the above script results in this kind of output: 
+
+{{{
+===== PPSS Item Log File =====
+Host:		Beest
+Item:		PPSS_LOCAL_TMPDIR/20060907.wav
+Start date:	Mar 10 23:54:04
+
+Encode of PPSS_LOCAL_TMPDIR/20060907.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:1:44
+}}}
+
 *TIP*
 
 All variables specified when generating a configuration script can be used within your own script when sourcing the configuration file.
