@@ -93,6 +93,37 @@ If files are distributed over NFS or SMB, the files seem to be present on the lo
 
 If the -t option is used, the -o option specifies the destination directory on the server. The results are uploaded to this directory. If the -t option is not specified, the command 'cp' is used to transfer files back to the specified output directory. 
 
+== Create a script == (optional)
+
+If you want to make use of the full potential of PPSS, thus being able to upload the results of your commands back to the server, you have to make sure that the output is placed in a specific location. 
+
+This specific location is the $PPSS_LOCAL_OUTPUT directory. The result must be stored in a directory that has the name of the item that has been processed. 
+
+This is very easily accomplished just by 'sourcing' the just generated PPSS configuration file and use the $PPSS_LOCAL_OUTPUT variable within your script or command. An example script is shown below, that has actually been used to encode 400 GB of WAV files.
+
+{{{
+#!/bin/bash
+
+ITEM="$1"
+TMP=`basename $ITEM`
+
+source config.cfg
+
+PATH=$PATH:/opt/local/bin:~/bin
+
+lame -a "$ITEM" "$PPSS_LOCAL_OUTPUT/$TMP/$TMP.mp3" --preset standard --quiet
+ERROR="$?"
+
+if [ "$ERROR" == "0" ]
+then
+    echo "Encode of $ITEM successful."
+    exit 0
+else
+    echo "Error when encoding $ITEM."
+    exit 1
+fi
+}}}
+
 == Deploy PPSS to nodes ==
 
 Once SSH access is setup and the configuration file is generated, PPSS can be deployed to the nodes. This is very simple, as this example demonstrates:
