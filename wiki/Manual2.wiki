@@ -182,7 +182,7 @@ mrt 12 22:18:29: INFO   - PPSS installed on node 192.168.1.4.
 mrt 12 22:18:31: INFO   - PPSS installed on node 192.168.1.31.
 }}}
 
-Deployment of PPSS is serialised, not parallel. Maybe it should be performed in parallel. This is a to-do.
+Deployment of PPSS is executed in parallel for each host.
 
 == Start PPSS on nodes ==
 
