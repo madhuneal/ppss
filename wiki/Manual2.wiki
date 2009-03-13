@@ -8,6 +8,7 @@ To use PPSS in a distributed fasion, The following steps must be performed:
  # Setup SSH access on server and nodes.
  # Create a list of all nodes. 
  # Create a configuration file for PPSS, that will be distributed to nodes.
+ # Optional: create a custom script to be executed.
  # Deploy PPSS to the nodes.
  # Start PPSS on all nodes. 
  
@@ -93,13 +94,27 @@ If files are distributed over NFS or SMB, the files seem to be present on the lo
 
 If the -t option is used, the -o option specifies the destination directory on the server. The results are uploaded to this directory. If the -t option is not specified, the command 'cp' is used to transfer files back to the specified output directory. 
 
+*More examples*
+
+The following example does the exact same thing as the encode script. 
+
+`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -s 192.168.1.100 -u ppss -k ppss-key.key -S ./encode.sh -n nodes.txt  -t -o /some/output/dir` 
+
+The OUTPUT_DIR and OUTPUT_FILE variables are special. It tells your command where to store the output. This is important if you want to transfer the results of your command back to the server. 
+
+In this example, Lame requires that the user specifies an output file. PPSS generates the name of this output file for you, based on the name of the Item. This example shows that you don't need to create your own shell scripts in order to be able to use PPSS. 
+
 == Create a script ==
 
-This step is not mandatory, however it is necessary if you want to be able to upload the results of your commands back to the server.  You have to make sure that the output is placed in a specific location. 
+*Entrirely optional!* 
 
-This specific location is the $PPSS_LOCAL_OUTPUT directory. The result must be stored in a directory that has the name of the item that has been processed. 
+This section is optional. It is possible to execute commands just by using the -c option and the appropriate variables.
 
-This is very easily accomplished just by 'sourcing' the just generated PPSS configuration file and use the $PPSS_LOCAL_OUTPUT variable within your script or command. An example script is shown below, that has actually been used to encode 400 GB of WAV files.
+PPSS transfers files to the node and uploads the output back to the server. In order to be able to upload output back to the server, PPSS must know where this output can be found. 
+
+by default output is stored in the directory specified by $PPSS_LOCAL_OUTPUT/$ITEM. Ofcource, you can hard-code the PPSS_LOCAL_OUTPUT path, however, it is much easier to just source the ppss configuration file and use the already defined variables, that are used by PPSS anyway. 
+
+An example script that uses the settings of the PPSS configuration file is shown below, that has actually been used to encode 400 GB of WAV files.
 
 {{{
 #!/bin/bash
@@ -123,6 +138,10 @@ fi
 }}}
 
 Take notice of the basename command. Items are provided with full path. Basename strips this path from the filename and uses just the filename in this script.
+
+*TIP*
+
+All variables specified when generating a configuration script can be used within your own script when sourcing the configuration file.
 
 == Deploy PPSS to nodes ==
 
