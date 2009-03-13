@@ -64,6 +64,7 @@ LISTENER_PID=""
 IFS_BACKUP="$IFS"
 INTERVAL="30"                           # Polling interval to check if there are running jobs.
 CPUINFO=/proc/cpuinfo
+PROCESSORS=""
 
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
@@ -495,7 +496,13 @@ init_vars () {
 
     if [ -z "$MAX_NO_OF_RUNNING_JOBS" ]
     then 
-        MAX_NO_OF_RUNNING_JOBS=`get_no_of_cpus $HYPERTHREADING`
+        get_no_of_cpus $HYPERTHREADING
+    fi
+
+    if [ -e "$CPUINFO" ]
+    then
+        CPU=`cat /proc/cpuinfo | grep 'model name' | cut -d ":" -f 2 | sed -e s/^\ //g | sort | uniq`
+        log INFO "CPU: $CPU"
     fi
 
     log INFO "---------------------------------------------------------"
@@ -607,7 +614,9 @@ erase_ppss () {
     fi
 }
 
-deploy_ppss () {
+deploy () {
+
+    NODE="$1"
 
     ERROR=0
     set_error () {
@@ -618,6 +627,34 @@ deploy_ppss () {
         fi
     }
 
+    ssh -q $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
+    scp -q $SSH_OPTS $0 $USER@$NODE:~/$PPSS_HOME_DIR
+    set_error $?
+    scp -q $KEY $USER@$NODE:~/$PPSS_HOME_DIR
+    set_error $?
+    scp -q $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
+    set_error $?
+    scp -q known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
+    set_error $?
+    scp -q $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+    set_error $?
+    if [ ! -z "$INPUT_FILE" ]
+    then
+    scp -q $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+    set_error $?
+    fi
+
+    if [ "$ERROR" == "0" ]
+    then
+        log INFO "PPSS installed on node $NODE."
+    else
+        log INFO "PPSS failed to install on $NODE."
+    fi
+}
+
+deploy_ppss () {
+
+    
     if [ -z "$NODES_FILE" ]
     then
         log INFO "ERROR - are you using the right option? -C ?"
@@ -648,29 +685,7 @@ deploy_ppss () {
     else
         for NODE in `cat $NODES_FILE` 
         do
-            ssh -q $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
-            scp -q $SSH_OPTS $0 $USER@$NODE:~/$PPSS_HOME_DIR
-            set_error $?
-            scp -q $KEY $USER@$NODE:~/$PPSS_HOME_DIR
-            set_error $?
-            scp -q $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
-            set_error $?
-            scp -q known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
-            set_error $?
-            scp -q $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
-            set_error $?
-            if [ ! -z "$INPUT_FILE" ]
-            then
-                scp -q $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
-                set_error $?
-            fi
-
-            if [ "$ERROR" == "0" ]
-            then
-                log INFO "PPSS installed on node $NODE."
-            else
-                log INFO "PPSS failed to install on $NODE."
-            fi
+            deploy "$NODE" &
         done
     fi
 }
@@ -739,27 +754,32 @@ get_no_of_cpus () {
         log DEBUG "Found $NUMBER logic processors."
     elif [ "$HPT" == "no" ]
     then
-        log DEBUG "Hyperthreading is disabled."
+        log INFO "Hyperthreading is disabled."
         if [ "$ARCH" == "Linux" ]
         then
             PHYSICAL=`grep 'physical id' $CPUINFO`
             if [ "$?" == "0" ]
             then
                 PHYSICAL=`grep 'physical id' $CPUINFO | sort | uniq | wc -l`
-                log DEBUG "Detected $PHYSICAL physical CPU(s)"
+                if [ "$PHYSICAL" == "1" ]
+                then
+                    log INFO "Found $PHYSICAL physical CPU."
+                else
+                    log INFO "Found $PHYSICAL physical CPUs."
+                fi
                 TMP=`grep 'core id' $CPUINFO` 
                 if [ "$?" == "0" ]
                 then
                     log DEBUG "Starting job only for each physical core on all physical CPU(s)."
                     NUMBER=`grep 'core id' $CPUINFO | sort | uniq | wc -l` 
-                    log DEBUG "Found $NUMBER physical cores."
+                    log INFO "Found $NUMBER physical cores."
                 else
-                    log DEBUG "Single core processor(s) detected (or you found a bug)."
-                    log DEBUG "Starting job (only) for each physical CPU."
+                    log INFO "Single core processor(s) detected."
+                    log INFO "Starting job for each physical CPU."
                     NUMBER=$PHYSICAL
                 fi
             else
-                log DEBUG "No 'physical id' section found in $CPUINFO, is this a bug?."            
+                log INFO "No 'physical id' section found in $CPUINFO, is this a bug?."            
                 NUMBER=`grep ^processor $CPUINFO | wc -l`
                 got_cpu_info "$?"
             fi
@@ -780,7 +800,7 @@ get_no_of_cpus () {
 
     if [ ! -z "$NUMBER" ]
     then
-        echo "$NUMBER"
+        MAX_NO_OF_RUNNING_JOBS=$NUMBER
     else
         log INFO "$FUNCNAME ERROR - number of CPUs not obtained."
         exit 1
@@ -1073,6 +1093,8 @@ commando () {
 
     ITEM="$1"
     ITEM_NO_PATH="$1"
+    OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
+    OUTPUT_FILE="$ITEM_NO_PATH"
 
     log DEBUG "Processing item $ITEM"
 
@@ -1086,7 +1108,7 @@ commando () {
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
 
-    mkdir -p $PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
+    mkdir -p "$OUTPUT_DIR"
 
     does_file_exist "$ITEM_LOG_FILE"
     if [ "$?" == "0" ]
@@ -1286,6 +1308,7 @@ main () {
                     display_header
                     log INFO "Deploying PPSS on nodes."
                     deploy_ppss
+                    wait
                     cleanup
                     exit 0
                     ;;
