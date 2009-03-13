@@ -93,9 +93,9 @@ If files are distributed over NFS or SMB, the files seem to be present on the lo
 
 If the -t option is used, the -o option specifies the destination directory on the server. The results are uploaded to this directory. If the -t option is not specified, the command 'cp' is used to transfer files back to the specified output directory. 
 
-== Create a script == (optional)
+== Create a script ==
 
-If you want to make use of the full potential of PPSS, thus being able to upload the results of your commands back to the server, you have to make sure that the output is placed in a specific location. 
+This step is not mandatory, however it is necessary if you want to be able to upload the results of your commands back to the server.  You have to make sure that the output is placed in a specific location. 
 
 This specific location is the $PPSS_LOCAL_OUTPUT directory. The result must be stored in a directory that has the name of the item that has been processed. 
 
@@ -123,6 +123,8 @@ else
     exit 1
 fi
 }}}
+
+Take notice of the basename command. Items are provided with full path. Basename strips this path from the filename and uses just the filename in this script.
 
 == Deploy PPSS to nodes ==
 
