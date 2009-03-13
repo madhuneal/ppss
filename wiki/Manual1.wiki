@@ -141,7 +141,7 @@ In this example, a list of URLs is provided by the file list.txt. These urls are
 
 Some commands require that you specify an output file. An example of such a command or program is the Lame mp3 encoder. Since the output file must be unique for each item, the output file name must be based on a variable. Like this:
 
--c 'lame -a "$ITEM" "/some/path/$ITEM.mp3" --preset standard --quiet'
+`-c 'lame -a "$ITEM" "/some/path/$ITEM.mp3" --preset standard --quiet'`
 
 The filename of the item is reused to create the output file name. 
 
