@@ -1,5 +1,9 @@
 #summary Changelog of distributed PPSS
 
+=== 2.06 ===
+
+  * Forgot to update the version number within the script.
+
 === 2.05 ===
 
   * Deployment of PPSS to nodes is now performed in parallel, by executing the deploy function with &." 
