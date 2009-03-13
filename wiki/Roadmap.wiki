@@ -1,0 +1,14 @@
+#summary Roadmap
+
+= Introduction =
+
+PPPSS Roadmap.
+
+
+= Details =
+
+  * The distributed mechanism basically requires some script to be written in order to be able to upload content back to the server. This shouldt not be a requirement. The same must be accomplished by just using the -c command line option. 
+
+  * Better status monitoring of nodes. Nodes should periodically write some status information to the server, that can provide some insight in the current status of the jobs that are running.
+
+  * I am considering to add the option to specify a hosts that acts as the SSH fileserver. The PPSS master host and fileserver must be the same host currently. This should not be necessary.
