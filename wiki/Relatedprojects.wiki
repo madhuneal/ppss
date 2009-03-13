@@ -2,7 +2,7 @@
 
 
 === Project Middleman ===
-Through Linux Magazine, I found a project called "Linux Middleman". 
+Through Linuxtoday, I found a project called "Linux Middleman". 
 
 A quote from it's main page:
 
