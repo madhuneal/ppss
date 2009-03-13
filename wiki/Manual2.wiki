@@ -106,7 +106,7 @@ In this example, Lame requires that the user specifies an output file. PPSS gene
 
 == Create a script ==
 
-*Entrirely optional!* 
+*Entirely optional!* 
 
 This section is optional. It is possible to execute commands just by using the -c option and the appropriate variables.
 
