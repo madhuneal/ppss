@@ -1,0 +1,10 @@
+#summary Changelog of distributed PPSS
+
+=== 2.05 ===
+
+  * Deployment of PPSS to nodes is now performed in parallel, by executing the deploy function with &." 
+  * It is now possible to specify the output directory and/or output filename within the -c option.
+
+=== 2.04 and older ===
+
+I didn't realise that a changelog might be relevant until 2.05.
