@@ -127,7 +127,7 @@ The -c option specifies the command that will be executed by PPSS in parallel fo
 
 Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
 
-`$ ./ppss.sh standalone -d /path/to/files -c 'cp "$ITEM" /destination/dir '`
+`$ ./ppss.sh standalone -d /path/to/files -c 'cp "$ITEM" /destination/dir'`
 
 Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
 
