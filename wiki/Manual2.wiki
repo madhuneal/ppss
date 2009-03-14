@@ -24,7 +24,8 @@ Example:
 
 `ssh-keygen -f ppss-private.key`
 
-{{{enerating public/private rsa key pair.
+{{{
+enerating public/private rsa key pair.
 Enter passphrase (empty for no passphrase): 
 Enter same passphrase again: 
 Your identification has been saved in ppss-private.key.
