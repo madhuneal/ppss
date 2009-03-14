@@ -43,6 +43,9 @@ drwxr-xr-x+ 51 ppss  staff   1,7K 14 mrt 17:45 ..
 The result is a private and a public key (.pub). The private key is the key that needs to be distributed to all nodes in order to be able to logon to the server.
 
   * Add the public SSH key to the authorized_keys file of the 'ppss' user on the server.
+
+Thus, put the contents of ppss-private.key.pub into a file called authorized_keys and place this file into the directory .ssh in the home directory of the PPSS user on the server.
+
   * Add the public SSH key to the authorized_keys file of the 'ppss' user on the client. 
 
 This is necessary if you want to deploy PPSS on the nodes using PPSS in an automated fashion. The alternative is to manually copy PPSS and all necessary files to each node by hand.
