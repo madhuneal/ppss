@@ -70,6 +70,7 @@ The -s option specifies the SSH server that acts as both fileserver and SSH serv
 If the server acts both as a file server and SSH server, it is not recommended to use it also as a node, in this case for encoding. Filetransers using SSH can take quite some processing power. 
 
 *User name*
+
 This is the name of the local system user that is used by the nodes to logon to the server. For deployment, such a user must also be present on the nodes.
 
 *SSH Key*
