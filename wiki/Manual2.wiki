@@ -71,7 +71,7 @@ If the server acts both as a file server and SSH server, it is not recommended t
 
 *User name*
 
-This is the name of the local system user that is used by the nodes to logon to the server. For deployment, such a user must also be present on the nodes.
+This is the name of the local system user that is used by the nodes to logon to the server with SSH. For deployment, such a user must also be present on the nodes.
 
 *SSH Key*
 
