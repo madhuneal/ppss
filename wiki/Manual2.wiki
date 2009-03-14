@@ -50,7 +50,7 @@ Thus, put the contents of ppss-private.key.pub into a file called authorized_key
 
 This is necessary if you want to deploy PPSS on the nodes using PPSS in an automated fashion. The alternative is to manually copy PPSS and all necessary files to each node by hand.
 
-  * Create a 'known_hosts' file containing the public key of the server. 
+  * Create a 'known_hosts' file containing the public key of the server.  *Important*
 
 When a node connects to the server for the first time, SSH wil show you the fingerprint of the server and ask if it is ok to connect to this host. To prevent this question, you must perform one of these actions:
 
