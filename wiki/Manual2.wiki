@@ -16,9 +16,9 @@ To use PPSS in a distributed fasion, The following steps must be performed:
 
 The following preparations must be made in order to use PPSS in a distributed fasion:
 
-  # Create an unprivileged user 'ppss' on the server.
-  # Create an unprivileged user 'ppss' on each node.
-  # Generate a SSH key without a pass phrase.
+  * Create an unprivileged user 'ppss' on the server.
+  * Create an unprivileged user 'ppss' on each node.
+  * Generate a SSH key without a pass phrase.
 
 Example:
 
@@ -42,12 +42,12 @@ drwxr-xr-x+ 51 ppss  staff   1,7K 14 mrt 17:45 ..
 
 The result is a private and a public key (.pub). The private key is the key that needs to be distributed to all nodes in order to be able to logon to the server.
 
-  # Add the public SSH key to the authorized_keys file of the 'ppss' user on the server.
-  # Add the public SSH key to the authorized_keys file of the 'ppss' user on the client. 
+  * Add the public SSH key to the authorized_keys file of the 'ppss' user on the server.
+  * Add the public SSH key to the authorized_keys file of the 'ppss' user on the client. 
 
 This is necessary if you want to deploy PPSS on the nodes using PPSS in an automated fashion. The alternative is to manually copy PPSS and all necessary files to each node by hand.
 
-  # Create a 'known_hosts' file containing the public key of the server. 
+  * Create a 'known_hosts' file containing the public key of the server. 
 
 When a node connects to the server for the first time, SSH wil show you the fingerprint of the server and ask if it is ok to connect to this host. To prevent this question, you must perform one of these actions:
 
@@ -57,7 +57,7 @@ When a node connects to the server for the first time, SSH wil show you the fing
 
 Place the file in the same directory as where the ppss.sh script resides. When PPSS is deployed to the nodes, this 'known_hosts' file will be copied with the ppss.sh script to the nodes. This known_hosts file will be used by PPSS so in this case the first option, to manually logon to each node, is not necessary. 
  
-  # Place PPSS on the server within the PPSS home directory. 
+  * Place PPSS on the server within the PPSS home directory. 
 
 *Security* 
 Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with this setup is acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
