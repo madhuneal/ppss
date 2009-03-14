@@ -19,8 +19,40 @@ The following preparations must be made in order to use PPSS in a distributed fa
   # Create an unprivileged user 'ppss' on the server.
   # Create an unprivileged user 'ppss' on each node.
   # Generate a SSH key without a pass phrase.
+
+Example:
+
+`ssh-keygen -f ppss-private.key`
+
+{{{enerating public/private rsa key pair.
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in ppss-private.key.
+Your public key has been saved in ppss-private.key.pub.
+The key fingerprint is:
+....
+bash-3.2$ ls -alh
+total 16
+drwxr-xr-x   4 nan03  staff   136B 15 mrt 00:09 .
+drwxr-xr-x+ 51 nan03  staff   1,7K 14 mrt 17:45 ..
+-rw-------   1 nan03  staff   1,6K 15 mrt 00:09 ppss-private.key
+-rw-r--r--   1 nan03  staff   401B 15 mrt 00:09 ppss-private.key.pub
+}}}
+
+The result is a private and a public key (.pub). The private key is the key that needs to be distributed to all nodes in order to be able to logon to the server.
+
   # Add the SSH key to the authorized_keys file of the 'ppss' user on the server.
-  # Add the SSH key to the authorized_keys file of the 'ppss' user on the client.  
+  # Add the SSH key to the authorized_keys file of the 'ppss' user on the client. 
+  # Create a 'known_hosts' file containing the public key of the server. 
+
+When a node connects to the server for the first time, SSH wil show you the fingerprint of the server and ask if it is ok to connect to this host. To prevent this question, you must perform one of these actions:
+
+  * Logon to each node manually and connect once to the server and manually accept the server signature
+  * Manually upload a known_hosts file to each node and place it in the .ssh directory.
+  * Create a file called "known_hosts" and put the server public key in this file. You may already have the server public key in the ~/.ssh/known_hosts file of a system that has been used to logon to the server.
+
+Place the file in the same directory as where the ppss.sh script resides. When PPSS is deployed to the nodes, this 'known_hosts' file will be copied with the ppss.sh script to the nodes. This known_hosts file will be used by PPSS so in this case the first option, to manually logon to each node, is not necessary. 
+ 
   # Place PPSS on the server within the PPSS home directory. 
 
 *Security* 
