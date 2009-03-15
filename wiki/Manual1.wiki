@@ -69,6 +69,10 @@ The following options are used for distributed execution of PPSS.
 
 --key | -k         The SSH key that a node uses to connect to the server.
 
+--known-hosts | -K The file that contains the server public key. Can often be found on  
+                   hosts that already once connected to the server. See the file 
+                   ~/.ssh/known_hosts or else, manualy connect once and check this file.
+
 --user | -u        The SSH user name that is used when logging in into the master SSH
                    server.
 
