@@ -65,7 +65,7 @@ You may already have the server public key in the ~/.ssh/known_hosts file of a s
 *Security* 
 Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with this setup is acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
 
-== Create a list of nodes == 
+= Create a list of nodes =
 
 A file must be created containing the hostnames (DNS) and/or IP-addresses of all nodes. The file must contain one node per line, such as:
 
