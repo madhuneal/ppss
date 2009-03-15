@@ -55,8 +55,7 @@ STOP_SIGNAL="stop_signal"
 ARRAY_POINTER_FILE="ppss-array-pointer" # 
 JOB_LOG_DIR="JOB_LOG"                   # Directory containing log files of processed items.
 LOGFILE="ppss-log.txt"                  # General PPSS log file. Contains lots of info.
-STATUSFILE="$HOSTNAME-status"
-STOP=9                                  # STOP job.
+STOP=0                                  # STOP job.
 MAX_DELAY=2
 PERCENT="0"
 PID="$$"
@@ -73,7 +72,7 @@ SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections ove
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
-                           -o ConnectTimeout=5 \ "
+                           -o ConnectTimeout=5 "
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
@@ -650,19 +649,19 @@ deploy () {
     }
 
     ssh -q $SSH_OPTS $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
-    scp -q $0 $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $0 $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $KEY $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $KEY $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
     if [ ! -z "$INPUT_FILE" ]
     then
-    scp -q $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
     fi
 
@@ -717,7 +716,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $SSH_OPTS $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
+    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
 }
 
 
@@ -900,7 +899,7 @@ download_item () {
         log DEBUG "Transfering item $ITEM to local disk."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of transfer is $?"
         else
             cp "$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR 
@@ -1195,7 +1194,7 @@ commando () {
         if [ ! -z "$SSH_SERVER" ]
         then
             log DEBUG "Uploading item log file $ITEM_LOG_FILE to master."
-            scp -q $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
+            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
         fi
     fi
 
