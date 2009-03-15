@@ -55,10 +55,10 @@ This is necessary if you want to deploy PPSS on the nodes using PPSS in an autom
 When a node connects to the server for the first time, SSH wil show you the fingerprint of the server and ask if it is ok to connect to this host. To prevent this question, you must perform one of these actions:
 
   * Logon to each node manually and connect once to the server and manually accept the server signature
-  * Manually upload a known_hosts file to each node and place it in the .ssh directory.
-  * Create a file called "known_hosts" and put the server public key in this file. You may already have the server public key in the ~/.ssh/known_hosts file of a system that has been used to logon to the server.
+  * Manually upload a known_hosts file to each node and place it in the ~/.ssh directory of the ppss user.
+  * Create a file called "known_hosts" and put the server public key in this file. *Recommended*
 
-Place the file in the same directory as where the ppss.sh script resides. When PPSS is deployed to the nodes, this 'known_hosts' file will be copied with the ppss.sh script to the nodes. This known_hosts file will be used by PPSS so in this case the first option, to manually logon to each node, is not necessary. 
+You may already have the server public key in the ~/.ssh/known_hosts file of a system that has been used to logon to the server. Thus use the -K option to generate your own ./known_hosts file for usage with PPSS. If a known_hosts file exists within the same directory in which PPSS resides, this file will automatically be used and deployed to nodes.
  
   * Place PPSS on the server within the PPSS home directory. 
 
@@ -138,11 +138,13 @@ If the -t option is used, the -o option specifies the destination directory on t
 
 The following example does the exact same thing as the encode script. 
 
-`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -s 192.168.1.100 -u ppss -k ppss-key.key -S ./encode.sh -n nodes.txt  -t -o /some/output/dir` 
+`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -s 192.168.1.100 -u ppss -k ppss-key.key -K /path/to/known_hosts_file* -S ./encode.sh -n nodes.txt  -t -o /some/output/dir` 
 
 The OUTPUT_DIR and OUTPUT_FILE variables are special. It tells your command where to store the output. This is important if you want to transfer the results of your command back to the server. 
 
 In this example, Lame requires that the user specifies an output file. PPSS generates the name of this output file for you, based on the name of the Item. This example shows that you don't need to create your own shell scripts in order to be able to use PPSS. 
+
+* = optional. If you created a file called 'known_hosts', this file will automatically be used. Warning: if you specify a different file with the -K option, the curent known_hosts file will be replaced by this file.
 
 == Create a script ==
 
