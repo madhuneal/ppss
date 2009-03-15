@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.07"
+SCRIPT_VERSION="2.08"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -528,8 +528,6 @@ init_vars () {
     fi
 
     log INFO "---------------------------------------------------------"
-
-    SSH_OPTS="$SSH_OPTS $SSH_KNOWN_HOSTS"
 
     does_file_exist "$JOB_LOG_DIR"
     if [ ! "$?" == "0" ]
