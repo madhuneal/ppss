@@ -58,7 +58,7 @@ When a node connects to the server for the first time, SSH wil show you the fing
   * Manually upload a known_hosts file to each node and place it in the ~/.ssh directory of the ppss user.
   * Create a file called "known_hosts" and put the server public key in this file. *Recommended*
 
-You may already have the server public key in the ~/.ssh/known_hosts file of a system that has been used to logon to the server. Thus use the -K option to generate your own ./known_hosts file for usage with PPSS. If a known_hosts file exists within the same directory in which PPSS resides, this file will automatically be used and deployed to nodes.
+You may already have the server public key in the ~/.ssh/known_hosts file of a system that has been used to logon to the server. Thus use the -K option to generate your own ./known_hosts file for usage with PPSS. If a known_hosts file exists within the same directory in which PPSS resides, this file will automatically be used and deployed to nodes. So if you manually create a file called known_hosts with the appropriate content, the -K option can be omitted.
  
   * Place PPSS on the server within the PPSS home directory. 
 
