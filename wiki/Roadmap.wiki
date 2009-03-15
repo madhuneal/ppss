@@ -12,3 +12,7 @@ PPSS Roadmap.
   * Better status monitoring of nodes. Nodes should periodically write some status information to the server, that can provide some insight in the current status of the jobs that are running.
 
   * I am considering to add the option to specify a hosts that acts as the SSH fileserver. The PPSS master host and fileserver must be the same host currently. This should not be necessary.
+
+  * The 'known_hosts' file mechanism may not be the cleanest solution and may be improved."
+
+If you have any suggestions for additional features or improvements, let me know using commends or by creating an issue.
