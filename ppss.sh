@@ -38,24 +38,24 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.05"
+SCRIPT_VERSION="2.07"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
 shift
 
-ARGS=$@
-CONFIG="config.cfg"
+CONFIG=""
 HOSTNAME=`hostname`
 ARCH=`uname`
 RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
 GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
-PAUSE_SIGNAL="pause_signal"                # Not implemented yet (pause processing).
-PAUSE_DELAY=300
+PAUSE_SIGNAL="pause_signal"             # Pause processing if this file is present.
+PAUSE_DELAY=300                         # Polling every 5 minutes by default.
 STOP_SIGNAL="stop_signal"
 ARRAY_POINTER_FILE="ppss-array-pointer" # 
 JOB_LOG_DIR="JOB_LOG"                   # Directory containing log files of processed items.
 LOGFILE="ppss-log.txt"                  # General PPSS log file. Contains lots of info.
+STATUSFILE="$HOSTNAME-status"
 STOP=9                                  # STOP job.
 MAX_DELAY=2
 PERCENT="0"
@@ -68,11 +68,12 @@ PROCESSORS=""
 
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
+SSH_KNOWN_HOSTS=""
 SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections over 1 master.
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
-                           -o ConnectTimeout=5"
+                           -o ConnectTimeout=5 \ "
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
@@ -145,6 +146,10 @@ showusage () {
     echo -e "                   name per line."
     echo
     echo -e "--key | -k         The SSH key that a node uses to connect to the server."
+    echo
+    echo -e "--known-hosts | -K The file that contains the server public key. Can often be found on  "
+    echo -e "                   hosts that already once connected to the server. See the file "
+    echo -e "                   ~/.ssh/known_hosts or else, manualy connect once and check this file."
     echo
     echo -e "--user | -u        The SSH user name that is used when logging in into the master SSH"
     echo -e "                   server."
@@ -341,6 +346,17 @@ do
                             SSH_KEY="-i $SSH_KEY"
                         fi
 
+                        if [ ! -e "./known_hosts" ]
+                        then
+                            if [ -e $SSH_KNOWN_HOSTS ]
+                            then
+                                cat $SSH_KNOWN_HOSTS > ./known_hosts
+                            else
+                                echo "File $SSH_KNOWN_HOSTS does not exist."
+                                exit
+                            fi
+                        fi
+
                         shift 2
                         ;;
         --node|-n ) 
@@ -369,10 +385,10 @@ do
                         shift 2
                         ;;
 
-        --help|-h )
+          --help|-h )
                         showusage
                         exit 1;;
-        --homedir|-H)
+       --homedir|-H )
                         if [ ! -z "$2" ]
                         then
                             PPSS_HOME_DIR="$2"
@@ -381,7 +397,7 @@ do
                         fi
                         ;;
                         
-        --disable-ht|-j )
+     --disable-ht|-j )
                         HYPERTHREADING=no
                         add_var_to_config HYPERTHREADING $HYPERTHREADING
                         shift 1
@@ -400,6 +416,12 @@ do
                         fi
                         shift 2
                         ;;
+  --known-hosts | -K ) 
+                        SSH_KNOWN_HOSTS="$2"
+                        add_var_to_config SSH_KNOWN_HOSTS "$SSH_KNOWN_HOSTS"
+                        shift 2
+                        ;;
+                            
         --no-scp |-b )
                         SECURE_COPY=0
                         add_var_to_config SECURE_COPY "$SECURE_COPY"
@@ -507,6 +529,8 @@ init_vars () {
 
     log INFO "---------------------------------------------------------"
 
+    SSH_OPTS="$SSH_OPTS $SSH_KNOWN_HOSTS"
+
     does_file_exist "$JOB_LOG_DIR"
     if [ ! "$?" == "0" ]
     then
@@ -609,7 +633,7 @@ erase_ppss () {
         for NODE in `cat $NODES_FILE`
         do
             log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-            ssh $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            ssh $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     fi
 }
@@ -627,8 +651,8 @@ deploy () {
         fi
     }
 
-    ssh -q $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
-    scp -q $SSH_OPTS $0 $USER@$NODE:~/$PPSS_HOME_DIR
+    ssh -q $SSH_OPTS $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
+    scp -q $0 $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
     scp -q $KEY $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
@@ -695,7 +719,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
+    ssh $SSH_OPTS $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
 }
 
 
@@ -751,7 +775,7 @@ get_no_of_cpus () {
             NUMBER=`grep ^processor $CPUINFO | wc -l`
             got_cpu_info "$?"
         fi
-        log DEBUG "Found $NUMBER logic processors."
+        log INFO "Found $NUMBER logic processors."
     elif [ "$HPT" == "no" ]
     then
         log INFO "Hyperthreading is disabled."
@@ -806,7 +830,6 @@ get_no_of_cpus () {
         exit 1
     fi
 }
-
 
 random_delay () {
 
@@ -879,7 +902,7 @@ download_item () {
         log DEBUG "Transfering item $ITEM to local disk."
         if [ "$SECURE_COPY" == "1" ]
         then
-            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
+            scp -q $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of transfer is $?"
         else
             cp "$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR 
@@ -1174,7 +1197,7 @@ commando () {
         if [ ! -z "$SSH_SERVER" ]
         then
             log DEBUG "Uploading item log file $ITEM_LOG_FILE to master."
-            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
+            scp -q $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
         fi
     fi
 
