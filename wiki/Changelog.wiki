@@ -1,5 +1,9 @@
 #summary Changelog of distributed PPSS
 
+=== 2.07 ===
+
+  * User can now specify the known_hosts file with option -K. The fact that a known_hosts file must exist when distributing PPSS to nodes was not documented. 
+
 === 2.06 ===
 
   * Forgot to update the version number within the script.
