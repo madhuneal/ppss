@@ -138,13 +138,13 @@ If the -t option is used, the -o option specifies the destination directory on t
 
 The following example does the exact same thing as the encode script. 
 
-`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -s 192.168.1.100 -u ppss -k ppss-key.key -K /path/to/known_hosts_file* -S ./encode.sh -n nodes.txt  -t -o /some/output/dir` 
+`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -s 192.168.1.100 -u ppss -k ppss-key.key -K /path/to/known_hosts_file -S ./encode.sh -n nodes.txt  -t -o /some/output/dir` 
 
 The OUTPUT_DIR and OUTPUT_FILE variables are special. It tells your command where to store the output. This is important if you want to transfer the results of your command back to the server. 
 
 In this example, Lame requires that the user specifies an output file. PPSS generates the name of this output file for you, based on the name of the Item. This example shows that you don't need to create your own shell scripts in order to be able to use PPSS. 
 
-* = optional. If you created a file called 'known_hosts', this file will automatically be used. Warning: if you specify a different file with the -K option, the curent known_hosts file will be replaced by this file. If you manually create a file called known_hosts with the appropriate content, the -K option can be omitted.
+-K = optional. If you created a file called 'known_hosts', this file will automatically be used. Warning: if you specify a different file with the -K option, the curent known_hosts file will be replaced by this file. If you manually create a file called known_hosts with the appropriate content, the -K option can be omitted.
  
 
 = Create a script =
