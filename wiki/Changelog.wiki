@@ -1,5 +1,13 @@
 #summary Changelog of distributed PPSS
 
+=== 2.0.9 ===
+
+Fixed important bug: when deploying a key must be used to logon to the nodes using scp.
+
+=== 2.08 ===
+
+Fixed some bugs...
+
 === 2.07 ===
 
   * User can now specify the known_hosts file with option -K. The fact that a known_hosts file must exist when distributing PPSS to nodes was not documented. 
