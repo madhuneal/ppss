@@ -153,7 +153,7 @@ showusage () {
     echo -e "--user | -u        The SSH user name that is used when logging in into the master SSH"
     echo -e "                   server."
     echo 
-    echo -e "--script | -s      Specifies the script/program that must be copied to the nodes for "
+    echo -e "--script | -S      Specifies the script/program that must be copied to the nodes for "
     echo -e "                   execution through PPSS. Only used in the deploy mode."
     echo -e "                   This option should be specified if necessary when generating a config."
     echo
@@ -659,13 +659,16 @@ deploy () {
     set_error $?
     scp -q $SSH_OPTS $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
-    set_error $?
+    if [ ! -z "$SCRIPT" ]
+    then
+        scp -q $SSH_OPTS $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+        set_error $?
+    fi
 
     if [ ! -z "$INPUT_FILE" ]
     then
-    scp -q $SSH_OPTS $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
-    set_error $?
+        scp -q $SSH_OPTS $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+        set_error $?
     fi
 
     if [ "$ERROR" == "0" ]
@@ -694,7 +697,7 @@ deploy_ppss () {
         exit 1
     fi
 
-    if [ ! -e "$SCRIPT" ]
+    if [ ! -e "$SCRIPT" ] && [ ! -z "$SCRIPT" ]
     then
         log INFO "ERROR - script $SCRIPT not found."
         cleanup
