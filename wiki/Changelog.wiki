@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 
-=== 2.0.9 ===
+=== 2.10 ===
+
+Fixed important bugs when using an input file instead of an input directory. 
+
+=== 2.09 ===
 
 Fixed important bug: when deploying a key must be used to logon to the nodes using scp.
 
