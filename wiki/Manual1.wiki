@@ -177,6 +177,37 @@ This command creates a config file config.cfg that can be used in stead of re-en
 
 `./ppss.sh standalone -C config.cfg`
 
+== Advanced usage (by example ==
+
+*Unrar files in parallel*
+
+Unrarring some files in parallel can be as easy as:
+
+`./ppss.sh standalone -d ./dir-with-rars -c 'unrar x "$ITEM" ./output-dir'
+
+However, this may result in the outcome that all extracted files are dumped in the directory output-dir. This may not be wat you want. If you want to extract the files contained within each RAR-file into it's own directory. We need to perform two steps:
+
+  # Create a directory for each item in /output-dir
+  # Unrar the files into the individual directories.
+
+Step 1: making directories based on the name of the RAR file:
+
+`/ppss.sh standalone -d ./dir-with-rars -c 'ITEM=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM"'`
+
+Explanation: by default, each item consists of the full or relative path to that item. An item will expand as "./dir-with-rars/filename.rar". However, the directory name must be based only on the filename. So the unix build-in 'basename' is used to extract the filename from the item and use it to create the directory name.
+
+As you can see, it is no problem to use multiple commands within the -c option, by using ';'. 
+
+Step 2: extracting the files of each RAR file into it's own directory. 
+
+`./ppss.sh standalone -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+
+In this example, we use the basename command again to be able to specify the output directory based on the supplied ITEM name.
+
+Ofcourse, it is possible to put this all in one command: 
+
+`./ppss.sh standalone -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM_DIR"; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+
 == Logging (must read) == 
 
 There are two separate log mechanisms:
