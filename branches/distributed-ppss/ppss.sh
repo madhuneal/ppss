@@ -894,22 +894,22 @@ are_jobs_running () {
 
 download_item () {
 
-    ITEM_WITH_PATH="$1"
-    ITEM=`basename "$ITEM"`
+    ITEM="$1"
+    ITEM_NO_PATH=`basename "$ITEM"`
 
     if [ "$TRANSFER_TO_SLAVE" == "1" ]
     then
-        log DEBUG "Transfering item $ITEM to local disk."
+        log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM" $PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
-            cp "$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR 
+            cp "$ITEM" $PPSS_LOCAL_TMPDIR 
             log DEBUG "Exit code of local transfer is $?"
         fi
     else
-        log DEBUG "No transfer of item $ITEM to local workpath."
+        log DEBUG "No transfer of item $ITEM_NO_PATH to local workpath."
     fi
 }
 
@@ -1122,8 +1122,6 @@ commando () {
     OUTPUT_FILE="$ITEM_NO_PATH"
 
     log DEBUG "Processing item $ITEM"
-
-    log DEBUG "** $INPUT_FILE and $TRANSFER_TO_SLAVE - "
 
     if [ "$TRANSFER_TO_SLAVE" == "0" ]
     then
