@@ -177,7 +177,7 @@ This command creates a config file config.cfg that can be used in stead of re-en
 
 `./ppss.sh standalone -C config.cfg`
 
-== Advanced usage (by example ==
+== Advanced usage (by example) ==
 
 *Unrar files in parallel*
 
