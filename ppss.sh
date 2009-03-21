@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.11"
+SCRIPT_VERSION="2.12"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -905,7 +905,8 @@ download_item () {
         log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM" ./$PPSS_LOCAL_TMPDIR
+            ITEM_ESCAPED=`echo "$ITEM" | sed s/\\ /\\\ /g`
+            scp $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
             cp "$ITEM" ./$PPSS_LOCAL_TMPDIR 
@@ -947,27 +948,13 @@ lock_item () {
     if [ ! -z "$SSH_SERVER" ]
     then
         ITEM="$1"
-        LOCK_FILE_NAME=`echo $ITEM | sed s/^\\\.//g |sed s/^\\\.\\\.//g | sed s/\\\///g`
+        LOCK_FILE_NAME=`echo $ITEM | sed s/^\\\.//g |sed s/^\\\.\\\.//g | sed s/\\\///g | sed s/\\ //g`
         ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
-        log DEBUG "Trying to lock item $ITEM."
+        log DEBUG "Trying to lock item $ITEM - $ITEM_LOCK_FILE."
         exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
         ERROR="$?"
-        if [ -e "$ITEM_LOCK_FILE" ]
-        then
-            exec_cmd "touch $ITEM_LOCK_FILE/$HOSTNAME"
-        fi
         return "$ERROR"
     fi
-}
-
-release_item () {
-
-    ITEM="$1"
-   
-    LOCK_FILE_NAME=`echo $ITEM` # | sed s/^\\.//g | sed s/^\\.\\.//g | sed s/\\\///g`
-    ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
-
-    exec_cmd "rm -rf ./$ITEM_LOCK_FILE"
 }
 
 get_all_items () {
