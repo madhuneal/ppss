@@ -894,8 +894,8 @@ are_jobs_running () {
 
 download_item () {
 
-    ITEM="$1"
-    ITEM_WITH_PATH="$SRC_DIR/$ITEM"
+    ITEM_WITH_PATH="$1"
+    ITEM=`basename "$ITEM"`
 
     if [ "$TRANSFER_TO_SLAVE" == "1" ]
     then
@@ -909,7 +909,7 @@ download_item () {
             log DEBUG "Exit code of local transfer is $?"
         fi
     else
-        log DEBUG "No transfer of item $ITEM to workpath."
+        log DEBUG "No transfer of item $ITEM to local workpath."
     fi
 }
 
@@ -1000,7 +1000,7 @@ get_all_items () {
             fi
         fi
     
-        exec 10<$INPUT_FILE
+        exec 10<"$INPUT_FILE"
 
         while read LINE <&10
         do
@@ -1117,17 +1117,24 @@ elapsed () {
 commando () {
 
     ITEM="$1"
-    ITEM_NO_PATH="$1"
+    ITEM_NO_PATH=`basename "$ITEM"`
     OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
     OUTPUT_FILE="$ITEM_NO_PATH"
 
     log DEBUG "Processing item $ITEM"
 
-    if [ -z "$INPUT_FILE" ] && [ "$TRANSFER_TO_SLAVE" == "0" ]
+    log DEBUG "** $INPUT_FILE and $TRANSFER_TO_SLAVE - "
+
+    if [ "$TRANSFER_TO_SLAVE" == "0" ]
     then
-        ITEM="$SRC_DIR/$ITEM"
+        if [ -z "$SRC_DIR" ] && [ ! -z "$INPUT_FILE" ]
+        then
+            log DEBUG "Using item straight from INPUT FILE"
+        else
+            ITEM="$SRC_DIR/$ITEM"
+        fi
     else
-        ITEM="$PPSS_LOCAL_TMPDIR/$ITEM"
+        ITEM="$PPSS_LOCAL_TMPDIR/$ITEM_NO_PATH"
     fi
 
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
