@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.10"
+SCRIPT_VERSION="2.11"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -927,7 +927,7 @@ upload_item () {
             log DEBUG "ERROR - uploading of $ITEM failed."
         else
             log DEBUG "Upload of item $ITEM success" 
-            rm $ITEM
+            rm "$ITEM"
         fi
     else    
         cp "$ITEM" $REMOTE_OUTPUT_DIR
@@ -1186,7 +1186,7 @@ commando () {
         then
             if [ -e "$ITEM" ]
             then
-                rm $ITEM
+                rm "$ITEM"
             else        
                 log DEBUG "ERROR Something went wrong removing item $ITEM from local work dir."
             fi
