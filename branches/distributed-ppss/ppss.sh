@@ -557,12 +557,12 @@ init_vars () {
         exit
     fi
 
-    if [ ! -e "$PPSS_LOCAL_TMPDIR" ] && [ ! -z "$SSH_SERVER" ]
+    if [ ! -e "$PPSS_LOCAL_TMPDIR" ]
     then
         mkdir "$PPSS_LOCAL_TMPDIR"
     fi
 
-    if [ ! -e "$PPSS_LOCAL_OUTPUT" ] && [ ! -z "$SSH_SERVER" ]
+    if [ ! -e "$PPSS_LOCAL_OUTPUT" ] 
     then
         mkdir "$PPSS_LOCAL_OUTPUT"
     fi
@@ -902,10 +902,10 @@ download_item () {
         log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM" $PPSS_LOCAL_TMPDIR
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
-            cp "$ITEM" $PPSS_LOCAL_TMPDIR 
+            cp "$ITEM" ./$PPSS_LOCAL_TMPDIR 
             log DEBUG "Exit code of local transfer is $?"
         fi
     else
@@ -1132,7 +1132,7 @@ commando () {
             ITEM="$SRC_DIR/$ITEM"
         fi
     else
-        ITEM="$PPSS_LOCAL_TMPDIR/$ITEM_NO_PATH"
+        ITEM="./$PPSS_LOCAL_TMPDIR/$ITEM_NO_PATH"
     fi
 
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
