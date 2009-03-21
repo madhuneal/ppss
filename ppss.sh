@@ -630,7 +630,7 @@ erase_ppss () {
         for NODE in `cat $NODES_FILE`
         do
             log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-            ssh $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            ssh $SSH_OPTS $SSH_KEY $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     fi
 }
@@ -648,20 +648,23 @@ deploy () {
         fi
     }
 
-    ssh -q $SSH_OPTS $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
-    scp -q $SSH_OPTS $0 $USER@$NODE:~/$PPSS_HOME_DIR
+    KEY=`echo $SSH_KEY | cut -d " " -f 2` 
+
+    ssh -q $SSH_OPTS $SSH_KEY $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
+    scp -q $SSH_OPTS $SSH_KEY $0 $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $KEY $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $SSH_KEY $KEY $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
+
     if [ ! -z "$INPUT_FILE" ]
     then
-    scp -q $SSH_OPTS $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
     fi
 
@@ -716,7 +719,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
+    ssh $SSH_OPTS $SSH_KEY $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
 }
 
 
@@ -897,14 +900,16 @@ download_item () {
     if [ "$TRANSFER_TO_SLAVE" == "1" ]
     then
         log DEBUG "Transfering item $ITEM to local disk."
-        if [ "$SECURE_COPY" == "1" ]
+        if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
             scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR
-            log DEBUG "Exit code of transfer is $?"
+            log DEBUG "Exit code of remote transfer is $?"
         else
             cp "$ITEM_WITH_PATH" $PPSS_LOCAL_TMPDIR 
-            log DEBUG "Exit code of transfer is $?"
+            log DEBUG "Exit code of local transfer is $?"
         fi
+    else
+        log DEBUG "No transfer of item $ITEM to workpath."
     fi
 }
 
@@ -1241,12 +1246,12 @@ show_status () {
 
     if [ -z "$INPUT_FILE" ]
     then
-        ITEMS=`exec_cmd "ls -1 $SRC_DIR | wc -l"`
+        ITEMS=`exec_cmd "ls -1 $SRC_DIR | wc -l"`  
     else
-        ITEMS=`exec_cmd "cat $INPUT_FILE | wc -l"` 
+        ITEMS=`exec_cmd "cat $INPUT_FILE | wc -l"`
     fi
     
-    PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"`
+    PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"` 2>&1 >> /dev/null
     STATUS=$((100 * $PROCESSED / $ITEMS))
 
     log INFO "$STATUS percent complete."
