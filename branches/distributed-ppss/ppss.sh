@@ -289,7 +289,7 @@ cleanup () {
 # check if ppss is already running.
 is_running () {
 
-    if [ -e "$RUNNING_SIGNAL" ]
+    if [ -e "$RUNNING_SIGNAL" ] && [ ! "$MODE" == "erase" ] 
     then
         echo 
         log INFO "$0 is already running (lock file exists)."
@@ -630,6 +630,7 @@ erase_ppss () {
         for NODE in `cat $NODES_FILE`
         do
             log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
+            ssh $SSH_OPTS $SSH_KEY $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
             ssh $SSH_OPTS $SSH_KEY $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     fi
@@ -905,8 +906,8 @@ download_item () {
         log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            ITEM_ESCAPED=`echo "$ITEM" | sed s/\\ /\\\ /g`
-            scp $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
+            ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
+            scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
             cp "$ITEM" ./$PPSS_LOCAL_TMPDIR 
@@ -919,16 +920,30 @@ download_item () {
 
 upload_item () {
 
+
     ITEM="$1"
+
+    if [ "$TRANSFER_TO_SLAVE" == "0" ]
+    then
+        log DEBUG "File transfer is disabled."
+        return 0
+    fi
+
+    #if [ ! -z "$INPUT_FILE" ]
+    #then
+    #    ITEM_FILE=`basename "$ITEM"`
+    #fi 
 
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-        scp -q $SSH_OPTS $SSH_KEY $ITEM $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR
+       # ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
+        #log DEBUG "ITEM_ESCAPED = $ITEM_ESCAPED"
+        scp $SSH_KEY "$ITEM" $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR 
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
-            log DEBUG "ERROR - uploading of $ITEM failed."
+            log INFO "ERROR - uploading of $ITEM via SCP failed."
         else
             log DEBUG "Upload of item $ITEM success" 
             rm "$ITEM"
@@ -938,7 +953,7 @@ upload_item () {
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
-            log DEBUG "ERROR - uploading of $ITEM failed."
+            log DEBUG "ERROR - uploading of $ITEM vi CP failed."
         fi
     fi
 }
@@ -948,7 +963,10 @@ lock_item () {
     if [ ! -z "$SSH_SERVER" ]
     then
         ITEM="$1"
-        LOCK_FILE_NAME=`echo $ITEM | sed s/^\\\.//g |sed s/^\\\.\\\.//g | sed s/\\\///g | sed s/\\ //g`
+
+        LOCK_FILE_NAME=`echo "$ITEM" |sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g | sed s/\\ //g | sed s/\\'/\\\\\\\\\\\\\\'/g | sed s/\&/\\\\\\\\\\\\\\&/g | sed s/\(/\\\\\\\\\\(/g | sed s/\)/\\\\\\\\\\)/g ` 
+
+        echo " ---> $LOCK_FILE_NAME"
         ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
         log DEBUG "Trying to lock item $ITEM - $ITEM_LOCK_FILE."
         exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
@@ -1036,7 +1054,7 @@ get_item () {
     # Gives a status update on the current progress..
     PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
     log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
-    echo -en "\033[1A"
+    #echo -en "\033[1A"
 
     # Check if all items have been processed.
     if [ "$ARRAY_POINTER" -ge "$SIZE_OF_ARRAY" ]
@@ -1109,6 +1127,8 @@ commando () {
     ITEM="$1"
     ITEM_NO_PATH=`basename "$ITEM"`
     OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
+
+    # This VAR can be used in scripts or command lines.
     OUTPUT_FILE="$ITEM_NO_PATH"
 
     log DEBUG "Processing item $ITEM"
@@ -1183,10 +1203,7 @@ commando () {
 
         fi
 
-        if [ ! -z "$REMOTE_OUTPUT_DIR" ] && [ ! -z "$SSH_SERVER" ] 
-        then
-            upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
-        fi
+        #upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
         
         elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
         echo -e "" >> "$ITEM_LOG_FILE"
@@ -1194,7 +1211,11 @@ commando () {
         if [ ! -z "$SSH_SERVER" ]
         then
             log DEBUG "Uploading item log file $ITEM_LOG_FILE to master."
-            scp -q $SSH_OPTS $SSH_KEY $ITEM_LOG_FILE $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
+            scp -q $SSH_OPTS $SSH_KEY "$ITEM_LOG_FILE" $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
+            if [ ! "$?" == "0" ]
+            then
+                log INFO "ERROR - uploading of item log file failed."
+            fi
         fi
     fi
 
@@ -1346,6 +1367,15 @@ main () {
                     cleanup
                     exit 0
                     ;;
+        kill )
+                    for x in `ps ux | grep ppss | grep -v grep | grep bash | awk '{ print $2 }'`
+                    do          
+                         kill "$x"
+                    done
+                    cleanup
+                    exit 0
+                    ;;
+
         * )
                     showusage
                     exit 1
