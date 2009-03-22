@@ -908,13 +908,13 @@ download_item () {
         then
             #ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
             ITEM_ESCAPED=`echo "$ITEM" | \
-                    sed s/\\\//\\\\\\ /g | \
                     sed s/\\ /\\\\\\\\\\\\\\ /g | \
                     sed s/\\'/\\\\\\\\\\\\\\'/g | \
                     sed s/\&/\\\\\\\\\\\\\\&/g | \
                     sed s/\(/\\\\\\\\\\(/g | \
                     sed s/\)/\\\\\\\\\\)/g ` 
 
+            echo " ==+> $ITEM_ESCAPED"
             scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
