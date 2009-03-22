@@ -964,7 +964,16 @@ lock_item () {
     then
         ITEM="$1"
 
-        LOCK_FILE_NAME=`echo "$ITEM" |sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g | sed s/\\ //g | sed s/\\'/\\\\\\\\\\\\\\'/g | sed s/\&/\\\\\\\\\\\\\\&/g | sed s/\(/\\\\\\\\\\(/g | sed s/\)/\\\\\\\\\\)/g ` 
+        LOCK_FILE_NAME=`echo "$ITEM" | \
+        sed s/^\\\.//g | \
+        sed s/^\\\.\\\.//g | \
+        sed s/^\\\///g | \
+        sed s/\\\//\\\\\\ /g | \
+        sed s/\\ /\\\\\\\\\\\\\\ /g | \
+        sed s/\\'/\\\\\\\\\\\\\\'/g | \
+        sed s/\&/\\\\\\\\\\\\\\&/g | \
+        sed s/\(/\\\\\\\\\\(/g | \
+        sed s/\)/\\\\\\\\\\)/g ` 
 
         echo " ---> $LOCK_FILE_NAME"
         ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
