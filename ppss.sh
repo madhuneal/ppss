@@ -906,13 +906,18 @@ download_item () {
         log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            ITEM_ESCAPED=`echo "$ITEM" | \
+            if [ ! -z "$SRC_DIR" ]
+            then
+                ITEM_PATH="$SRC_DIR/$ITEM"
+            else
+                ITEM_PATH="$ITEM"
+            fi 
+            ITEM_ESCAPED=`echo "$ITEM_PATH" | \
                     sed s/\\ /\\\\\\\\\\\\\\ /g | \
                     sed s/\\'/\\\\\\\\\\\\\\'/g | \
                     sed s/\&/\\\\\\\\\\\\\\&/g | \
                     sed s/\(/\\\\\\\\\\(/g | \
                     sed s/\)/\\\\\\\\\\)/g ` 
-
             scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
@@ -945,9 +950,7 @@ upload_item () {
                     sed s/\&/\\\\\\\\\\\\\\&/g | \
                     sed s/\(/\\\\\\\\\\(/g | \
                     sed s/\)/\\\\\\\\\\)/g `
-        echo
-        echo " ======= +++ $DIR_ESCAPED"
-        echo
+
         scp -q $SSH_OPTS $SSH_KEY "$ITEM"/* $USER@$SSH_SERVER:"$DIR_ESCAPED" 
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
@@ -1071,7 +1074,7 @@ get_item () {
     # Gives a status update on the current progress..
     PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
     log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
-    echo -en "\033[1A"
+    #echo -en "\033[1A"
 
     # Check if all items have been processed.
     if [ "$ARRAY_POINTER" -ge "$SIZE_OF_ARRAY" ]
@@ -1225,7 +1228,6 @@ commando () {
         fi
 
         NEWDIR="$REMOTE_OUTPUT_DIR/$DIRNAME"
-
         DIR_ESCAPED=`echo "$NEWDIR" | \
                     sed s/\\ /\\\\\\\\\\\\\\ /g | \
                     sed s/\\'/\\\\\\\\\\\\\\'/g | \
@@ -1233,10 +1235,7 @@ commando () {
                     sed s/\(/\\\\\\\\\\(/g | \
                     sed s/\)/\\\\\\\\\\)/g `
 
-
-
         exec_cmd "mkdir -p $DIR_ESCAPED"
-
         upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH" "$DIRNAME"
         
         elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
