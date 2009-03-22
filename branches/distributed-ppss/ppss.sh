@@ -928,6 +928,7 @@ upload_item () {
 
 
     ITEM="$1"
+    ITEMDIR="$2"
 
     if [ "$TRANSFER_TO_SLAVE" == "0" ]
     then
@@ -938,7 +939,16 @@ upload_item () {
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-        scp -q $SSH_OPTS $SSH_KEY "$ITEM"/* $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR 
+        DIR_ESCAPED=`echo "$REMOTE_OUTPUT_DIR$ITEMDIR" | \
+                    sed s/\\ /\\\\\\\\\\\\\\ /g | \
+                    sed s/\\'/\\\\\\\\\\\\\\'/g | \
+                    sed s/\&/\\\\\\\\\\\\\\&/g | \
+                    sed s/\(/\\\\\\\\\\(/g | \
+                    sed s/\)/\\\\\\\\\\)/g `
+        echo
+        echo " ======= +++ $DIR_ESCAPED"
+        echo
+        scp -q $SSH_OPTS $SSH_KEY "$ITEM"/* $USER@$SSH_SERVER:"$DIR_ESCAPED" 
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
@@ -1132,6 +1142,10 @@ elapsed () {
 commando () {
 
     ITEM="$1"
+    DIRNAME=`dirname "$ITEM"`
+    echo 
+    echo "DIRNAME IS $DIRNAME"
+    echo 
     ITEM_NO_PATH=`basename "$ITEM"`
     OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
 
@@ -1210,7 +1224,20 @@ commando () {
 
         fi
 
-        upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH"
+        NEWDIR="$REMOTE_OUTPUT_DIR/$DIRNAME"
+
+        DIR_ESCAPED=`echo "$NEWDIR" | \
+                    sed s/\\ /\\\\\\\\\\\\\\ /g | \
+                    sed s/\\'/\\\\\\\\\\\\\\'/g | \
+                    sed s/\&/\\\\\\\\\\\\\\&/g | \
+                    sed s/\(/\\\\\\\\\\(/g | \
+                    sed s/\)/\\\\\\\\\\)/g `
+
+
+
+        exec_cmd "mkdir -p $DIR_ESCAPED"
+
+        upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH" "$DIRNAME"
         
         elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
         echo -e "" >> "$ITEM_LOG_FILE"
