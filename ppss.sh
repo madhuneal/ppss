@@ -1074,7 +1074,7 @@ get_item () {
     # Gives a status update on the current progress..
     PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
     log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
-    #echo -en "\033[1A"
+    echo -en "\033[1A"
 
     # Check if all items have been processed.
     if [ "$ARRAY_POINTER" -ge "$SIZE_OF_ARRAY" ]
@@ -1146,9 +1146,6 @@ commando () {
 
     ITEM="$1"
     DIRNAME=`dirname "$ITEM"`
-    echo 
-    echo "DIRNAME IS $DIRNAME"
-    echo 
     ITEM_NO_PATH=`basename "$ITEM"`
     OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
 
@@ -1236,6 +1233,10 @@ commando () {
                     sed s/\)/\\\\\\\\\\)/g `
 
         exec_cmd "mkdir -p $DIR_ESCAPED"
+        if [ "$DIRNAME" == "." ]
+        then
+            DIRNAME=""
+        fi
         upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH" "$DIRNAME"
         
         elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
