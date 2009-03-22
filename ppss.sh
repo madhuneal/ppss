@@ -906,7 +906,15 @@ download_item () {
         log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
+            #ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
+            ITEM_ESCAPED=`echo "$ITEM" | \
+                    sed s/\\\//\\\\\\ /g | \
+                    sed s/\\ /\\\\\\\\\\\\\\ /g | \
+                    sed s/\\'/\\\\\\\\\\\\\\'/g | \
+                    sed s/\&/\\\\\\\\\\\\\\&/g | \
+                    sed s/\(/\\\\\\\\\\(/g | \
+                    sed s/\)/\\\\\\\\\\)/g ` 
+
             scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
