@@ -906,7 +906,6 @@ download_item () {
         log DEBUG "Transfering item $ITEM_NO_PATH to local disk."
         if [ "$SECURE_COPY" == "1" ] && [ ! -z "$SSH_SERVER" ] 
         then
-            #ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
             ITEM_ESCAPED=`echo "$ITEM" | \
                     sed s/\\ /\\\\\\\\\\\\\\ /g | \
                     sed s/\\'/\\\\\\\\\\\\\\'/g | \
@@ -914,7 +913,6 @@ download_item () {
                     sed s/\(/\\\\\\\\\\(/g | \
                     sed s/\)/\\\\\\\\\\)/g ` 
 
-            echo " ==+> $ITEM_ESCAPED"
             scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
@@ -937,24 +935,17 @@ upload_item () {
         return 0
     fi
 
-    #if [ ! -z "$INPUT_FILE" ]
-    #then
-    #    ITEM_FILE=`basename "$ITEM"`
-    #fi 
-
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-       # ITEM_ESCAPED=`echo "$ITEM" | sed s:\\ :\\\\\\\\\ :g`
-        #log DEBUG "ITEM_ESCAPED = $ITEM_ESCAPED"
-        scp $SSH_KEY "$ITEM" $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR 
+        scp -q $SSH_OPTS $SSH_KEY "$ITEM"/* $USER@$SSH_SERVER:$REMOTE_OUTPUT_DIR 
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
             log INFO "ERROR - uploading of $ITEM via SCP failed."
         else
             log DEBUG "Upload of item $ITEM success" 
-            rm "$ITEM"
+            rm -rf ./"$ITEM"
         fi
     else    
         cp "$ITEM" $REMOTE_OUTPUT_DIR
@@ -983,7 +974,6 @@ lock_item () {
         sed s/\(/\\\\\\\\\\(/g | \
         sed s/\)/\\\\\\\\\\)/g ` 
 
-        echo " ---> $LOCK_FILE_NAME"
         ITEM_LOCK_FILE="$ITEM_LOCK_DIR/$LOCK_FILE_NAME"
         log DEBUG "Trying to lock item $ITEM - $ITEM_LOCK_FILE."
         exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
@@ -1071,7 +1061,7 @@ get_item () {
     # Gives a status update on the current progress..
     PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
     log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
-    #echo -en "\033[1A"
+    echo -en "\033[1A"
 
     # Check if all items have been processed.
     if [ "$ARRAY_POINTER" -ge "$SIZE_OF_ARRAY" ]
@@ -1220,7 +1210,7 @@ commando () {
 
         fi
 
-        #upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH/*"
+        upload_item "$PPSS_LOCAL_OUTPUT/$ITEM_NO_PATH"
         
         elapsed "$BEFORE" "$AFTER" >> "$ITEM_LOG_FILE"
         echo -e "" >> "$ITEM_LOG_FILE"
