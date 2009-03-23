@@ -1,5 +1,11 @@
 #summary Changelog of distributed PPSS
 
+=== 2.14 ===
+
+Major rework on path and filename handling. Filenames are now properly sanitized for special characters such as ',& and ( ). 
+
+Also, PPSS recreates the directory structure of the source location of files, based on the -f option.
+
 === 2.10 ===
 
 Fixed important bugs when using an input file instead of an input directory. 
