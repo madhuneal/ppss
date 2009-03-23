@@ -289,7 +289,7 @@ cleanup () {
 # check if ppss is already running.
 is_running () {
 
-    if [ -e "$RUNNING_SIGNAL" ] && [ ! "$MODE" == "erase" ] 
+    if [ -e "$RUNNING_SIGNAL" ] && [ ! "$MODE" == "kill" ] 
     then
         echo 
         log INFO "$0 is already running (lock file exists)."
@@ -622,18 +622,21 @@ check_status () {
 
 erase_ppss () {
 
-    echo "Are you realy sure you want to erase PPSS from all nades!?"
+    echo "Are you realy sure you want to erase PPSS from all nades!? (YES/NO)"
     read YN
 
-    if [ "$YN" == "y" ]
+    if [ "$YN" == "yes" ] || [ "$YN" == "YES" ] 
     then
         for NODE in `cat $NODES_FILE`
         do
             log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-            ssh $SSH_OPTS $SSH_KEY $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
-            ssh $SSH_OPTS $SSH_KEY $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            ssh -q $SSH_KEY $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
+            ssh -q $SSH_KEY $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
+    else
+        log INFO "Aborting.."
     fi
+    sleep 1
 }
 
 deploy () {
@@ -713,7 +716,8 @@ deploy_ppss () {
     else
         for NODE in `cat $NODES_FILE` 
         do
-            deploy "$NODE" 
+            deploy "$NODE" &
+            sleep 0.5
         done
     fi
 }
@@ -723,7 +727,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $SSH_OPTS $SSH_KEY $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
+    ssh $SSH_KEY $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
 }
 
 
@@ -807,7 +811,7 @@ get_no_of_cpus () {
                     NUMBER=$PHYSICAL
                 fi
             else
-                log INFO "No 'physical id' section found in $CPUINFO, is this a bug?."            
+                log INFO "No 'physical id' section found in $CPUINFO, typical for older cpus."            
                 NUMBER=`grep ^processor $CPUINFO | wc -l`
                 got_cpu_info "$?"
             fi
