@@ -72,7 +72,7 @@ SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections ove
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
-                           -o ConnectTimeout=5 "
+                           -o ConnectTimeout=15 "
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
@@ -713,7 +713,7 @@ deploy_ppss () {
     else
         for NODE in `cat $NODES_FILE` 
         do
-            deploy "$NODE" &
+            deploy "$NODE" 
         done
     fi
 }
@@ -1298,7 +1298,7 @@ show_status () {
     then
         ITEMS=`exec_cmd "ls -1 $SRC_DIR | wc -l"`  
     else
-        ITEMS=`exec_cmd "cat $INPUT_FILE | wc -l"`
+        ITEMS=`exec_cmd "cat $PPSS_HOME_DIR/$INPUT_FILE | wc -l"`
     fi
     
     PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"` 2>&1 >> /dev/null
