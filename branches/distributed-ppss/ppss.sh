@@ -83,6 +83,7 @@ TRANSFER_TO_SLAVE="0"                   # Transfer item to slave via (s)cp.
 SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
 SCRIPT=""                               # Custom user script that is executed by ppss.
+ITEM_ESCAPED=""
 
 
 showusage () {
@@ -716,8 +717,8 @@ deploy_ppss () {
     else
         for NODE in `cat $NODES_FILE` 
         do
-            deploy "$NODE" &
-            sleep 0.5
+            deploy "$NODE" 
+            sleep 0.1
         done
     fi
 }
@@ -900,6 +901,19 @@ are_jobs_running () {
     fi
 }
 
+escape_item () {
+
+    TMP="$1"
+
+    ITEM_ESCAPED=`echo "$TMP" | \
+            sed s/\\ /\\\\\\\\\\\\\\ /g | \
+            sed s/\\'/\\\\\\\\\\\\\\'/g | \
+            sed s/\&/\\\\\\\\\\\\\\&/g | \
+            sed s/\;/\\\\\\\\\\\\\\;/g | \
+            sed s/\(/\\\\\\\\\\(/g | \
+            sed s/\)/\\\\\\\\\\)/g ` 
+}
+
 download_item () {
 
     ITEM="$1"
@@ -916,12 +930,9 @@ download_item () {
             else
                 ITEM_PATH="$ITEM"
             fi 
-            ITEM_ESCAPED=`echo "$ITEM_PATH" | \
-                    sed s/\\ /\\\\\\\\\\\\\\ /g | \
-                    sed s/\\'/\\\\\\\\\\\\\\'/g | \
-                    sed s/\&/\\\\\\\\\\\\\\&/g | \
-                    sed s/\(/\\\\\\\\\\(/g | \
-                    sed s/\)/\\\\\\\\\\)/g ` 
+            
+            escape_item "$ITEM_PATH" 
+
             scp -q $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER:"$ITEM_ESCAPED" ./$PPSS_LOCAL_TMPDIR
             log DEBUG "Exit code of remote transfer is $?"
         else
@@ -948,12 +959,8 @@ upload_item () {
     log DEBUG "Uploading item $ITEM."
     if [ "$SECURE_COPY" == "1" ]
     then
-        DIR_ESCAPED=`echo "$REMOTE_OUTPUT_DIR$ITEMDIR" | \
-                    sed s/\\ /\\\\\\\\\\\\\\ /g | \
-                    sed s/\\'/\\\\\\\\\\\\\\'/g | \
-                    sed s/\&/\\\\\\\\\\\\\\&/g | \
-                    sed s/\(/\\\\\\\\\\(/g | \
-                    sed s/\)/\\\\\\\\\\)/g `
+        escape_item "$REMOTE_OUTPUT_DIR$ITEMDIR"
+        DIR_ESCAPED="$ITEM_ESCAPED"
 
         scp -q $SSH_OPTS $SSH_KEY "$ITEM"/* $USER@$SSH_SERVER:"$DIR_ESCAPED" 
         ERROR="$?"
@@ -965,7 +972,7 @@ upload_item () {
             rm -rf ./"$ITEM"
         fi
     else    
-        cp "$ITEM" $REMOTE_OUTPUT_DIR
+        cp "$ITEM" "$REMOTE_OUTPUT_DIR"
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
@@ -988,6 +995,7 @@ lock_item () {
         sed s/\\ /\\\\\\\\\\\\\\ /g | \
         sed s/\\'/\\\\\\\\\\\\\\'/g | \
         sed s/\&/\\\\\\\\\\\\\\&/g | \
+        sed s/\;/\\\\\\\\\\\\\\;/g | \
         sed s/\(/\\\\\\\\\\(/g | \
         sed s/\)/\\\\\\\\\\)/g ` 
 
@@ -1229,12 +1237,8 @@ commando () {
         fi
 
         NEWDIR="$REMOTE_OUTPUT_DIR/$DIRNAME"
-        DIR_ESCAPED=`echo "$NEWDIR" | \
-                    sed s/\\ /\\\\\\\\\\\\\\ /g | \
-                    sed s/\\'/\\\\\\\\\\\\\\'/g | \
-                    sed s/\&/\\\\\\\\\\\\\\&/g | \
-                    sed s/\(/\\\\\\\\\\(/g | \
-                    sed s/\)/\\\\\\\\\\)/g `
+        escape_item "$NEWDIR"
+        DIR_ESCAPED="$ITEM_ESCAPED"
 
         exec_cmd "mkdir -p $DIR_ESCAPED"
         if [ "$DIRNAME" == "." ]
