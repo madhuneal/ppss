@@ -1,4 +1,11 @@
 #summary Changelog of distributed PPSS
+#labels Featured
+
+=== 2.16 ===
+
+- Cleaned up output to screen.
+- Deployment of ppss to nodes uses a single SSH connection for file transfer.
+- Deployment of ppss to nodes is done in parallel. 
 
 === 2.15 ===
 
