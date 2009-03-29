@@ -1,6 +1,24 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.18 ===
+
+- PPSS now also record CPU model of Mac OS X devices.
+
+{{{
+mrt 29 23:11:56: INFO  =========================================================
+mrt 29 23:11:56: INFO                         |P|P|S|S|                         
+mrt 29 23:11:56: INFO  Distributed Parallel Processing Shell Script version 2.18
+mrt 29 23:11:56: INFO  =========================================================
+mrt 29 23:11:56: INFO  Hostname:	MacBoek.local
+mrt 29 23:11:56: INFO  ---------------------------------------------------------
+mrt 29 23:11:56: INFO  Found 2 logic processors.
+mrt 29 23:11:56: INFO  CPU:  Intel Core 2 Duo  2.16 GHz
+mrt 29 23:11:56: INFO  Starting 2 workers.
+mrt 29 23:11:56: INFO  ---------------------------------------------------------
+
+}}}
+
 === 2.17 ===
 
 - Implemented nifty status screen for distributed mode.
