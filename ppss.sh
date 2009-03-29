@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.14"
+SCRIPT_VERSION="2.17"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -68,11 +68,14 @@ PROCESSORS=""
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_KNOWN_HOSTS=""
-SSH_SOCKET="/tmp/PPSS-ssh-socket"       # Multiplex multiple SSH connections over 1 master.
+SSH_SOCKET="./PPSS_SSH_SOCKET"          # Multiplex multiple SSH connections over 1 master.
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
+                           -o Cipher=blowfish \
                            -o ConnectTimeout=15 "
+
+                                        # Blowfish is faster but still secure. 
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
@@ -84,7 +87,7 @@ SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
 SCRIPT=""                               # Custom user script that is executed by ppss.
 ITEM_ESCAPED=""
-
+NODE_STATUS="status.txt"
 
 showusage () {
     
@@ -174,7 +177,7 @@ showusage () {
     echo 
     echo -e "Running PPSS based on a configuration file."
     echo
-    echo -e "$0 node -C config.cfg"
+    echo -e "$0 standalone -C config.cfg"
     echo 
     echo -e "Running PPSS on a client as part of a cluster."
     echo 
@@ -215,6 +218,7 @@ kill_process () {
 
 exec_cmd () { 
 
+
     CMD="$1"
 
     if [ ! -z "$SSH_SERVER" ] && [ "$SECURE_COPY" == "1" ]
@@ -243,16 +247,21 @@ check_for_interrupt () {
     does_file_exist "$STOP_SIGNAL"
     if [ "$?" == "0" ]
     then
+        set_status "STOPPED"
         log INFO "STOPPING job. Stop signal found."
         STOP="1"
+        return 1
     fi
 
     does_file_exist "$PAUSE_SIGNAL"
     if [ "$?" == "0" ]
     then
+        set_status "PAUZED"
         log INFO "PAUSE: sleeping for $PAUSE_DELAY SECONDS."
         sleep $PAUSE_DELAY
         check_for_interrupt
+    else
+        set_status "RUNNING"
     fi
 }
 
@@ -476,10 +485,12 @@ done
 
 display_header () {
 
-    log INFO "---------------------------------------------------------"
+    log INFO "========================================================="
+    log INFO "                       |P|P|S|S|                         "
     log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
-    log INDO "---------------------------------------------------------"
-    log INFO "Hostname: $HOSTNAME"
+    log INFO "========================================================="
+    log INFO "Hostname:\t$HOSTNAME"
+    log INFO "---------------------------------------------------------"
 }
 
 
@@ -515,6 +526,8 @@ init_vars () {
     exec 42<> $FIFO
 
     touch $RUNNING_SIGNAL
+
+    set_status "RUNNING" 
 
     if [ -z "$MAX_NO_OF_RUNNING_JOBS" ]
     then 
@@ -569,6 +582,19 @@ init_vars () {
     fi
 }
 
+get_status () {
+
+    STATUS=`cat "$NODE_SATUS"`
+    echo "$STATUS"
+}
+
+set_status () {
+
+    STATUS="$1"
+    echo "$HOSTNAME $STATUS" > "$NODE_STATUS"
+}
+
+
 expand_str () {
 
     STR=$1
@@ -587,13 +613,12 @@ log () {
 
     TYPE="$1"
     MESG="$2"
-    TMP_LOG=""
-    TYPE_LENGTH=6 
+    TYPE_LENGTH=5 
 
     TYPE_EXP=`expand_str "$TYPE"`
 
     DATE=`date +%b\ %d\ %H:%M:%S`
-    PREFIX="$DATE: ${TYPE_EXP:0:$TYPE_LENGTH} -"
+    PREFIX="$DATE: ${TYPE_EXP:0:$TYPE_LENGTH}"
 
     LOG_MSG="$PREFIX $MESG"
 
@@ -623,6 +648,7 @@ check_status () {
 
 erase_ppss () {
 
+    
     echo "Are you realy sure you want to erase PPSS from all nades!? (YES/NO)"
     read YN
 
@@ -631,8 +657,8 @@ erase_ppss () {
         for NODE in `cat $NODES_FILE`
         do
             log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-            ssh -q $SSH_KEY $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
-            ssh -q $SSH_KEY $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     else
         log INFO "Aborting.."
@@ -644,35 +670,54 @@ deploy () {
 
     NODE="$1"
 
+    SSH_OPTS_NODE="-o BatchMode=yes -o ControlPath=socket-%h \
+                           -o GlobalKnownHostsFile=./known_hosts \
+                           -o ControlMaster=auto \
+                           -o Cipher=blowfish \
+                           -o ConnectTimeout=5 "
+
     ERROR=0
     set_error () {
 
         if [ ! "$1" == "0" ]
         then
-            ERROR=$1 
+            ERROR=1 
         fi
     }
 
+    ssh -q -o ConnectTimeout=5 $SSH_KEY $USER@$NODE exit 0
+    set_error "$?"
+    if [ ! "$ERROR" == "0" ]
+    then
+        log INFO "Cannot connect to node $NODE."
+        return 
+    fi
+
+    ssh -N -M $SSH_OPTS_NODE $SSH_KEY $USER@$NODE &
+    SSH_PID=$!
+
     KEY=`echo $SSH_KEY | cut -d " " -f 2` 
 
-    ssh -q $SSH_OPTS $SSH_KEY $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
-    scp -q $SSH_OPTS $SSH_KEY $0 $USER@$NODE:~/$PPSS_HOME_DIR
+    sleep 1.1
+
+    ssh -q $SSH_OPTS_NODE $SSH_KEY $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
+    scp -q $SSH_OPTS_NODE $SSH_KEY $0 $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $SSH_KEY $KEY $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY $KEY $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
     if [ ! -z "$SCRIPT" ]
     then
-        scp -q $SSH_OPTS $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+        scp -q $SSH_OPTS_NODE $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
         set_error $?
     fi
 
     if [ ! -z "$INPUT_FILE" ]
     then
-        scp -q $SSH_OPTS $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+        scp -q $SSH_OPTS_NODE $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
         set_error $?
     fi
 
@@ -682,6 +727,8 @@ deploy () {
     else
         log INFO "PPSS failed to install on $NODE."
     fi
+
+    kill $SSH_PID
 }
 
 deploy_ppss () {
@@ -699,12 +746,14 @@ deploy_ppss () {
     then
         log INFO "ERROR - nodes require a key file."
         cleanup
+        set_status "ERROR"
         exit 1
     fi
 
     if [ ! -e "$SCRIPT" ] && [ ! -z "$SCRIPT" ]
     then
         log INFO "ERROR - script $SCRIPT not found."
+        set_status "ERROR"
         cleanup
         exit 1
     fi
@@ -717,7 +766,7 @@ deploy_ppss () {
     else
         for NODE in `cat $NODES_FILE` 
         do
-            deploy "$NODE" 
+            deploy "$NODE" &
             sleep 0.1
         done
     fi
@@ -736,7 +785,8 @@ test_server () {
 
     # Testing if the remote server works as expected.
     if [ ! -z "$SSH_SERVER" ] 
-    then
+    then 
+ 
         exec_cmd "date >> /dev/null"
         check_status "$?" "$FUNCNAME" "Server $SSH_SERVER could not be reached"
 
@@ -771,23 +821,28 @@ get_no_of_cpus () {
         then
             NUMBER=`grep ^processor $CPUINFO | wc -l`
             got_cpu_info "$?"
-            
+
         elif [ "$ARCH" == "Darwin" ]
         then
             NUMBER=`sysctl -a hw | grep -w logicalcpu | awk '{ print $2 }'`
             got_cpu_info "$?"
+
         elif [ "$ARCH" == "FreeBSD" ]
         then
             NUMBER=`sysctl hw.ncpu | awk '{ print $2 }'`
             got_cpu_info "$?"
+
         else
             NUMBER=`grep ^processor $CPUINFO | wc -l`
             got_cpu_info "$?"
+
         fi
         log INFO "Found $NUMBER logic processors."
+
     elif [ "$HPT" == "no" ]
     then
         log INFO "Hyperthreading is disabled."
+
         if [ "$ARCH" == "Linux" ]
         then
             PHYSICAL=`grep 'physical id' $CPUINFO`
@@ -800,6 +855,7 @@ get_no_of_cpus () {
                 else
                     log INFO "Found $PHYSICAL physical CPUs."
                 fi
+
                 TMP=`grep 'core id' $CPUINFO` 
                 if [ "$?" == "0" ]
                 then
@@ -836,6 +892,7 @@ get_no_of_cpus () {
         MAX_NO_OF_RUNNING_JOBS=$NUMBER
     else
         log INFO "$FUNCNAME ERROR - number of CPUs not obtained."
+        set_status "ERROR"
         exit 1
     fi
 }
@@ -1003,6 +1060,12 @@ lock_item () {
         log DEBUG "Trying to lock item $ITEM - $ITEM_LOCK_FILE."
         exec_cmd "mkdir $ITEM_LOCK_FILE >> /dev/null 2>&1"
         ERROR="$?"
+
+        if [ "$ERROR" == "$?" ]
+        then
+            exec_cmd "touch $ITEM_LOCK_FILE/$HOSTNAME"      # Record that item is claimed by node x.
+        fi
+
         return "$ERROR"
     fi
 }
@@ -1035,6 +1098,7 @@ get_all_items () {
             if [ ! -e "$INPUT_FILE" ]
             then
                 log INFO "ERROR - input file $INPUT_FILE does not exist."
+                set_status "ERROR"
                 cleanup 
                 exit 1
             fi
@@ -1292,6 +1356,19 @@ start_all_workers () {
         start_single_worker
         ((i++))
     done
+
+}
+
+get_status_of_node () {
+
+    NODE="$1"
+    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$PPSS_HOME_DIR/$NODE_STATUS"`
+    ERROR="$?"
+    if [ ! "$ERROR" == "0" ]
+    then
+        STATUS="Could not connect to $NODE."
+    fi
+    echo "$STATUS"
 }
 
 show_status () {
@@ -1310,10 +1387,35 @@ show_status () {
     fi
     
     PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"` 2>&1 >> /dev/null
-    STATUS=$((100 * $PROCESSED / $ITEMS))
+    TMP_STATUS=$((100 * $PROCESSED / $ITEMS))
 
-    log INFO "$STATUS percent complete."
+    log INFO "Status:\t\t$TMP_STATUS percent complete."
 
+    if [ ! -z $NODES_FILE ]
+    then
+        TMP_NO=`cat $NODES_FILE | wc -l`
+        log INFO "Nodes:\t $TMP_NO"
+    fi
+
+
+    log INFO "---------------------------------------------------------"
+    HEADER=`echo IP-address Hostname Processed Status | awk '{ printf ("%-16s %-18s % 10s %10s\n",$1,$2,$3,$4) }'`  
+    log INFO "$HEADER"
+    log INFO "---------------------------------------------------------"
+    PROCESSED=0
+    for x in `cat $NODES_FILE`
+    do
+        NODE=`get_status_of_node "$x" | awk '{ print $1 }'`
+        RES=`exec_cmd "grep $NODE ~/$JOB_LOG_DIR/* | wc -l"`
+        let PROCESSED=$PROCESSED+$RES
+        STATUS=`get_status_of_node "$x" | awk '{ print $2 }'`
+        LINE=`echo "$x $NODE $RES $STATUS" | awk '{ printf ("%-16s %-18s % 10s %10s\n",$1,$2,$3,$4) }'`
+        log INFO "$LINE"
+
+    done
+    log INFO "---------------------------------------------------------"
+    LINE=`echo $PROCESSED | awk '{ printf ("Total processed: % 29s\n",$1) }'`
+    log INFO "$LINE"
 }
 
 
@@ -1450,13 +1552,21 @@ do
         log DEBUG "Sleeping $INTERVAL seconds." 
         sleep $INTERVAL
     else
-            echo -en "\033[1B"
-            log INFO "There are no more running jobs, so we must be finished."
-            echo -en "\033[1B"
-            log INFO "Killing listener and remainig processes."
-            log INFO "Dying processes may display an error message."
-            kill_process
-    fi
+        if [ "$STOP" == "1" ] || [ ! "$PERCENT" == "100" ]
+        then
+            set_status "STOPPED"
+        elif [ "$PERCENT" == "100" ]
+        then
+            set_status "FINISHED"
+        fi
+
+        echo -en "\033[1B"
+        log INFO "There are no more running jobs, so we must be finished."
+        echo -en "\033[1B"
+        log INFO "Killing listener and remainig processes."
+        log INFO "Dying processes may display an error message."
+        kill_process
+fi
 done
 
 # Exit after all processes have finished.
