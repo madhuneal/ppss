@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.17"
+SCRIPT_VERSION="2.18"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -538,9 +538,14 @@ init_vars () {
     then
         CPU=`cat /proc/cpuinfo | grep 'model name' | cut -d ":" -f 2 | sed -e s/^\ //g | sort | uniq`
         log INFO "CPU: $CPU"
+    elif [ "$ARCH" == "Darwin" ]
+    then
+        MODEL=`system_profiler SPHardwareDataType | grep "Processor Name" | cut -d ":" -f 2`
+        SPEED=`system_profiler SPHardwareDataType | grep "Processor Speed" | cut -d ":" -f 2`
+        log INFO "CPU: $MODEL $SPEED"
     fi
+        
 
-    log INFO "---------------------------------------------------------"
 
     does_file_exist "$JOB_LOG_DIR"
     if [ ! "$?" == "0" ]
@@ -1333,7 +1338,7 @@ commando () {
 # A job is executed for every event received.
 listen_for_job () {
 
-    log INFO "Listener started."
+    log DEBUG "Listener started."
     while read event <& 42
     do
         commando "$event" &
@@ -1349,6 +1354,7 @@ start_all_workers () {
     else
         log INFO "Starting $MAX_NO_OF_RUNNING_JOBS workers."
     fi
+    log INFO "---------------------------------------------------------"
 
     i=0
     while [ "$i" -lt "$MAX_NO_OF_RUNNING_JOBS" ]
