@@ -19,6 +19,20 @@ mrt 29 23:11:56: INFO  ---------------------------------------------------------
 
 }}}
 
+{{{
+Mar 29 23:19:12: INFO  =========================================================
+Mar 29 23:19:12: INFO                         |P|P|S|S|                         
+Mar 29 23:19:12: INFO  Distributed Parallel Processing Shell Script version 2.18
+Mar 29 23:19:12: INFO  =========================================================
+Mar 29 23:19:12: INFO  Hostname:	MINI.local
+Mar 29 23:19:12: INFO  ---------------------------------------------------------
+Mar 29 23:19:13: INFO  Found 2 logic processors.
+Mar 29 23:19:14: INFO  CPU:  Intel Core Duo  1.66 GHz
+Mar 29 23:19:14: INFO  Starting 2 workers.
+Mar 29 23:19:14: INFO  ---------------------------------------------------------
+
+}}}
+
 === 2.17 ===
 
 - Implemented nifty status screen for distributed mode.
