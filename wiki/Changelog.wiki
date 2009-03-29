@@ -20,6 +20,8 @@ mrt 29 01:22:06: INFO   - 10.0.0.1:	PAUZED (router)
 
 }}}
 
+- Also, the ; character is now supported in filenames. 
+
 === 2.14 ===
 
 Major rework on path and filename handling. Filenames are now properly sanitized for special characters such as ',& and ( ). 
