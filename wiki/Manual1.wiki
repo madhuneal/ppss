@@ -96,7 +96,7 @@ Example: encoding some wav files to mp3 using lame:
 
 Running PPSS based on a configuration file.
 
-./ppss.sh node -C config.cfg
+./ppss.sh standalone -C config.cfg
 
 Running PPSS on a client as part of a cluster.
 
