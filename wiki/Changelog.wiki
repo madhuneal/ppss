@@ -1,6 +1,34 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.17 ===
+
+- Implemented nifty status screen for distributed mode.
+
+{{{
+mrt 29 22:18:27: INFO  =========================================================
+mrt 29 22:18:27: INFO                         |P|P|S|S|                         
+mrt 29 22:18:27: INFO  Distributed Parallel Processing Shell Script version 2.17
+mrt 29 22:18:27: INFO  =========================================================
+mrt 29 22:18:27: INFO  Hostname:	MacBoek.local
+mrt 29 22:18:27: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  Status:		100 percent complete.
+mrt 29 22:18:28: INFO  Nodes:	        7
+mrt 29 22:18:28: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  IP-address       Hostname            Processed     Status
+mrt 29 22:18:28: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  10.0.0.14        Core7i                    155   FINISHED
+mrt 29 22:18:29: INFO  10.0.0.12        MINI.local                 34   FINISHED
+mrt 29 22:18:29: INFO  10.0.0.4         server                     29   FINISHED
+mrt 29 22:18:30: INFO  10.0.0.30        host3                       6   FINISHED
+mrt 29 22:18:31: INFO  10.0.0.31        host4                       6   FINISHED
+mrt 29 22:18:31: INFO  10.0.0.50        imac-2.local               34   FINISHED
+mrt 29 22:18:32: INFO  10.0.0.1         router                      7   FINISHED
+mrt 29 22:18:32: INFO  ---------------------------------------------------------
+mrt 29 22:18:32: INFO  Total processed:                           271
+
+}}}
+
 === 2.16 ===
 
 - Cleaned up output to screen.
