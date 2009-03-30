@@ -217,14 +217,21 @@ During the phase when we generated the configuration file, a nodes file was spec
 
 {{{
 bash-3.2$ ./ppss.sh deploy -C config.cfg
-mrt 12 22:18:22: INFO   - ---------------------------------------------------------
-mrt 12 22:18:22: INFO   - Distributed Parallel Processing Shell Script version 2.03
-mrt 12 22:18:22: INFO   - Hostname: MacBoek.local
-mrt 12 22:18:22: INFO   - Deploying PPSS on nodes.
-mrt 12 22:18:24: INFO   - PPSS installed on node 192.168.1.14.
-mrt 12 22:18:28: INFO   - PPSS installed on node 192.168.1.12.
-mrt 12 22:18:29: INFO   - PPSS installed on node 192.168.1.4.
-mrt 12 22:18:31: INFO   - PPSS installed on node 192.168.1.31.
+mrt 30 23:20:00: INFO  =========================================================
+mrt 30 23:20:00: INFO                         |P|P|S|S|                         
+mrt 30 23:20:00: INFO  Distributed Parallel Processing Shell Script version 2.18
+mrt 30 23:20:00: INFO  =========================================================
+mrt 30 23:20:00: INFO  Hostname:	MacBoek.local
+mrt 30 23:20:00: INFO  ---------------------------------------------------------
+mrt 30 23:20:00: INFO  Deploying PPSS on nodes.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.18.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.6.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.4.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.1.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.15.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.33.
+mrt 30 23:20:05: INFO  Cannot connect to node 192.168.0.20.
+
 }}}
 
 Deployment of PPSS is executed in parallel for each host.
