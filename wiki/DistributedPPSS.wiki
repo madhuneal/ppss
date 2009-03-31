@@ -29,7 +29,7 @@ The modes 'start', 'pause', and 'stop', implement this functionality. They signa
 
 If a larger number of nodes are used, it would be nice if some simple overview could be generated about the current status of nodes and the overal progress of the entire process.
 
-Currently, there is no status of specific hosts, but the 'status' mode displays the overall progress of PPSS.
+The current status screen polls the status of each host ( running, paused, stopped, finished ) and informs you about how many items have been processed by each host.
 
 == Item (file) distribution == 
 
