@@ -1,4 +1,5 @@
 #summary Won't xargs do the same?.
+#labels Deprecated
 
 = Introduction =
 
