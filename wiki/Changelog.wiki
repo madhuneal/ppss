@@ -4,6 +4,7 @@
 === 2.19 ===
 
 - Improved filename sanitization. 
+
 - Fixed typo.
 
 === 2.18 ===
