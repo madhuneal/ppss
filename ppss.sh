@@ -1293,7 +1293,7 @@ commando () {
         then
            echo -e "Status:\t\tError - something went wrong." >> "$ITEM_LOG_FILE"
         else
-           echo -e "Status:\t\tSucces - item has been processed." >> "$ITEM_LOG_FILE"
+           echo -e "Status:\t\tSuccess - item has been processed." >> "$ITEM_LOG_FILE"
         fi
 
         if [ "$TRANSFER_TO_SLAVE" == "1" ]      
