@@ -245,13 +245,14 @@ If you tailor your command the right way, or create a (small) script, it is very
 
 PPSS skips items if an item log file is present in the Job_log directory. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
 
-===== Other things you should be aware about =====
+
+== Other things you should be aware of ==
 
 ppss.sh must be run inside a file system that support file locking. It
 can, however, the data to process can be in a non-locking file system.
 
 PPSS controller/intermediate output such as ppss.sh_is_running, JOB_LOG,
-PPSS_* directories, ppss-array-pointer etc will be created inside the same
+PPSS_ directories, ppss-array-pointer etc will be created inside the same
 directory as ppss.sh, will be written to the current directory. This means one cannot share a copy of ppss.sh. Each ppss.sh run must be use its own copy of ppss.sh file.
 
 Q: Is it possible to modify the program to write
