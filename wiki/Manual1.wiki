@@ -139,7 +139,7 @@ Another example is the use of an input file instead of a directory. Such a file 
 
 In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
 
-`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q "$ITEM"'`
+`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q "$ITEM"'` -p 5
 
 *Advanced usage of the -c command option *
 
@@ -157,11 +157,11 @@ In this paragraph, some additional options are discussed.
 
 This option allows you to specify how many parallel proceses should be started. Thus, automatic detection of CPUs and cores is overruled. This is useful, for example, when downloading a bunch of files in parallel, or other tasks that are not bound by the number of available CPUs. 
 
-* -j <disable hyper threading>*
+* -j * (Disable hyper-threading )
 
 If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core 7i quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
 
-Please note that this mechanism depends on what /proc/cpu (linux) reports. For exampe, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why whould you do that anyway) only one processor is used. So  test this option if you need it. 
+Please note that this mechanism depends on what /proc/cpu (linux) reports. For exampe, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why would you do that anyway) only one processor is used. So  test this option if you need it. 
 
 * -l <PPSS log file>*
 
@@ -244,3 +244,17 @@ If you tailor your command the right way, or create a (small) script, it is very
 *Important:* 
 
 PPSS skips items if an item log file is present in the Job_log directory. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
+
+===== Other things you should be aware about =====
+
+ppss.sh must be run inside a file system that support file locking. It
+can, however, the data to process can be in a non-locking file system.
+
+PPSS controller/intermediate output such as ppss.sh_is_running, JOB_LOG,
+PPSS_* directories, ppss-array-pointer etc will be created inside the same
+directory as ppss.sh, will be written to the current directory. This means one cannot share a copy of ppss.sh. Each ppss.sh run must be use its own copy of ppss.sh file.
+
+Q: Is it possible to modify the program to write
+all these files to a user-specified directory instead? 
+
+A: As requested, this feature will be implemented, one way or the other.
