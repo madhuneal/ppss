@@ -302,7 +302,7 @@ is_running () {
     if [ -e "$RUNNING_SIGNAL" ] && [ ! "$MODE" == "kill" ] 
     then
         echo 
-        log INFO "$0 is already running (lock file exists)."
+        log ERROR "$0 is already running (lock file exists)."
         echo
         exit 1
     fi
@@ -649,6 +649,9 @@ expand_str () {
 }
 
 log () {
+    
+    # Type 'INFO' is logged to the screen
+    # Any other log-type is only logged to the logfile.
 
     TYPE="$1"
     MESG="$2"
@@ -663,7 +666,7 @@ log () {
 
     echo -e "$LOG_MSG" >> "$LOGFILE"
 
-    if [ "$TYPE" == "INFO" ] 
+    if [ "$TYPE" == "INFO" ] || [ "$TYPE" == "ERROR" ] 
     then
         echo -e "$LOG_MSG"
     fi
@@ -728,7 +731,7 @@ deploy () {
     set_error "$?"
     if [ ! "$ERROR" == "0" ]
     then
-        log INFO "Cannot connect to node $NODE."
+        log ERROR "Cannot connect to node $NODE."
         return 
     fi
 
@@ -783,7 +786,7 @@ deploy_ppss () {
     KEY=`echo $SSH_KEY | cut -d " " -f 2` 
     if [ -z "$KEY" ] || [ ! -e "$KEY" ]
     then
-        log INFO "ERROR - nodes require a key file."
+        log ERROR "Nodes require a key file."
         cleanup
         set_status "ERROR"
         exit 1
@@ -791,7 +794,7 @@ deploy_ppss () {
 
     if [ ! -e "$SCRIPT" ] && [ ! -z "$SCRIPT" ]
     then
-        log INFO "ERROR - script $SCRIPT not found."
+        log ERROR "Script $SCRIPT not found."
         set_status "ERROR"
         cleanup
         exit 1
@@ -799,7 +802,7 @@ deploy_ppss () {
 
     if [ ! -e "$NODES_FILE" ]
     then
-        log INFO "ERROR file $NODES with list of nodes does not exist."
+        log ERROR "File $NODES with list of nodes does not exist."
         cleanup
         exit 1
     else
@@ -1064,7 +1067,7 @@ upload_item () {
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
-            log INFO "ERROR - uploading of $ITEM via SCP failed."
+            log ERROR "Uploading of $ITEM via SCP failed."
         else
             log DEBUG "Upload of item $ITEM success" 
             rm -rf ./"$ITEM"
@@ -1122,7 +1125,12 @@ get_all_items () {
             ITEMS=`exec_cmd "ls -1 $SRC_DIR"`
             check_status "$?" "$FUNCNAME" "Could not list files within remote source directory."
         else 
-            ITEMS=`ls -1 $SRC_DIR`
+            if [ -e "$SRC_DIR" ]
+            then
+                ITEMS=`ls -1 $SRC_DIR`
+            else
+                ITEMS=""
+            fi
         fi
         IFS=$'\n'
 
@@ -1138,7 +1146,7 @@ get_all_items () {
             log DEBUG "Running as slave, input file has been pushed (hopefully)."
             if [ ! -e "$INPUT_FILE" ]
             then
-                log INFO "ERROR - input file $INPUT_FILE does not exist."
+                log ERROR "Input file $INPUT_FILE does not exist."
                 set_status "ERROR"
                 cleanup 
                 exit 1
@@ -1159,7 +1167,7 @@ get_all_items () {
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     if [ "$SIZE_OF_ARRAY" -le "0" ]
     then
-        log INFO "ERROR: source file/dir seems to be empty."
+        log ERROR "Source file/dir seems to be empty."
         cleanup
         exit 1
     fi
@@ -1361,7 +1369,7 @@ commando () {
             scp -q $SSH_OPTS $SSH_KEY "$ITEM_LOG_FILE" $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
             if [ ! "$?" == "0" ]
             then
-                log INFO "ERROR - uploading of item log file failed."
+                log ERROR "Uploading of item log file failed."
             fi
         fi
     fi
@@ -1481,7 +1489,7 @@ main () {
                     display_header
                     if [ ! -e "$NODES_FILE" ]
                     then
-                        log INFO "ERROR file $NODES with list of nodes does not exist."
+                        log ERROR "File $NODES with list of nodes does not exist."
                         cleanup
                         exit 1
                     else
