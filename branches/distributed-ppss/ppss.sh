@@ -44,18 +44,31 @@ SCRIPT_VERSION="2.20"
 MODE="$1"
 shift
 
+# The working directory of PPSS can be set with
+# export PPSS_DIR=/path/to/workingdir
+if [ -z "$PPSS_DIR" ]
+then
+    PPSS_DIR="./ppss"
+fi
+
+if [ ! -e "$PPSS_DIR" ]
+then
+    mkdir -p "$PPSS_DIR"
+fi
+
 CONFIG=""
 HOSTNAME=`hostname`
 ARCH=`uname`
-RUNNING_SIGNAL="$0_is_running"          # Prevents running mutiple instances of PPSS.. 
-GLOBAL_LOCK="PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
-PAUSE_SIGNAL="pause_signal"             # Pause processing if this file is present.
-PAUSE_DELAY=300                         # Polling every 5 minutes by default.
-STOP_SIGNAL="stop_signal"
-ARRAY_POINTER_FILE="ppss-array-pointer" # 
-JOB_LOG_DIR="JOB_LOG"                   # Directory containing log files of processed items.
-LOGFILE="ppss-log.txt"                  # General PPSS log file. Contains lots of info.
-STOP=0                                  # STOP job.
+
+RUNNING_SIGNAL="$PPSS_DIR/$0_is_running"          # Prevents running mutiple instances of PPSS.. 
+GLOBAL_LOCK="$PPSS_DIR/PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
+PAUSE_SIGNAL="$PPSS_DIR/pause_signal"             # Pause processing if this file is present.
+PAUSE_DELAY=300                                   # Polling every 5 minutes by default.
+STOP_SIGNAL="$PPSS_DIR/stop_signal"               # Stop processing if this file is present.
+ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer" # Pointer for keeping track of processed items.
+JOB_LOG_DIR="$PPSS_DIR/job_log"                   # Directory containing log files of processed items.
+LOGFILE="$PPSS_DIR/ppss-log.txt"                  # General PPSS log file. Contains lots of info.
+STOP=0                                            # STOP job.
 MAX_DELAY=2
 PERCENT="0"
 PID="$$"
@@ -65,10 +78,11 @@ INTERVAL="30"                           # Polling interval to check if there are
 CPUINFO=/proc/cpuinfo
 PROCESSORS=""
 
+MIN_JOBS=3
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_KNOWN_HOSTS=""
-SSH_SOCKET="./PPSS_SSH_SOCKET"          # Multiplex multiple SSH connections over 1 master.
+SSH_SOCKET="$PPSS_DIR/PPSS_SSH_SOCKET"          # Multiplex multiple SSH connections over 1 master.
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
@@ -79,9 +93,9 @@ SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
 SSH_MASTER_PID=""
 
 PPSS_HOME_DIR="ppss"
-ITEM_LOCK_DIR="PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
-PPSS_LOCAL_TMPDIR="PPSS_LOCAL_TMPDIR" # Local directory on slave for local processing.
-PPSS_LOCAL_OUTPUT="PPSS_LOCAL_OUTPUT" # Local directory on slave for local output.
+ITEM_LOCK_DIR="$PPSS_DIR/PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
+PPSS_LOCAL_TMPDIR="$PPSS_DIR/PPSS_LOCAL_TMPDIR"   # Local directory on slave for local processing.
+PPSS_LOCAL_OUTPUT="$PPSS_DIR/PPSS_LOCAL_OUTPUT"   # Local directory on slave for local output.
 TRANSFER_TO_SLAVE="0"                   # Transfer item to slave via (s)cp.
 SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
@@ -175,6 +189,9 @@ showusage () {
     echo -e "--outputdir | -o   Directory on server where processed files are put. If the result of "
     echo -e "                   encoding a wav file is an mp3 file, the mp3 file is put in the "
     echo -e "                   directory specified with this option."
+    echo 
+    echo -e "--homedir | -H     Directory in which directory PPSS is installed on the node."
+    echo -e "                   Default is 'ppss'."
     echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
@@ -426,6 +443,11 @@ do
                         add_var_to_config FORCE "$FORCE"
                         shift 1
                         ;;
+     --workingdir|-w ) 
+                        WORKINGDIR="$2"
+                        add_var_to_config WORKINGDIR "$WORKINGDIR"
+                        shift 2
+                        ;;
         --key|-k )
                         SSH_KEY="$2"
                         add_var_to_config SSH_KEY "$SSH_KEY"
@@ -494,38 +516,46 @@ do
 done
 
 
+get_min_jobs () {
+
+    if [ "$ARCH" == "Darwin" ]
+    then
+        MIN_JOBS=4
+    elif [ "$ARCH" == "Linux" ]
+    then
+        MIN_JOBS=3
+    fi
+}
+
 check_for_running_instances () {
 
     #Checking that this is the only instance of PPSS for this user
     JOBS=`ps axu | grep -v grep  | grep ${USER} | grep -v -i screen | grep ppss.sh | wc -l`
     #echo "$(date) : ${JOBS}"
-    MIN_JOBS=2
-     
-    if [ "$ARCH" == "Darwin" ]
+    get_min_jobs
+    log INFO "Minjobs is $MIN_JOBS"
+    
+    if [ "$JOBS" -gt "$MIN_JOBS" ]  
     then
-        MIN_JOBS=2
-    elif [ "$ARCH" == "Linux" ]
-    then
-        MIN_JOBS=2
-    fi
-     
-    if [ "$JOBS" -gt "$MIN_JOBS" ]  && [ "$FORCE" == "no" ] 
-    then
-        log ERROR "Cannot run PPSS because there are other running instances of PPSS detected. See log for more details."
-        log ERROR "Use -F to override. Please note that all running PPSS instances will never quit if you do." 
-        if [ "$ARCH" == "Darwin" ]
+        if [ "$FORCE" == "no" ]
         then
-            TMP=`ps aux -j | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
-            log DEBUG "$TMP"
-        elif [ "$ARCH" == "Linux" ]
+            log ERROR "Cannot run PPSS because there are other running instances of PPSS detected. See log for more details."
+            log ERROR "Use -F to override. Please note that all running PPSS instances will never quit if you do." 
+            if [ "$ARCH" == "Darwin" ]
+            then
+                TMP=`ps aux -j | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
+                log DEBUG "$TMP"
+            elif [ "$ARCH" == "Linux" ]
+            then
+                TMP=`ps aux -f | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
+                log DEBUG "$TMP"
+            fi
+            cleanup
+            exit 2
+        elif [ "$FORCE" == "yes" ]
         then
-            TMP=`ps aux -f | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
-            log DEBUG "$TMP"
+            log WARN "\n\n*** Multiple instances of PPSS detected. This process will not terminate. ***\n\n"
         fi
-        cleanup
-        exit 2
-    else
-        log WARN "\n\n*** Multiple instances of PPSS detected. This process will not terminate. ***\n\n"
     fi
 }
 
@@ -543,6 +573,15 @@ display_header () {
 
 # Init all vars
 init_vars () {
+
+
+    if [ "$ARCH" == "Darwin" ]
+    then
+        MIN_JOBS=4
+    elif [ "$ARCH" == "Linux" ]
+    then
+        MIN_JOBS=3
+    fi
 
     if [ -e "$LOGFILE" ]
     then
@@ -1600,15 +1639,7 @@ do
     JOBS=`ps aux | grep $USER | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
     log DEBUG "There are $JOBS running processes. "
     
-    MIN_JOBS=3
-
-    if [ "$ARCH" == "Darwin" ]
-    then
-        MIN_JOBS=4
-    elif [ "$ARCH" == "Linux" ]
-    then
-        MIN_JOBS=3
-    fi
+    get_min_jobs
 
     if [ "$JOBS" -gt "$MIN_JOBS" ] 
     then
