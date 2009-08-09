@@ -511,7 +511,7 @@ check_for_running_instances () {
      
     if [ "$JOBS" -gt "$MIN_JOBS" ]  && [ "$FORCE" == "no" ] 
     then
-        log ERROR "Cannot run PPSS because there is another running instances of PPSS detected. See log for more details."
+        log ERROR "Cannot run PPSS because there are other running instances of PPSS detected. See log for more details."
         log ERROR "Use -F to override. Please note that all running PPSS instances will never quit if you do." 
         if [ "$ARCH" == "Darwin" ]
         then
