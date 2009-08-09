@@ -88,6 +88,7 @@ REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must 
 SCRIPT=""                               # Custom user script that is executed by ppss.
 ITEM_ESCAPED=""
 NODE_STATUS="status.txt"
+FORCE="no"
 
 showusage () {
     
@@ -137,6 +138,10 @@ showusage () {
     echo
     echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
     echo -e "                   CPU's."
+    echo
+    echo -e "--force | -F       Force PPSS to run, even anoter instance of PPSS is already running."
+    echo    "                   Please note that any running PPSS instance will not exit anymore if"
+    echo    "                   you start multiple instances, although they will run fine."
     echo
     echo -e "The following options are used for distributed execution of PPSS."
     echo 
@@ -416,6 +421,11 @@ do
                         add_var_to_config LOGFILE "$LOGFILE"
                         shift 2
                         ;;
+        --force|-F )
+                        FORCE=yes
+                        add_var_to_config FORCE "$FORCE"
+                        shift 1
+                        ;;
         --key|-k )
                         SSH_KEY="$2"
                         add_var_to_config SSH_KEY "$SSH_KEY"
@@ -499,9 +509,10 @@ check_for_running_instances () {
         MIN_JOBS=2
     fi
      
-    if [ "$JOBS" -gt "$MIN_JOBS" ] 
+    if [ "$JOBS" -gt "$MIN_JOBS" ]  && [ "$FORCE" == "no" ] 
     then
         log ERROR "Cannot run PPSS because there is another running instances of PPSS detected. See log for more details."
+        log ERROR "Use -F to override. Please note that all running PPSS instances will never quit if you do." 
         if [ "$ARCH" == "Darwin" ]
         then
             TMP=`ps aux -j | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
@@ -513,6 +524,8 @@ check_for_running_instances () {
         fi
         cleanup
         exit 2
+    else
+        log WARN "\n\n*** Multiple instances of PPSS detected. This process will not terminate. ***\n\n"
     fi
 }
 
@@ -666,7 +679,7 @@ log () {
 
     echo -e "$LOG_MSG" >> "$LOGFILE"
 
-    if [ "$TYPE" == "INFO" ] || [ "$TYPE" == "ERROR" ] 
+    if [ "$TYPE" == "INFO" ] || [ "$TYPE" == "ERROR" ] || [ "$TYPE" == "WARN" ]
     then
         echo -e "$LOG_MSG"
     fi
