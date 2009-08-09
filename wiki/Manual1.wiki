@@ -169,7 +169,15 @@ Please note that this mechanism depends on what /proc/cpu (linux) reports. For e
 * -l <PPSS log file>*
 
 This option allows you to specify a custom name for the log file that is used by PPSS itself. 
-  
+ 
+* setting the working directory *
+
+Prior to executing PPSS, set the working directory as follows:
+
+export PPSS_DIR=/path/to/dir
+
+Next, if PPSS is executed, the aforementioned directory is used to store all (temporary) files.
+ 
 == Creating and using a config file ==
 
 A config file is created when PPSS is called with the 'config' mode.  In this mode, PPSS does not execute any job, instead, all command line options are used to create a config file. An example:
