@@ -45,7 +45,7 @@ Options are:
 --sourcefile | -f  Each single line of the supplied file will be fed as an item to the
                    command that has been specified with -c.
 
---config | -c      If the mode is config, a config file with the specified name will be
+--config | -C      If the mode is config, a config file with the specified name will be
                    generated based on all the options specified. In the other modes.
                    this option will result in PPSS reading the config file and start
                    processing items based on the settings of this file.
