@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.19"
+SCRIPT_VERSION="2.20"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -126,7 +126,7 @@ showusage () {
     echo -e "--sourcefile | -f  Each single line of the supplied file will be fed as an item to the"
     echo -e "                   command that has been specified with -c."
     echo 
-    echo -e "--config | -c      If the mode is config, a config file with the specified name will be"
+    echo -e "--config | -C      If the mode is config, a config file with the specified name will be"
     echo -e "                   generated based on all the options specified. In the other modes". 
     echo -e "                   this option will result in PPSS reading the config file and start"
     echo -e "                   processing items based on the settings of this file."
@@ -190,10 +190,10 @@ kill_process () {
     kill $LISTENER_PID >> /dev/null 2>&1
     while true
     do
-        JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | grep -i bash | wc -l`
+        JOBS=`ps aux | grep $USER | grep -v grep | grep -v -i screen | grep ppss.sh | grep -i bash | wc -l`
         if [ "$JOBS" -gt "2" ]
         then
-            for x in `ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | grep -i bash | awk '{ print $1 }'`
+            for x in `ps aux | grep $USER | grep -v grep | grep -v -i screen | grep ppss.sh | grep -i bash | awk '{ print $1 }'`
             do
                 if [ ! "$x" == "$PID" ] && [ ! "$x" == "$$" ]
                 then
@@ -482,6 +482,40 @@ do
                         exit 1;;
     esac
 done
+
+
+check_for_running_instances () {
+
+    #Checking that this is the only instance of PPSS for this user
+    JOBS=`ps axu | grep -v grep  | grep ${USER} | grep -v -i screen | grep ppss.sh | wc -l`
+    #echo "$(date) : ${JOBS}"
+    MIN_JOBS=2
+     
+    if [ "$ARCH" == "Darwin" ]
+    then
+        MIN_JOBS=2
+    elif [ "$ARCH" == "Linux" ]
+    then
+        MIN_JOBS=2
+    fi
+     
+    if [ "$JOBS" -gt "$MIN_JOBS" ] 
+    then
+        log ERROR "Cannot run PPSS because there is another running instances of PPSS detected. See log for more details."
+        if [ "$ARCH" == "Darwin" ]
+        then
+            TMP=`ps aux -j | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
+            log DEBUG "$TMP"
+        elif [ "$ARCH" == "Linux" ]
+        then
+            TMP=`ps aux -f | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
+            log DEBUG "$TMP"
+        fi
+        cleanup
+        exit 2
+    fi
+}
+
 
 display_header () {
 
@@ -1431,7 +1465,7 @@ show_status () {
 main () {
     
     is_running    
-
+    check_for_running_instances
 
     case $MODE in
     node|standalone ) 
@@ -1542,7 +1576,7 @@ main
 while true
 do
     sleep 5
-    JOBS=`ps ax | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
+    JOBS=`ps aux | grep $USER | grep -v grep | grep -v -i screen | grep ppss.sh | wc -l`
     log DEBUG "There are $JOBS running processes. "
     
     MIN_JOBS=3
