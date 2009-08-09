@@ -1,6 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.20 ===
+
+- PPSS did not take into account that different users can run PPSS on a single system. This has been fixed. Thanks to Cinly Ooi
+-  If a user is starting another instance of PPSS, the second instance will abort unless the -F option is specified. Please note that if you run multiple instances of PPSS under the same user account, all instances will process items but fail to terminate.
+- Improved error reporting.
+
 === 2.19 ===
 
 - Improved filename sanitization. 
