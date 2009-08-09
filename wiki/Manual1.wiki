@@ -57,6 +57,9 @@ Options are:
 --processes | -p   Start the specified number of processes. Ignore the number of available
                    CPUs.
 
+--force | -F Forces PPSS to start even if another instance is already running. This causes all instances
+                       of PPSS to keep on running. They will process items, but not stop.
+
 The following options are used for distributed execution of PPSS.
 
 --server | -s      Specifies the SSH server that is used for communication between nodes.
