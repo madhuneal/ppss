@@ -1,5 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
+=== 2.21 ===
+
+- Fixed bug in new mechanism for detecting multiple PPSS instances. (My fault).
+- By default now PPSS creates a directory 'ppss' in the current working dir of PPSS. 
+   By using 'export PPSS_DIR=/some/dir' you can change the directory used.
 
 === 2.20 ===
 
