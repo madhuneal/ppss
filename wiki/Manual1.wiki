@@ -174,7 +174,7 @@ This option allows you to specify a custom name for the log file that is used by
 
 Prior to executing PPSS, set the working directory as follows:
 
-export PPSS_DIR=/path/to/dir
+`export PPSS_DIR=/path/to/dir`
 
 Next, if PPSS is executed, the aforementioned directory is used to store all (temporary) files.
  
