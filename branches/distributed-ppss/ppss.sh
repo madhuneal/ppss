@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.20"
+SCRIPT_VERSION="2.22"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -48,7 +48,7 @@ shift
 # export PPSS_DIR=/path/to/workingdir
 if [ -z "$PPSS_DIR" ]
 then
-    PPSS_DIR="./ppss"
+    PPSS_DIR="ppss"
 fi
 
 if [ ! -e "$PPSS_DIR" ]
@@ -159,7 +159,7 @@ showusage () {
     echo
     echo -e "The following options are used for distributed execution of PPSS."
     echo 
-    echo -e "--server | -s      Specifies the SSH server that is used for communication between nodes."
+    echo -e "--master | -m      Specifies the SSH server that is used for communication between nodes."
     echo -e "                   Using SSH, file locks are created, informing other nodes that an item "
     echo -e "                   is locked. Also, often items, such as files, reside on this host. SCP "
     echo -e "                   is used to transfer files from this host to nodes for local procesing."
@@ -167,7 +167,7 @@ showusage () {
     echo -e "--node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS "
     echo -e "                   name per line."
     echo
-    echo -e "--key | -k         The SSH key that a node uses to connect to the server."
+    echo -e "--key | -k         The SSH key that a node uses to connect to the master."
     echo
     echo -e "--known-hosts | -K The file that contains the server public key. Can often be found on  "
     echo -e "                   hosts that already once connected to the server. See the file "
@@ -243,11 +243,13 @@ exec_cmd () {
 
     CMD="$1"
 
-    if [ ! -z "$SSH_SERVER" ] && [ "$SECURE_COPY" == "1" ]
+    if [ ! -z "$SSH_SERVER" ] 
     then
         ssh $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER $CMD
+        return $?
     else
         eval "$CMD"
+        return $?
     fi
 }
 
@@ -482,7 +484,7 @@ do
                             shift 2
                         fi
                         ;;
-        --server|-s ) 
+        --master|-m ) 
                         SSH_SERVER="$2"
                         add_var_to_config SSH_SERVER "$SSH_SERVER"
                         shift 2
@@ -533,7 +535,7 @@ check_for_running_instances () {
     JOBS=`ps axu | grep -v grep  | grep ${USER} | grep -v -i screen | grep ppss.sh | wc -l`
     #echo "$(date) : ${JOBS}"
     get_min_jobs
-    log INFO "Minjobs is $MIN_JOBS"
+    log DEBUG "Minjobs is $MIN_JOBS"
     
     if [ "$JOBS" -gt "$MIN_JOBS" ]  
     then
@@ -750,9 +752,15 @@ erase_ppss () {
     then
         for NODE in `cat $NODES_FILE`
         do
-            log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
-            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            does_file_exist "ppss"
+            if [ "$?" == "0" ]
+            then
+                log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
+                ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
+                ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            else
+                log INFO "PPSS was not present on node $NODE."
+            fi
         done
     else
         log INFO "Aborting.."
@@ -1464,7 +1472,7 @@ start_all_workers () {
 get_status_of_node () {
 
     NODE="$1"
-    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$PPSS_HOME_DIR/$NODE_STATUS"`
+    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$PPSS_DIR/$NODE_STATUS"`
     ERROR="$?"
     if [ ! "$ERROR" == "0" ]
     then
@@ -1508,7 +1516,13 @@ show_status () {
     for x in `cat $NODES_FILE`
     do
         NODE=`get_status_of_node "$x" | awk '{ print $1 }'`
-        RES=`exec_cmd "grep $NODE ~/$JOB_LOG_DIR/* | wc -l"`
+        RES=`exec_cmd "grep $NODE ~/$JOB_LOG_DIR/* >> /dev/null 2>&1"`
+        if [ ! "$ERROR" == "0" ]
+        then
+            RES=0
+        else
+            RES=`exec_cmd "grep $NODE ~/$JOB_LOG_DIR/* | wc -l"`
+        fi
         let PROCESSED=$PROCESSED+$RES
         STATUS=`get_status_of_node "$x" | awk '{ print $2 }'`
         LINE=`echo "$x $NODE $RES $STATUS" | awk '{ printf ("%-16s %-18s % 10s %10s\n",$1,$2,$3,$4) }'`
