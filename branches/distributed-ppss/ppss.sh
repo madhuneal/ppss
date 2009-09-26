@@ -644,6 +644,7 @@ init_vars () {
     if [ ! "$?" == "0" ]
     then
         echo "ERROR: remote output dir $REMOTE_OUTPUT_DIR does not exist."
+        set_status STOPPED
         cleanup
         exit
     fi
@@ -720,6 +721,7 @@ check_status () {
     if [ ! "$ERROR" == "0" ]
     then
         log INFO "$FUNCTION - $MESSAGE"
+        set_status STOPPED 
         cleanup
         exit 1
     fi
@@ -736,15 +738,9 @@ erase_ppss () {
     then
         for NODE in `cat $NODES_FILE`
         do
-            does_file_exist "ppss"
-            if [ "$?" == "0" ]
-            then
-                log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-                ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
-                ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
-            else
-                log INFO "PPSS was not present on node $NODE."
-            fi
+            log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     else
         log INFO "Aborting.."
@@ -823,6 +819,7 @@ deploy_ppss () {
     if [ -z "$NODES_FILE" ]
     then
         log INFO "ERROR - are you using the right option? -C ?"
+        set_status ERROR
         cleanup 
         exit 1
     fi
@@ -847,6 +844,7 @@ deploy_ppss () {
     if [ ! -e "$NODES_FILE" ]
     then
         log ERROR "File $NODES with list of nodes does not exist."
+        set_status ERROR
         cleanup
         exit 1
     else
@@ -990,6 +988,7 @@ random_delay () {
     if [ -z "$ARGS" ]
     then
         log ERROR "$FUNCNAME Function random delay, no argument specified."
+        set_status ERROR
         exit 1
     fi
 
@@ -1212,6 +1211,7 @@ get_all_items () {
     if [ "$SIZE_OF_ARRAY" -le "0" ]
     then
         log ERROR "Source file/dir seems to be empty."
+        set_status STOPPED
         cleanup
         exit 1
     fi
@@ -1453,6 +1453,7 @@ listen_for_job () {
         fi
     done
     kill_process
+    set_status STOPPED
     log DEBUG "Listener stopped."
 }
 
@@ -1563,6 +1564,7 @@ main () {
                     if [ ! -e "$NODES_FILE" ]
                     then
                         log ERROR "File $NODES with list of nodes does not exist."
+                        set_status STOPPED
                         cleanup
                         exit 1
                     else
