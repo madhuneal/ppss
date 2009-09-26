@@ -1,5 +1,9 @@
 #summary Changelog of distributed PPSS
 #labels Featured
+=== 2.30 ===
+
+- PPSS now operates fully asynchronous. There are no polling mechanisms, every action is almost realtime. 
+
 === 2.21 ===
 
 - Fixed bug in new mechanism for detecting multiple PPSS instances. (My fault).
