@@ -729,7 +729,7 @@ check_status () {
 erase_ppss () {
 
     
-    echo "Are you realy sure you want to erase PPSS from all nades!? (YES/NO)"
+    echo "Are you realy sure you want to erase PPSS from all nodes!? (YES/NO)"
     read YN
 
     if [ "$YN" == "yes" ] || [ "$YN" == "YES" ] 
