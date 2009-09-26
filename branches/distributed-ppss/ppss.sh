@@ -74,7 +74,6 @@ PERCENT="0"
 PID="$$"
 LISTENER_PID=""
 IFS_BACKUP="$IFS"
-INTERVAL="30"                           # Polling interval to check if there are running jobs.
 CPUINFO=/proc/cpuinfo
 PROCESSORS=""
 STOP_KEY=$RANDOM$RANDOM$RANDOM
