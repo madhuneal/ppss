@@ -69,7 +69,7 @@ ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer" # Pointer for keeping track of
 JOB_LOG_DIR="$PPSS_DIR/job_log"                   # Directory containing log files of processed items.
 LOGFILE="$PPSS_DIR/ppss-log.txt"                  # General PPSS log file. Contains lots of info.
 STOP=0                                            # STOP job.
-MAX_DELAY=2
+MAX_DELAY=3
 PERCENT="0"
 PID="$$"
 LISTENER_PID=""
@@ -1329,6 +1329,8 @@ commando () {
 
     log DEBUG "Processing item $ITEM"
 
+    #Decide if an item must be transfered to the node.
+    #or be processed in-place (NFS / SMB mount?)
     if [ "$TRANSFER_TO_SLAVE" == "0" ]
     then
         if [ -z "$SRC_DIR" ] && [ ! -z "$INPUT_FILE" ]
@@ -1388,6 +1390,7 @@ commando () {
            echo -e "Status:\t\tSuccess - item has been processed." >> "$ITEM_LOG_FILE"
         fi
 
+        #Remove the item after it has been processed as not to fill up disk space.
         if [ "$TRANSFER_TO_SLAVE" == "1" ]      
         then
             if [ -e "$ITEM" ]
@@ -1415,11 +1418,11 @@ commando () {
 
         if [ ! -z "$SSH_SERVER" ]
         then
-            log DEBUG "Uploading item log file $ITEM_LOG_FILE to master."
-            scp -q $SSH_OPTS $SSH_KEY "$ITEM_LOG_FILE" $USER@$SSH_SERVER:~/$JOB_LOG_DIR/ 
+            log DEBUG "Uploading item log file $ITEM_LOG_FILE to master ~/$PPSS_HOME_DIR/$JOB_LOG"
+            scp -q $SSH_OPTS $SSH_KEY "$ITEM_LOG_FILE" $USER@$SSH_SERVER:~/$JOB_LOG_DIR
             if [ ! "$?" == "0" ]
             then
-                log ERROR "Uploading of item log file failed."
+                log DEBUG "Uploading of item log file failed."
             fi
         fi
     fi
@@ -1524,12 +1527,10 @@ show_status () {
     for x in `cat $NODES_FILE`
     do
         NODE=`get_status_of_node "$x" | awk '{ print $1 }'`
-        RES=`exec_cmd "grep $NODE ~/$JOB_LOG_DIR/* >> /dev/null 2>&1"`
-        if [ ! "$ERROR" == "0" ]
+        RES=`exec_cmd "grep -i $NODE ~/$JOB_LOG_DIR/*  | wc -l "`
+        if [ ! "$?" == "0" ]
         then
             RES=0
-        else
-            RES=`exec_cmd "grep $NODE ~/$JOB_LOG_DIR/* | wc -l"`
         fi
         let PROCESSED=$PROCESSED+$RES
         STATUS=`get_status_of_node "$x" | awk '{ print $2 }'`
