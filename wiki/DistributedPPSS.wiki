@@ -62,4 +62,4 @@ So a node tries to lock a file by issueing a mkdir on the server through SSH. If
     * Accessible through SSH.
     * Must support Bash shell.
 
-Please note that it is *NOT* required to run PPSS on the central Master server. Only slaves need PPSS installed. Also the central server for inter-node communication (item locking) can (and will often be) the same host as the file server.
+Although it is not necessary to run PPSS on the master SSH server, it must be installed on the master SSH server. This is done automatically by PPSS when the deploy command is issued.
