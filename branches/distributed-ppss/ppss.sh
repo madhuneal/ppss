@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.32"
+SCRIPT_VERSION="2.33"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -210,7 +210,7 @@ showusage () {
 kill_process () {
 
 
-    kill $LISTENER_PID > /dev/null 2&>1
+    kill $LISTENER_PID > /dev/null 2>&1
     sleep 1
     cleanup
     sleep 1
@@ -1463,7 +1463,7 @@ listen_for_job () {
             fi
             log DEBUG "$((MAX_NO_OF_RUNNING_JOBS-DIED)) jobs are remaining."
         else
-             commando "$event" &
+            commando "$event" &
         fi
     done
     kill_process
@@ -1488,7 +1488,6 @@ start_all_workers () {
         start_single_worker
         ((i++))
     done
-
 }
 
 get_status_of_node () {
