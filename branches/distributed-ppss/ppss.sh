@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.33"
+SCRIPT_VERSION="2.34"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -1345,6 +1345,7 @@ commando () {
         DATE=`date +%b\ %d\ %H:%M:%S`
         echo "===== PPSS Item Log File =====" > "$ITEM_LOG_FILE"
         echo -e "Host:\t\t$HOSTNAME" >> "$ITEM_LOG_FILE"
+        echo -e "Process:$PID" >> "$ITEM_LOG_FILE"
         echo -e "Item:\t\t$ITEM" >> "$ITEM_LOG_FILE"
         echo -e "Start date:\t$DATE" >> "$ITEM_LOG_FILE"
         echo -e "" >> "$ITEM_LOG_FILE"
