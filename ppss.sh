@@ -60,18 +60,17 @@ CONFIG=""
 HOSTNAME=`hostname`
 ARCH=`uname`
 
-RUNNING_SIGNAL="$PPSS_DIR/$0_is_running"          # Prevents running mutiple instances of PPSS.. 
-GLOBAL_LOCK="$PPSS_DIR/PPSS-GLOBAL-LOCK"          # Global lock file used by local PPSS instance.
-PAUSE_SIGNAL="$PPSS_DIR/pause_signal"             # Pause processing if this file is present.
-PAUSE_DELAY=300                                   # Polling every 5 minutes by default.
-STOP_SIGNAL="$PPSS_DIR/stop_signal"               # Stop processing if this file is present.
-ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer" # Pointer for keeping track of processed items.
-JOB_LOG_DIR="$PPSS_DIR/job_log"                   # Directory containing log files of processed items.
-LOGFILE="$PPSS_DIR/ppss-log.txt"                  # General PPSS log file. Contains lots of info.
-STOP=0                                            # STOP job.
+PID="$$"
+GLOBAL_LOCK="$PPSS_DIR/PPSS-GLOBAL-LOCK-$PID"           # Global lock file used by local PPSS instance.
+PAUSE_SIGNAL="$PPSS_DIR/pause_signal"                   # Pause processing if this file is present.
+PAUSE_DELAY=300                                         # Polling every 5 minutes by default.
+STOP_SIGNAL="$PPSS_DIR/stop_signal"                     # Stop processing if this file is present.
+ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer-$PID"  # Pointer for keeping track of processed items.
+JOB_LOG_DIR="$PPSS_DIR/job_log"                         # Directory containing log files of processed items.
+LOGFILE="$PPSS_DIR/ppss-log-$$.txt"                     # General PPSS log file. Contains lots of info.
+STOP=0                                                  # STOP job.
 MAX_DELAY=3
 PERCENT="0"
-PID="$$"
 LISTENER_PID=""
 IFS_BACKUP="$IFS"
 CPUINFO=/proc/cpuinfo
@@ -102,7 +101,6 @@ REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must 
 SCRIPT=""                               # Custom user script that is executed by ppss.
 ITEM_ESCAPED=""
 NODE_STATUS="status.txt"
-FORCE="no"
 
 showusage () {
     
@@ -332,30 +330,12 @@ cleanup () {
         rm -rf $GLOBAL_LOCK
     fi
 
-    if [ -e "$RUNNING_SIGNAL" ]
-    then
-        rm "$RUNNING_SIGNAL"
-    fi
-
     if [ -e "$SSH_SOCKET" ]
     then
         rm -rf "$SSH_SOCKET"
     fi
 
 }
-
-# check if ppss is already running.
-is_running () {
-
-    if [ -e "$RUNNING_SIGNAL" ] && [ ! "$MODE" == "kill" ] 
-    then
-        echo 
-        log ERROR "$0 is already running (lock file exists)."
-        echo
-        exit 1
-    fi
-}
-
 
 add_var_to_config () {
     
@@ -584,7 +564,7 @@ init_vars () {
 
     echo 0 > $ARRAY_POINTER_FILE
 
-    FIFO=$(pwd)/fifo-$RANDOM-$RANDOM
+    FIFO=$PPSS_DIR/fifo-$RANDOM-$RANDOM
 
     if [ ! -e "$FIFO" ]
     then    
@@ -592,8 +572,6 @@ init_vars () {
     fi
 
     exec 42<> $FIFO
-
-    touch $RUNNING_SIGNAL
 
     set_status "RUNNING" 
 
@@ -1554,8 +1532,6 @@ show_status () {
 # If this is called, the whole framework will execute.
 main () {
     
-    is_running    
-
     case $MODE in
     node|standalone ) 
                     init_vars
