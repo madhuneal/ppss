@@ -587,8 +587,9 @@ init_vars () {
         log INFO "CPU: $MODEL $SPEED"
     elif [ "$ARCH" == "SunOS" ]
     then
-        CPU=`psrinfo -v | grep MHz | cut -d " " -f 4,8 | awk '{ printf ("Processor architecture: %s @ %s MHz.\n", $1,$2) }'`
-        log INFO "CPU: $CPU"
+        CPU=`psrinfo -v | grep MHz | cut -d " " -f 4,8 | awk '{ printf ("Processor architecture: %s @ %s MHz.\n", $1,$2) }' | head -n 1`
+        
+        log INFO "$CPU"
     else
         log INFO "CPU: Cannot determine. Provide a patch for your arch!"
         log INFO "Arch is $ARCH"
