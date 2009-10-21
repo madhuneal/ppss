@@ -585,6 +585,10 @@ init_vars () {
         MODEL=`system_profiler SPHardwareDataType | grep "Processor Name" | cut -d ":" -f 2`
         SPEED=`system_profiler SPHardwareDataType | grep "Processor Speed" | cut -d ":" -f 2`
         log INFO "CPU: $MODEL $SPEED"
+    elif [ "$ARCH" == "SunOS" ]
+    then
+        CPU=`psrinfo -v | grep MHz | cut -d " " -f 4,8 | awk '{ printf ("Processor architecture: %s @ %s MHz.\n", $1,$2) }'`
+        log INFO "CPU: $CPU"
     else
         log INFO "CPU: Cannot determine. Provide a patch for your arch!"
         log INFO "Arch is $ARCH"
