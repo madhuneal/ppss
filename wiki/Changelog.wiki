@@ -1,6 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.34 ===
+
+- PPSS now works on Solaris if Bash is installed.
+- PPSS can now be run simultaneously within the same directory. If multiple instances are started of PPSS with the same arguments, they work together. If other arguments are used, they work separately.
+- Cleaned stuff up a bit.
+
 === 2.31 ===
 
 - The status screen in distributed mode is now working properly again.
