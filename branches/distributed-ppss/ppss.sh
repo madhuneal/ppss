@@ -524,11 +524,12 @@ done
 
 display_header () {
 
+    log info ""
     log INFO "========================================================="
     log INFO "                       |P|P|S|S|                         "
     log INFO "$SCRIPT_NAME version $SCRIPT_VERSION"
     log INFO "========================================================="
-    log INFO "Hostname:\t$HOSTNAME"
+    log INFO "Hostname:\t\t$HOSTNAME"
     log INFO "---------------------------------------------------------"
 }
 
@@ -575,11 +576,6 @@ init_vars () {
 
     set_status "RUNNING" 
 
-    if [ -z "$MAX_NO_OF_RUNNING_JOBS" ]
-    then 
-        get_no_of_cpus $HYPERTHREADING
-    fi
-
     if [ -e "$CPUINFO" ]
     then
         CPU=`cat /proc/cpuinfo | grep 'model name' | cut -d ":" -f 2 | sed -e s/^\ //g | sort | uniq`
@@ -589,9 +585,15 @@ init_vars () {
         MODEL=`system_profiler SPHardwareDataType | grep "Processor Name" | cut -d ":" -f 2`
         SPEED=`system_profiler SPHardwareDataType | grep "Processor Speed" | cut -d ":" -f 2`
         log INFO "CPU: $MODEL $SPEED"
-    fi
-        
+    else
+        log INFO "CPU: Cannot determine. Provide a patch for your arch!"
+        log INFO "Arch is $ARCH"
+    fi 
 
+    if [ -z "$MAX_NO_OF_RUNNING_JOBS" ]
+    then 
+        get_no_of_cpus $HYPERTHREADING
+    fi
 
     does_file_exist "$JOB_LOG_DIR"
     if [ ! "$?" == "0" ]
@@ -674,14 +676,16 @@ log () {
 
     DATE=`date +%b\ %d\ %H:%M:%S`
     PREFIX="$DATE: ${TYPE_EXP:0:$TYPE_LENGTH}"
+    PREFIX_SMALL="$DATE: "
 
     LOG_MSG="$PREFIX $MESG"
+    ECHO_MSG="$PREFIX_SMALL $MESG"
 
     echo -e "$LOG_MSG" >> "$LOGFILE"
 
     if [ "$TYPE" == "INFO" ] || [ "$TYPE" == "ERROR" ] || [ "$TYPE" == "WARN" ]
     then
-        echo -e "$LOG_MSG"
+        echo -e "$ECHO_MSG"
     fi
 
 }
@@ -901,12 +905,22 @@ get_no_of_cpus () {
             NUMBER=`sysctl hw.ncpu | awk '{ print $2 }'`
             got_cpu_info "$?"
 
-        else
-            NUMBER=`grep ^processor $CPUINFO | wc -l`
+        elif [ "$ARCH" == "SunOS" ]
+        then
+            NUMBER=`psrinfo | grep on-line | wc -l`
             got_cpu_info "$?"
-
+        else
+            if [ -e "$CPUINFO" ]
+            then
+                NUMBER=`grep ^processor $CPUINFO | wc -l`
+                got_cpu_info "$?"
+            fi 
         fi
-        log INFO "Found $NUMBER logic processors."
+
+        if [ ! -z "$NUMBER" ]
+        then
+            log INFO "Found $NUMBER logic processors."
+        fi
 
     elif [ "$HPT" == "no" ]
     then
@@ -956,11 +970,12 @@ get_no_of_cpus () {
 
     fi
 
-    if [ ! -z "$NUMBER" ]
+    if [ ! -z "$NUMBER" ] 
     then
         MAX_NO_OF_RUNNING_JOBS=$NUMBER
     else
-        log INFO "$FUNCNAME ERROR - number of CPUs not obtained."
+        log ERROR "Number of CPUs not obtained."
+        log ERROR "Please specify manually with -p."
         set_status "ERROR"
         exit 1
     fi
@@ -1451,9 +1466,9 @@ start_all_workers () {
 
     if [ "$MAX_NO_OF_RUNNING_JOBS" == "1" ]
     then
-        log INFO "Starting $MAX_NO_OF_RUNNING_JOBS worker."
+        log INFO "Starting $MAX_NO_OF_RUNNING_JOBS single worker."
     else
-        log INFO "Starting $MAX_NO_OF_RUNNING_JOBS workers."
+        log INFO "Starting $MAX_NO_OF_RUNNING_JOBS parallel workers."
     fi
     log INFO "---------------------------------------------------------"
 
