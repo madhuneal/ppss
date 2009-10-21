@@ -77,8 +77,8 @@ IFS_BACKUP="$IFS"
 CPUINFO=/proc/cpuinfo
 PROCESSORS=""
 STOP_KEY=$RANDOM$RANDOM$RANDOM
+PIDS_FILE="$PPSS_DIR/pids"
 
-MIN_JOBS=3
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_KNOWN_HOSTS=""
@@ -205,6 +205,46 @@ showusage () {
     echo 
     echo -e "$0 node -d /somedir -c 'cp "$ITEM" /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key"
     echo    
+}
+
+add_pid () {
+
+    PID="$1"
+    if [ ! -z "$PID" ]
+    then
+        log ERROR "Cannot add empty pid to pidlist."
+        return 1
+    else
+        echo "$x" >> "$PIDS_FILE"
+    fi
+}
+
+get_pids () {
+
+    cat "$PIDS_FILE"
+}
+
+del_pid () {
+
+    PID="$1"
+    PIDS_LIST=`get_pids`
+    PIDS_FILE_TMP="$PIDS_FILE.tmp"
+
+    if [ -z "$PID" ]
+    then
+        log ERROR "Cannot delete empty PID."
+        return 1
+    fi
+
+    for x in $PIDS_LIST
+    do
+        if [ ! "$x" == "$PID" ]
+        then
+            echo "$x" >> "$PIDS_FILE_TMP"
+        fi
+    done
+    mv "$PIDS_FILE_TMP" "$PIDS_FILE"
+
 }
 
 kill_process () {
@@ -500,50 +540,6 @@ do
                         exit 1;;
     esac
 done
-
-
-get_min_jobs () {
-
-    if [ "$ARCH" == "Darwin" ]
-    then
-        MIN_JOBS=4
-    elif [ "$ARCH" == "Linux" ]
-    then
-        MIN_JOBS=3
-    fi
-}
-
-check_for_running_instances () {
-
-    #Checking that this is the only instance of PPSS for this user
-    JOBS=`ps axu | grep -v grep  | grep ${USER} | grep -v -i screen | grep ppss.sh | wc -l`
-    #echo "$(date) : ${JOBS}"
-    get_min_jobs
-    log DEBUG "Minjobs is $MIN_JOBS"
-    
-    if [ "$JOBS" -gt "$MIN_JOBS" ]  
-    then
-        if [ "$FORCE" == "no" ]
-        then
-            log ERROR "Cannot run PPSS because there are other running instances of PPSS detected. See log for more details."
-            log ERROR "Use -F to override. Please note that all running PPSS instances will never quit if you do." 
-            if [ "$ARCH" == "Darwin" ]
-            then
-                TMP=`ps aux -j | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
-                log DEBUG "$TMP"
-            elif [ "$ARCH" == "Linux" ]
-            then
-                TMP=`ps aux -f | grep -v grep | grep ${USER} | grep -v -i screen | grep ppss.sh` 
-                log DEBUG "$TMP"
-            fi
-            cleanup
-            exit 2
-        elif [ "$FORCE" == "yes" ]
-        then
-            log WARN "\n\n*** Multiple instances of PPSS detected. This process will not terminate. ***\n\n"
-        fi
-    fi
-}
 
 
 display_header () {
@@ -1559,7 +1555,6 @@ show_status () {
 main () {
     
     is_running    
-    check_for_running_instances
 
     case $MODE in
     node|standalone ) 
