@@ -22,37 +22,37 @@ Oct 21 16:38:49:  ---------------------------------------------------------
 
 === 2.31 ===
 
-- The status screen in distributed mode is now working properly again.
+  * The status screen in distributed mode is now working properly again.
 
 === 2.30 ===
 
-- PPSS now operates fully asynchronous. There are no polling mechanisms, every action is almost realtime. 
+  * PPSS now operates fully asynchronous. There are no polling mechanisms, every action is almost realtime. 
 
 === 2.21 ===
 
-- Fixed bug in new mechanism for detecting multiple PPSS instances. (My fault).
+  * Fixed bug in new mechanism for detecting multiple PPSS instances. (My fault).
 
-- By default now PPSS creates a directory 'ppss' in the current working dir of PPSS. 
+  * By default now PPSS creates a directory 'ppss' in the current working dir of PPSS. 
    By using 'export PPSS_DIR=/some/dir' you can change the directory used.
 
 === 2.20 ===
 
-- PPSS did not take into account that different users can run PPSS on a single system. This has been fixed. Thanks to Cinly Ooi
+  * PPSS did not take into account that different users can run PPSS on a single system. This has been fixed. Thanks to Cinly Ooi
 
--  If a user is starting another instance of PPSS, the second instance will abort unless the -F option is specified. 
+  * If a user is starting another instance of PPSS, the second instance will abort unless the -F option is specified. 
 Please note that if you run multiple instances of PPSS under the same user account, all instances will process items but fail to terminate.
 
-- Improved error reporting.
+  * Improved error reporting.
 
 === 2.19 ===
 
-- Improved filename sanitization. 
+  * Improved filename sanitization. 
 
-- Fixed typo.
+  * Fixed typo.
 
 === 2.18 ===
 
-- PPSS now also record CPU model of Mac OS X devices.
+  * PPSS now also record CPU model of Mac OS X devices.
 
 {{{
 mrt 29 23:11:56: INFO  =========================================================
@@ -84,7 +84,7 @@ Mar 29 23:19:14: INFO  ---------------------------------------------------------
 
 === 2.17 ===
 
-- Implemented nifty status screen for distributed mode.
+  * Implemented nifty status screen for distributed mode.
 
 {{{
 mrt 29 22:18:27: INFO  =========================================================
@@ -112,9 +112,9 @@ mrt 29 22:18:32: INFO  Total processed:                           271
 
 === 2.16 ===
 
-- Cleaned up output to screen.
-- Deployment of ppss to nodes uses a single SSH connection for file transfer.
-- Deployment of ppss to nodes is done in parallel. 
+  * Cleaned up output to screen.
+  * Deployment of ppss to nodes uses a single SSH connection for file transfer.
+  * Deployment of ppss to nodes is done in parallel. 
 
 === 2.15 ===
 
@@ -136,7 +136,7 @@ mrt 29 01:22:06: INFO   - 10.0.0.1:	PAUZED (router)
 
 }}}
 
-- Also, the ; character is now supported in filenames. 
+  * Also, the ; character is now supported in filenames. 
 
 === 2.14 ===
 
