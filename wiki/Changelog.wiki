@@ -3,9 +3,22 @@
 
 === 2.34 ===
 
-- PPSS now works on Solaris if Bash is installed.
-- PPSS can now be run simultaneously within the same directory. If multiple instances are started of PPSS with the same arguments, they work together. If other arguments are used, they work separately.
-- Cleaned stuff up a bit.
+  * PPSS now works on Solaris if Bash is installed.
+  * PPSS can now be run simultaneously within the same directory. If multiple instances are started of PPSS with the same arguments, they work together. If other arguments are used, they work separately.
+  * Cleaned stuff up a bit.
+
+{{{
+Oct 21 16:38:48:  =========================================================
+Oct 21 16:38:48:                         |P|P|S|S|                         
+Oct 21 16:38:48:  Distributed Parallel Processing Shell Script version 2.34
+Oct 21 16:38:48:  =========================================================
+Oct 21 16:38:48:  Hostname:             opensolaris-vm
+Oct 21 16:38:48:  ---------------------------------------------------------
+Oct 21 16:38:49:  Processor architecture: i386 @ 3600 MHz.
+Oct 21 16:38:49:  Found 2 logic processors.
+Oct 21 16:38:49:  Starting 2 parallel workers.
+Oct 21 16:38:49:  ---------------------------------------------------------
+}}}
 
 === 2.31 ===
 
