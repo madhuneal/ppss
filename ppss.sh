@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. Do not change. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.30"
+SCRIPT_VERSION="2.32"
 
 # The first argument to this script is always the 'mode'.
 MODE="$1"
@@ -579,7 +579,7 @@ init_vars () {
     if [ -z "$COMMAND" ]
     then
         echo
-        echo "ERROR - no command specified."
+        log ERROR "No command specified."
         echo
         showusage
         cleanup
@@ -623,7 +623,7 @@ init_vars () {
     if [ ! "$?" == "0" ]
     then
         log DEBUG "Job log directory $JOB_lOG_DIR does not exist. Creating."
-        exec_cmd "mkdir $JOB_LOG_DIR"
+        exec_cmd "mkdir -p $JOB_LOG_DIR"
     else
         log DEBUG "Job log directory $JOB_LOG_DIR exists."
     fi
@@ -637,13 +637,13 @@ init_vars () {
 
     if [ ! -e "$JOB_LOG_DIR" ]
     then
-        mkdir "$JOB_LOG_DIR"
+        mkdir -p "$JOB_LOG_DIR"
     fi
 
     does_file_exist "$REMOTE_OUTPUT_DIR"
     if [ ! "$?" == "0" ]
     then
-        echo "ERROR: remote output dir $REMOTE_OUTPUT_DIR does not exist."
+        log ERROR "Remote output dir $REMOTE_OUTPUT_DIR does not exist."
         set_status STOPPED
         cleanup
         exit
@@ -841,6 +841,7 @@ deploy_ppss () {
         exit 1
     fi
 
+    INSTALLED_ON_SSH_SERVER=0
     if [ ! -e "$NODES_FILE" ]
     then
         log ERROR "File $NODES with list of nodes does not exist."
@@ -852,7 +853,17 @@ deploy_ppss () {
         do
             deploy "$NODE" &
             sleep 0.1
+            if [ "$NODE" == "$SSH_SERVER" ]
+            then   
+                log DEBUG "SSH SERVER $SSH_SERVER is also a node."
+                INSTALLED_ON_SSH_SERVER=1
+            fi
         done
+        if [ "$INSTALLED_ON_SSH_SERVER" == "0" ]
+        then
+            log DEBUG "SSH SERVER $SSH_SERVER is not a node."
+            deploy "$SSH_SERVER"
+        fi
     fi
 }
 
@@ -1418,7 +1429,7 @@ commando () {
 
         if [ ! -z "$SSH_SERVER" ]
         then
-            log DEBUG "Uploading item log file $ITEM_LOG_FILE to master ~/$PPSS_HOME_DIR/$JOB_LOG"
+            log DEBUG "Uploading item log file $ITEM_LOG_FILE to master ~/$JOB_LOG"
             scp -q $SSH_OPTS $SSH_KEY "$ITEM_LOG_FILE" $USER@$SSH_SERVER:~/$JOB_LOG_DIR
             if [ ! "$?" == "0" ]
             then
@@ -1517,6 +1528,7 @@ show_status () {
         TMP_NO=`cat $NODES_FILE | wc -l`
         log INFO "Nodes:\t $TMP_NO"
     fi
+    log INFO "Items:\t\t$ITEMS"
 
 
     log INFO "---------------------------------------------------------"
