@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.34"
+SCRIPT_VERSION="2.36"
 
 # The first argument to this script can be a mode.
 MODES="start config stop pause continue deploy status erase kill"
@@ -112,13 +112,13 @@ showusage_short () {
     echo
     echo "|P|P|S|S| $SCRIPT_NAME $SCRIPT_VERSION"
     echo
-    echo "usage: $0 [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> \"%ITEM%\"' ]"
+    echo "usage: $0 [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> \"$ITEM\"' ]"
     echo "                 [ -C <configfile> ]  [ -j ] [ -l <logfile> ] [ -p <# jobs> ]"
     echo
     echo "Examples:"
     echo "                 $0 -d /dir/with/some/files -c 'gzip '" 
-    echo "                 $0 -d /dir/with/some/files -c 'gzip \"%ITEM\"'" 
-    echo "                 $0 -d /dir/with/some/files -c 'cp \"%ITEM\" /tmp' -p 2" 
+    echo "                 $0 -d /dir/with/some/files -c 'gzip \"$ITEM\"'" 
+    echo "                 $0 -d /dir/with/some/files -c 'cp \"$ITEM\" /tmp' -p 2" 
 }
 
 showusage_normal () {
@@ -278,7 +278,6 @@ kill_process () {
         kill -9 "$SSH_MASTER_PID" >> /dev/null 2>&1 
     fi
     sleep 1
-    echo
     log INFO "Finished."
 }
 
@@ -1265,19 +1264,16 @@ get_item () {
     # This variable is used to walk thtough all array items.
     ARRAY_POINTER=`cat $ARRAY_POINTER_FILE`
 
-    # Gives a status update on the current progress..
-    PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
-    log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
-    echo -en "\033[1A"
-
+    
     # Check if all items have been processed.
     if [ "$ARRAY_POINTER" -ge "$SIZE_OF_ARRAY" ]
     then
         release_global_lock
-        return 2
+        echo -en "\033[1A"
+        return 1
     fi
 
-    # Select an item. 
+        # Select an item. 
     ITEM="${ARRAY[$ARRAY_POINTER]}" 
     if [ -z "$ITEM" ]
     then
@@ -1313,8 +1309,7 @@ start_single_worker () {
         # informed that a worker just finished / died.
         # Tis allows the listener to determine if all processes
         # are finished and it is time to stop.
-        log INFO "Waiting for remaining jobs to finish..."
-        #echo -en "\033[1A"
+        echo
         echo "$STOP_KEY" > $FIFO
         return 1
     else
@@ -1461,7 +1456,7 @@ commando () {
 # A job is executed for every event received.
 # This listener enables fully asynchronous processing.
 listen_for_job () {
-
+    FINISHED=0
     DIED=0
     log DEBUG "Listener started."
     while read event <& 42
@@ -1470,6 +1465,9 @@ listen_for_job () {
         # inform the listener that a worker is finished.
         # If all workers are finished, it is time to stop.
         # This mechanism makes PPSS asynchronous.
+
+        # Gives a status update on the current progress..
+        
         if [ "$event" == "$STOP_KEY"  ]
         then
             ((DIED++))
@@ -1477,9 +1475,30 @@ listen_for_job () {
             then
                 break
             fi
-            log DEBUG "$((MAX_NO_OF_RUNNING_JOBS-DIED)) jobs are remaining."
+            RES=$((MAX_NO_OF_RUNNING_JOBS-DIED))
+            if [ "$RES" == "1" ]
+            then
+                log INFO "$((MAX_NO_OF_RUNNING_JOBS-DIED)) job is remaining.       "
+            else
+                log INFO "$((MAX_NO_OF_RUNNING_JOBS-DIED)) jobs are remaining."
+                echo -en "\033[1A"
+            fi
         else
             commando "$event" &
+        fi
+
+        SIZE_OF_ARRAY="${#ARRAY[@]}"
+        ARRAY_POINTER=`cat $ARRAY_POINTER_FILE`
+        PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
+        if [ "$DIED" == "0" ] && [ "$FINISHED" == "0" ]
+        then
+            log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
+            if [ "$PERCENT" == "100" ]
+            then
+                FINISHED=1
+            else
+                echo -en "\033[1A"
+            fi
         fi
     done
     kill_process
