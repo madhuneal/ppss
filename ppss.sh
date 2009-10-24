@@ -76,7 +76,8 @@ ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer-$PID"  # Pointer for keeping tr
 JOB_LOG_DIR="$PPSS_DIR/job_log"                         # Directory containing log files of processed items.
 LOGFILE="$PPSS_DIR/ppss-log-$$.txt"                     # General PPSS log file. Contains lots of info.
 STOP=0                                                  # STOP job.
-MAX_DELAY=3
+MAX_DELAY=0                                             # MAX DELAY between jobs.
+MAX_LOCK_DELAY=3                                        #
 PERCENT="0"
 LISTENER_PID=""
 IFS_BACKUP="$IFS"
@@ -114,10 +115,11 @@ showusage_short () {
     echo
     echo "usage: $0 [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> \"$ITEM\"' ]"
     echo "                 [ -C <configfile> ]  [ -j ] [ -l <logfile> ] [ -p <# jobs> ]"
+    echo "                 [ -D <delay> ]"
     echo
     echo "Examples:"
     echo "                 $0 -d /dir/with/some/files -c 'gzip '" 
-    echo "                 $0 -d /dir/with/some/files -c 'gzip \"$ITEM\"'" 
+    echo "                 $0 -d /dir/with/some/files -c 'gzip \"$ITEM\"' -D 5" 
     echo "                 $0 -d /dir/with/some/files -c 'cp \"$ITEM\" /tmp' -p 2" 
 }
 
@@ -278,7 +280,7 @@ kill_process () {
         kill -9 "$SSH_MASTER_PID" >> /dev/null 2>&1 
     fi
     sleep 1
-    log INFO "Finished."
+    log INFO "Finished. Consult ./$JOB_LOG_DIR for job output."
 }
 
 exec_cmd () { 
@@ -433,6 +435,11 @@ do
                         add_var_to_config SRC_DIR "$SRC_DIR"
                         shift 2
                         ;; 
+             --delay|-D)
+                        MAX_DELAY="$2"
+                        add_var_to_config MAX_DELAY "$MAX_DELAY"
+                        shift 2
+                        ;;
           --command|-c ) 
                         COMMAND=$2
                         if [ "$MODE" == "config" ]
@@ -1043,7 +1050,7 @@ get_global_lock () {
         ERROR="$?"
         if [ ! "$ERROR" == "0" ]
         then
-            random_delay $MAX_DELAY
+            random_delay $MAX_LOCK_DELAY
             continue
         else
             break
@@ -1249,7 +1256,7 @@ get_item () {
     then
         return 1
     fi
-
+    
     get_global_lock
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
@@ -1263,7 +1270,6 @@ get_item () {
 
     # This variable is used to walk thtough all array items.
     ARRAY_POINTER=`cat $ARRAY_POINTER_FILE`
-
     
     # Check if all items have been processed.
     if [ "$ARRAY_POINTER" -ge "$SIZE_OF_ARRAY" ]
@@ -1522,6 +1528,11 @@ start_all_workers () {
     do
         start_single_worker
         ((i++))
+
+        if [ ! "$MAX_DELAY" == "0" ]
+        then
+            random_delay "$MAX_DELAY"
+        fi
     done
 }
 
