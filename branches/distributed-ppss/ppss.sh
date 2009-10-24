@@ -40,9 +40,16 @@ trap 'kill_process; ' INT
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
 SCRIPT_VERSION="2.34"
 
-# The first argument to this script is always the 'mode'.
-MODE="$1"
-shift
+# The first argument to this script can be a mode.
+MODES="start config stop pause continue deploy status erase kill"
+for x in $MODES
+do
+    if [ "$x" == "$1" ]
+    then
+        MODE="$1"
+        shift
+    fi
+done
 
 # The working directory of PPSS can be set with
 # export PPSS_DIR=/path/to/workingdir
@@ -100,23 +107,83 @@ SCRIPT=""                               # Custom user script that is executed by
 ITEM_ESCAPED=""
 NODE_STATUS="$PPSS_DIR/status.txt"
 
-showusage () {
-    
+showusage_short () {
+
+    echo
+    echo "|P|P|S|S| $SCRIPT_NAME $SCRIPT_VERSION"
+    echo
+    echo "usage: $0 [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> \"%ITEM%\"' ]"
+    echo "                 [ -C <configfile> ]  [ -j ] [ -l <logfile> ] [ -p <# jobs> ]"
+    echo
+    echo "Examples:"
+    echo "                 $0 -d /dir/with/some/files -c 'gzip '" 
+    echo "                 $0 -d /dir/with/some/files -c 'gzip \"%ITEM\"'" 
+    echo "                 $0 -d /dir/with/some/files -c 'cp \"%ITEM\" /tmp' -p 2" 
+}
+
+showusage_normal () {
+
     echo 
-    echo "$SCRIPT_NAME"
+    echo "|P|P|S|S| - $SCRIPT_NAME -"
     echo "Version: $SCRIPT_VERSION"
     echo 
     echo "PPSS is a Bash shell script that executes commands in parallel on a set  "
-    echo "of items, such as files, or lines in a file."
+    echo "of items, such as files in a directory, or lines in a file."
     echo 
-    echo "Usage: $0 MODE [ options ]"
-    echo " or "
-    echo "Usage: $0 MODE -c <config file>"
+    echo "This short summary only discuesses options for stand-alone mode. for all "
+    echo "options, run PPSS with the options --help"
+    echo
+    echo "Usage $0 [ options ]"
+    echo
+    echo -e "--command | -c     Command to execute. Syntax: '<command> ' including the single quotes."
+    echo -e "                   Example: -c 'ls -alh '. It is also possible to specify where an item "
+    echo -e "                   must be inserted: 'cp \"\$ITEM\" /somedir'."
     echo 
-    echo "Modes are:"
+    echo -e "--sourcedir | -d   Directory that contains files that must be processed. Individual files" 
+    echo -e "                   are fed as an argument to the command that has been specified with -c." 
     echo 
-    echo " standalone   For execution of PPSS on a single host."
-    echo " node         For execution of PPSS on a node, that is part of a 'cluster'."
+    echo -e "--sourcefile | -f  Each single line of the supplied file will be fed as an item to the"
+    echo -e "                   command that has been specified with -c."
+    echo 
+    echo -e "--config | -C      If the mode is config, a config file with the specified name will be"
+    echo -e "                   generated based on all the options specified. In the other modes". 
+    echo -e "                   this option will result in PPSS reading the config file and start"
+    echo -e "                   processing items based on the settings of this file."
+    echo
+    echo -e "--enable-ht | -j   Enable hyperthreading. Is disabled by default."
+    echo 
+    echo -e "--log | -l         Sets the name of the log file. The default is ppss-log.txt."
+    echo
+    echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
+    echo -e "                   CPU's."
+    echo
+    echo -e "Example: encoding some wav files to mp3 using lame:"
+    echo 
+    echo -e "$0 -d /path/to/wavfiles -c 'lame '" 
+    echo 
+    echo -e "Extended usage: use --help"
+    echo
+}
+
+if [ "$#" == "0" ]
+then
+    showusage_short
+    exit 1
+fi
+
+showusage_long () {
+    
+    echo 
+    echo "|P|P|S|S| - $SCRIPT_NAME -"
+    echo "Version: $SCRIPT_VERSION"
+    echo 
+    echo "PPSS is a Bash shell script that executes commands in parallel on a set  "
+    echo "of items, such as files in a directory, or lines in a file."
+    echo 
+    echo "Usage: $0 [ MODE ] [ options ]"
+    echo 
+    echo "Modes are optional and mainly used for running in distributed mode. Modes are:"
+    echo 
     echo " config       Generate a config file based on the supplied option parameters."
     echo " deploy       Deploy PPSS and related files on the specified nodes."
     echo " erase        Erase PPSS and related files from the specified nodes."
@@ -148,10 +215,6 @@ showusage () {
     echo
     echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
     echo -e "                   CPU's."
-    echo
-    echo -e "--force | -F       Force PPSS to run, even anoter instance of PPSS is already running."
-    echo    "                   Please note that any running PPSS instance will not exit anymore if"
-    echo    "                   you start multiple instances, although they will run fine."
     echo
     echo -e "The following options are used for distributed execution of PPSS."
     echo 
@@ -191,15 +254,15 @@ showusage () {
     echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
-    echo -e "$0 standalone -c 'lame ' -d /path/to/wavfiles -j " 
+    echo -e "$0 -c 'lame ' -d /path/to/wavfiles -j " 
     echo 
     echo -e "Running PPSS based on a configuration file."
     echo
-    echo -e "$0 standalone -C config.cfg"
+    echo -e "$0 -C config.cfg"
     echo 
     echo -e "Running PPSS on a client as part of a cluster."
     echo 
-    echo -e "$0 node -d /somedir -c 'cp "$ITEM" /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key"
+    echo -e "$0 -d /somedir -c 'cp "$ITEM" /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key"
     echo    
 }
 
@@ -212,9 +275,10 @@ kill_process () {
     sleep 1
     if [ ! -z "$SSH_MASTER_PID" ]
     then
-        kill -9 "$SSH_MASTER_PID"
+        kill -9 "$SSH_MASTER_PID" >> /dev/null 2>&1 
     fi
     sleep 1
+    echo
     log INFO "Finished."
 }
 
@@ -354,13 +418,13 @@ do
 
                         shift 2
                         ;;
-        --node|-n ) 
+             --node|-n ) 
                         NODES_FILE="$2"
                         add_var_to_config NODES_FILE "$NODES_FILE"
                         shift 2
                         ;;
 
-        --sourcefile|-f )
+       --sourcefile|-f )
                         INPUT_FILE="$2"
                         add_var_to_config INPUT_FILE "$INPUT_FILE"
                         shift 2
@@ -370,7 +434,7 @@ do
                         add_var_to_config SRC_DIR "$SRC_DIR"
                         shift 2
                         ;; 
-        --command|-c ) 
+          --command|-c ) 
                         COMMAND=$2
                         if [ "$MODE" == "config" ]
                         then
@@ -380,10 +444,13 @@ do
                         shift 2
                         ;;
 
-          --help|-h )
-                        showusage
+                    -h )
+                        showusage_normal
                         exit 1;;
-       --homedir|-H )
+                 --help)
+                        showusage_long
+                        exit 1;;
+          --homedir|-H )
                         if [ ! -z "$2" ]
                         then
                             PPSS_DIR="$2"
@@ -392,27 +459,22 @@ do
                         fi
                         ;;
                         
-     --disable-ht|-j )
+       --disable-ht|-j )
                         HYPERTHREADING=no
                         add_var_to_config HYPERTHREADING $HYPERTHREADING
                         shift 1
                         ;;
-        --log|-l )
+              --log|-l )
                         LOGFILE="$2"
                         add_var_to_config LOGFILE "$LOGFILE"
                         shift 2
                         ;;
-        --force|-F )
-                        FORCE=yes
-                        add_var_to_config FORCE "$FORCE"
-                        shift 1
-                        ;;
-     --workingdir|-w ) 
+       --workingdir|-w ) 
                         WORKINGDIR="$2"
                         add_var_to_config WORKINGDIR "$WORKINGDIR"
                         shift 2
                         ;;
-        --key|-k )
+              --key|-k )
                         SSH_KEY="$2"
                         add_var_to_config SSH_KEY "$SSH_KEY"
                         if [ ! -z "$SSH_KEY" ]
@@ -421,13 +483,13 @@ do
                         fi
                         shift 2
                         ;;
-  --known-hosts | -K ) 
+    --known-hosts | -K ) 
                         SSH_KNOWN_HOSTS="$2"
                         add_var_to_config SSH_KNOWN_HOSTS "$SSH_KNOWN_HOSTS"
                         shift 2
                         ;;
                             
-        --no-scp |-b )
+          --no-scp |-b )
                         SECURE_COPY=0
                         add_var_to_config SECURE_COPY "$SECURE_COPY"
                         shift 1
@@ -474,7 +536,7 @@ do
                         exit 0
                         ;;
         * )
-                        showusage
+                        showusage_normal
                         exit 1;;
     esac
 done
@@ -516,7 +578,7 @@ init_vars () {
         echo
         log ERROR "No command specified."
         echo
-        showusage
+        showusage_normal
         cleanup
         exit 1
     fi
@@ -813,7 +875,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $SSH_KEY $USER@$NODE "cd $PPSS_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
+    ssh $SSH_KEY $USER@$NODE "cd $PPSS_DIR ; screen -d -m -S PPSS $0 node --config $CONFIG" 
 }
 
 
@@ -1251,8 +1313,8 @@ start_single_worker () {
         # informed that a worker just finished / died.
         # Tis allows the listener to determine if all processes
         # are finished and it is time to stop.
-        echo
         log INFO "Waiting for remaining jobs to finish..."
+        #echo -en "\033[1A"
         echo "$STOP_KEY" > $FIFO
         return 1
     else
@@ -1407,6 +1469,7 @@ listen_for_job () {
         # The start_single_worker method sends a special signal to 
         # inform the listener that a worker is finished.
         # If all workers are finished, it is time to stop.
+        # This mechanism makes PPSS asynchronous.
         if [ "$event" == "$STOP_KEY"  ]
         then
             ((DIED++))
@@ -1512,15 +1575,7 @@ show_status () {
 main () {
     
     case $MODE in
-    node|standalone ) 
-                    init_vars
-                    test_server
-                    get_all_items
-                    listen_for_job "$MAX_NO_OF_RUNNING_JOBS" & 2>&1 >> /dev/null
-                    LISTENER_PID=$!
-                    start_all_workers
-                    ;;
-        start )
+         start )
                     # This option only starts all nodes.
                     display_header
                     if [ ! -e "$NODES_FILE" ]
@@ -1607,9 +1662,14 @@ main () {
                     ;;
 
         * )
-                    showusage
-                    exit 1
+                    init_vars
+                    test_server
+                    get_all_items
+                    listen_for_job "$MAX_NO_OF_RUNNING_JOBS" & 2>&1 >> /dev/null
+                    LISTENER_PID=$!
+                    start_all_workers
                     ;;
+
     esac
 
 }
