@@ -36,7 +36,7 @@
 # Handling control-c for a clean shutdown.
 trap 'kill_process; ' INT
 
-# Setting some vars. Do not change. 
+# Setting some vars. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
 SCRIPT_VERSION="2.34"
 
@@ -63,7 +63,7 @@ ARCH=`uname`
 PID="$$"
 GLOBAL_LOCK="$PPSS_DIR/PPSS-GLOBAL-LOCK-$PID"           # Global lock file used by local PPSS instance.
 PAUSE_SIGNAL="$PPSS_DIR/pause_signal"                   # Pause processing if this file is present.
-PAUSE_DELAY=300                                         # Polling every 5 minutes by default.
+PAUSE_DELAY=60                                          # Polling every 1 minutes by default.
 STOP_SIGNAL="$PPSS_DIR/stop_signal"                     # Stop processing if this file is present.
 ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer-$PID"  # Pointer for keeping track of processed items.
 JOB_LOG_DIR="$PPSS_DIR/job_log"                         # Directory containing log files of processed items.
@@ -76,7 +76,6 @@ IFS_BACKUP="$IFS"
 CPUINFO=/proc/cpuinfo
 PROCESSORS=""
 STOP_KEY=$RANDOM$RANDOM$RANDOM
-PIDS_FILE="$PPSS_DIR/pids"
 
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
@@ -91,7 +90,6 @@ SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                                         # Blowfish is faster but still secure. 
 SSH_MASTER_PID=""
 
-PPSS_HOME_DIR="ppss"
 ITEM_LOCK_DIR="$PPSS_DIR/PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
 PPSS_LOCAL_TMPDIR="$PPSS_DIR/PPSS_LOCAL_TMPDIR"   # Local directory on slave for local processing.
 PPSS_LOCAL_OUTPUT="$PPSS_DIR/PPSS_LOCAL_OUTPUT"   # Local directory on slave for local output.
@@ -100,7 +98,7 @@ SECURE_COPY="1"                         # If set, use SCP, Otherwise, use cp.
 REMOTE_OUTPUT_DIR=""                    # Remote directory to which output must be uploaded.
 SCRIPT=""                               # Custom user script that is executed by ppss.
 ITEM_ESCAPED=""
-NODE_STATUS="status.txt"
+NODE_STATUS="$PPSS_DIR/status.txt"
 
 showusage () {
     
@@ -203,46 +201,6 @@ showusage () {
     echo 
     echo -e "$0 node -d /somedir -c 'cp "$ITEM" /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key"
     echo    
-}
-
-add_pid () {
-
-    PID="$1"
-    if [ ! -z "$PID" ]
-    then
-        log ERROR "Cannot add empty pid to pidlist."
-        return 1
-    else
-        echo "$x" >> "$PIDS_FILE"
-    fi
-}
-
-get_pids () {
-
-    cat "$PIDS_FILE"
-}
-
-del_pid () {
-
-    PID="$1"
-    PIDS_LIST=`get_pids`
-    PIDS_FILE_TMP="$PIDS_FILE.tmp"
-
-    if [ -z "$PID" ]
-    then
-        log ERROR "Cannot delete empty PID."
-        return 1
-    fi
-
-    for x in $PIDS_LIST
-    do
-        if [ ! "$x" == "$PID" ]
-        then
-            echo "$x" >> "$PIDS_FILE_TMP"
-        fi
-    done
-    mv "$PIDS_FILE_TMP" "$PIDS_FILE"
-
 }
 
 kill_process () {
@@ -428,8 +386,8 @@ do
        --homedir|-H )
                         if [ ! -z "$2" ]
                         then
-                            PPSS_HOME_DIR="$2"
-                            add_var_to_config PPSS_HOME_DIR $PPSS_HOME_DIR
+                            PPSS_DIR="$2"
+                            add_var_to_config PPSS_DIR $PPSS_DIR
                             shift 2
                         fi
                         ;;
@@ -721,9 +679,9 @@ erase_ppss () {
     then
         for NODE in `cat $NODES_FILE`
         do
-            log INFO "Erasing PPSS homedir $PPSS_HOME_DIR from node $NODE."
-            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
-            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
+            log INFO "Erasing PPSS homedir $PPSS_DIR from node $NODE."
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_DIR/$0 kill"
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_DIR"
         done
     else
         log INFO "Aborting.."
@@ -765,24 +723,24 @@ deploy () {
 
     sleep 1.1
 
-    ssh -q $SSH_OPTS_NODE $SSH_KEY $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
-    scp -q $SSH_OPTS_NODE $SSH_KEY $0 $USER@$NODE:~/$PPSS_HOME_DIR
+    ssh -q $SSH_OPTS_NODE $SSH_KEY $USER@$NODE "mkdir $PPSS_DIR >> /dev/null 2>&1" 
+    scp -q $SSH_OPTS_NODE $SSH_KEY $0 $USER@$NODE:~/$PPSS_DIR
     set_error $?
-    scp -q $SSH_OPTS_NODE $SSH_KEY $KEY $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY $KEY $USER@$NODE:~/$PPSS_DIR
     set_error $?
-    scp -q $SSH_OPTS_NODE $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_DIR
     set_error $?
-    scp -q $SSH_OPTS_NODE $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_DIR
     set_error $?
     if [ ! -z "$SCRIPT" ]
     then
-        scp -q $SSH_OPTS_NODE $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
+        scp -q $SSH_OPTS_NODE $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_DIR
         set_error $?
     fi
 
     if [ ! -z "$INPUT_FILE" ]
     then
-        scp -q $SSH_OPTS_NODE $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
+        scp -q $SSH_OPTS_NODE $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_DIR
         set_error $?
     fi
 
@@ -855,7 +813,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $SSH_KEY $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
+    ssh $SSH_KEY $USER@$NODE "cd $PPSS_DIR ; screen -d -m -S PPSS ./ppss.sh node --config $CONFIG" 
 }
 
 
@@ -1488,7 +1446,7 @@ start_all_workers () {
 get_status_of_node () {
 
     NODE="$1"
-    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$PPSS_DIR/$NODE_STATUS"`
+    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$NODE_STATUS"`
     ERROR="$?"
     if [ ! "$ERROR" == "0" ]
     then
@@ -1509,7 +1467,7 @@ show_status () {
     then
         ITEMS=`exec_cmd "ls -1 $SRC_DIR | wc -l"`  
     else
-        ITEMS=`exec_cmd "cat $PPSS_HOME_DIR/$INPUT_FILE | wc -l"`
+        ITEMS=`exec_cmd "cat $PPSS_DIR/$INPUT_FILE | wc -l"`
     fi
     
     PROCESSED=`exec_cmd "ls -1 $ITEM_LOCK_DIR | wc -l"` 2>&1 >> /dev/null
