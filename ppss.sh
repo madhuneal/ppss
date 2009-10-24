@@ -98,6 +98,7 @@ SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                                         # Blowfish is faster but still secure. 
 SSH_MASTER_PID=""
 
+PPSS_HOME_DIR=ppss
 ITEM_LOCK_DIR="$PPSS_DIR/PPSS_ITEM_LOCK_DIR"      # Remote directory on master used for item locking.
 PPSS_LOCAL_TMPDIR="$PPSS_DIR/PPSS_LOCAL_TMPDIR"   # Local directory on slave for local processing.
 PPSS_LOCAL_OUTPUT="$PPSS_DIR/PPSS_LOCAL_OUTPUT"   # Local directory on slave for local output.
@@ -159,6 +160,9 @@ showusage_normal () {
     echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
     echo -e "                   CPU's."
     echo
+    echo -e "--delay | -D       Adds an initial random delay to the start of all parallel jobs to spread"
+    echo -e "                   the load. The delay is only used at the start of all 'threads'."
+    echo 
     echo -e "Example: encoding some wav files to mp3 using lame:"
     echo 
     echo -e "$0 -d /path/to/wavfiles -c 'lame '" 
@@ -218,6 +222,9 @@ showusage_long () {
     echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
     echo -e "                   CPU's."
     echo
+    echo -e "--delay | -D       Adds an initial random delay to the start of all parallel jobs to spread"
+    echo -e "                   the load. The delay is only used at the start of all 'threads'."
+    echo 
     echo -e "The following options are used for distributed execution of PPSS."
     echo 
     echo -e "--master | -m      Specifies the SSH server that is used for communication between nodes."
@@ -459,8 +466,8 @@ do
           --homedir|-H )
                         if [ ! -z "$2" ]
                         then
-                            PPSS_DIR="$2"
-                            add_var_to_config PPSS_DIR $PPSS_DIR
+                            PPSS_HOME_DIR="$2"
+                            add_var_to_config PPSS_DIR $PPSS_HOME_DIR
                             shift 2
                         fi
                         ;;
@@ -748,8 +755,8 @@ erase_ppss () {
         for NODE in `cat $NODES_FILE`
         do
             log INFO "Erasing PPSS homedir $PPSS_DIR from node $NODE."
-            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_DIR/$0 kill"
-            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_DIR"
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "./$PPSS_HOME_DIR/$0 kill"
+            ssh -q $SSH_KEY $SSH_OPTS $USER@$NODE "rm -rf $PPSS_HOME_DIR"
         done
     else
         log INFO "Aborting.."
@@ -791,24 +798,24 @@ deploy () {
 
     sleep 1.1
 
-    ssh -q $SSH_OPTS_NODE $SSH_KEY $USER@$NODE "mkdir $PPSS_DIR >> /dev/null 2>&1" 
-    scp -q $SSH_OPTS_NODE $SSH_KEY $0 $USER@$NODE:~/$PPSS_DIR
+    ssh -q $SSH_OPTS_NODE $SSH_KEY $USER@$NODE "mkdir $PPSS_HOME_DIR >> /dev/null 2>&1" 
+    scp -q $SSH_OPTS_NODE $SSH_KEY $0 $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS_NODE $SSH_KEY $KEY $USER@$NODE:~/$PPSS_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY $KEY $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS_NODE $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY $CONFIG $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
-    scp -q $SSH_OPTS_NODE $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_DIR
+    scp -q $SSH_OPTS_NODE $SSH_KEY known_hosts $USER@$NODE:~/$PPSS_HOME_DIR
     set_error $?
     if [ ! -z "$SCRIPT" ]
     then
-        scp -q $SSH_OPTS_NODE $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_DIR
+        scp -q $SSH_OPTS_NODE $SSH_KEY $SCRIPT $USER@$NODE:~/$PPSS_HOME_DIR
         set_error $?
     fi
 
     if [ ! -z "$INPUT_FILE" ]
     then
-        scp -q $SSH_OPTS_NODE $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_DIR
+        scp -q $SSH_OPTS_NODE $SSH_KEY $INPUT_FILE $USER@$NODE:~/$PPSS_HOME_DIR
         set_error $?
     fi
 
@@ -881,7 +888,7 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $SSH_KEY $USER@$NODE "cd $PPSS_DIR ; screen -d -m -S PPSS $0 node --config $CONFIG" 
+    ssh $SSH_KEY $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS $0 node --config $CONFIG" 
 }
 
 
