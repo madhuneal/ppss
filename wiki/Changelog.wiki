@@ -1,11 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.34 ===
+=== 2.40 ===
 
   * All usage screens have been overhauled to make it more readable.
   * Reworked the distributed stuff.
   * PPSS now keeps track of processes and kills them gracefully.
+  * Bugs in process handling have been removed.
 
 === 2.34 ===
 
