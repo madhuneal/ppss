@@ -1498,7 +1498,7 @@ listen_for_job () {
             done
             if [ ! -z "$SSH_MASTER_PID" ]
             then
-                kill "$SSH_MASTER_PID" #>> /dev/null 2>&1 
+                kill "$SSH_MASTER_PID" 
             fi
             log INFO "Finished. Consult ./$JOB_LOG_DIR for job output."
             break
