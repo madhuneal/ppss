@@ -30,8 +30,7 @@ If PPSS is executed with -h, more options are displayed.
 {{{
 bash-3.2$ ./ppss.sh -h
 
-|P|P|S|S| - Distributed Parallel Processing Shell Script -
-Version: 2.40
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.40
 
 PPSS is a Bash shell script that executes commands in parallel on a set  
 of items, such as files in a directory, or lines in a file.
