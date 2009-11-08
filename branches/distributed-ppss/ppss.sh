@@ -863,6 +863,7 @@ deploy_ppss () {
             then   
                 log DEBUG "SSH SERVER $SSH_SERVER is also a node."
                 INSTALLED_ON_SSH_SERVER=1
+                exec_cmd "mkdir -p $PPSS_HOME_DIR/$JOB_LOG_DIR"
             fi
         done
         if [ "$INSTALLED_ON_SSH_SERVER" == "0" ]
@@ -1555,11 +1556,11 @@ start_all_workers () {
 get_status_of_node () {
 
     NODE="$1"
-    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$PPSS_HOME_DIR/$NODE_STATUS"`
+    STATUS=`ssh -o ConnectTimeout=10 $SSH_KEY $USER@$NODE cat "$PPSS_HOME_DIR/$NODE_STATUS" 2>/dev/null`
     ERROR="$?"
     if [ ! "$ERROR" == "0" ]
     then
-        STATUS="Could not connect to $NODE."
+        STATUS="UNKNOWN"
     fi
     echo "$STATUS"
 }
@@ -1600,16 +1601,21 @@ show_status () {
     for x in `cat $NODES_FILE`
     do
         NODE=`get_status_of_node "$x" | awk '{ print $1 }'`
-        RES=`exec_cmd "grep -i $NODE ~/$PPSS_HOME_DIR/$JOB_LOG_DIR/*  | wc -l "`
-        if [ ! "$?" == "0" ]
+        if [ ! "$NODE" == "UNKNOWN" ]
         then
+            STATUS=`get_status_of_node "$x" | awk '{ print $2 }'`
+            RES=`exec_cmd "grep -i $NODE ~/$PPSS_HOME_DIR/$JOB_LOG_DIR/*  | wc -l "`
+            if [ ! "$?" == "0" ]
+            then
+                RES=0
+            fi
+        else
+            STATUS="UNKNOWN"
             RES=0
         fi
         let PROCESSED=$PROCESSED+$RES
-        STATUS=`get_status_of_node "$x" | awk '{ print $2 }'`
         LINE=`echo "$x $NODE $RES $STATUS" | awk '{ printf ("%-16s %-18s % 10s %10s\n",$1,$2,$3,$4) }'`
         log INFO "$LINE"
-
     done
     log INFO "---------------------------------------------------------"
     LINE=`echo $PROCESSED | awk '{ printf ("Total processed: % 29s\n",$1) }'`
