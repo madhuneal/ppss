@@ -1411,9 +1411,9 @@ commando () {
         # Some error logging. Success or fail.
         if [ ! "$ERROR" == "0" ] 
         then
-           echo -e "Status:\t\tError - something went wrong." >> "$ITEM_LOG_FILE"
+           echo -e "Status:\t\tFAILURE" >> "$ITEM_LOG_FILE"
         else
-           echo -e "Status:\t\tSuccess - item has been processed." >> "$ITEM_LOG_FILE"
+           echo -e "Status:\t\tSUCCESS" >> "$ITEM_LOG_FILE"
         fi
 
         #Remove the item after it has been processed as not to fill up disk space.
@@ -1500,7 +1500,6 @@ listen_for_job () {
             then
                 kill "$SSH_MASTER_PID" #>> /dev/null 2>&1 
             fi
-            cleanup
             log INFO "Finished. Consult ./$JOB_LOG_DIR for job output."
             break
         else
@@ -1526,6 +1525,7 @@ listen_for_job () {
 
     set_status STOPPED
     log DEBUG "Listener stopped."
+    cleanup
     exit
 }
 
@@ -1604,7 +1604,7 @@ show_status () {
         if [ ! "$NODE" == "UNKNOWN" ]
         then
             STATUS=`get_status_of_node "$x" | awk '{ print $2 }'`
-            RES=`exec_cmd "grep -i $NODE ~/$PPSS_HOME_DIR/$JOB_LOG_DIR/*  | wc -l "`
+            RES=`exec_cmd "grep -i $NODE ~/$PPSS_HOME_DIR/$JOB_LOG_DIR/* 2>/dev/null | wc -l "`
             if [ ! "$?" == "0" ]
             then
                 RES=0
