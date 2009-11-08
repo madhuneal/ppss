@@ -1472,35 +1472,34 @@ listen_for_job () {
         # This mechanism makes PPSS asynchronous.
 
         # Gives a status update on the current progress..
-        echo "$event" >> event.txt
         
         if [ "$event" == "$STOP_KEY"  ]
         then
             ((DIED++))
             if [ "$DIED" -ge "$MAX_NO_OF_RUNNING_JOBS" ] 
             then
-                break
-            fi
-            RES=$((MAX_NO_OF_RUNNING_JOBS-DIED))
-            if [ "$RES" == "1" ]
-            then
-                log INFO "$((MAX_NO_OF_RUNNING_JOBS-DIED)) job is remaining.       "
+                kill_process
             else
-                log INFO "$((MAX_NO_OF_RUNNING_JOBS-DIED)) jobs are remaining."
-                echo -en "\033[1A"
+                RES=$((MAX_NO_OF_RUNNING_JOBS-DIED))
+                if [ "$RES" == "1" ]
+                then
+                    log INFO "$((MAX_NO_OF_RUNNING_JOBS-DIED)) job is remaining.       "
+                else
+                    log INFO "$((MAX_NO_OF_RUNNING_JOBS-DIED)) jobs are remaining."
+                    echo -en "\033[1A"
+                fi
             fi
         elif [ "$event" == "$KILL_KEY" ]
         then
             for x in $PIDS
             do
-                log DEBUG "Killing pid $x..."
                 kill $x >> /dev/null 2>&1
             done
-            cleanup
             if [ ! -z "$SSH_MASTER_PID" ]
             then
-                kill -9 "$SSH_MASTER_PID" >> /dev/null 2>&1 
+                kill "$SSH_MASTER_PID" #>> /dev/null 2>&1 
             fi
+            cleanup
             log INFO "Finished. Consult ./$JOB_LOG_DIR for job output."
             break
         else
@@ -1523,6 +1522,7 @@ listen_for_job () {
             fi
         fi
     done
+
     set_status STOPPED
     log DEBUG "Listener stopped."
     exit
@@ -1717,7 +1717,6 @@ main () {
 
         * )
                     init_vars
-                    test_server
                     get_all_items
                     listen_for_job "$MAX_NO_OF_RUNNING_JOBS" & 2>&1 >> /dev/null
                     LISTENER_PID=$!
