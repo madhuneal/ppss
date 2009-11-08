@@ -35,8 +35,8 @@ bash-3.2$ ./ppss.sh -h
 PPSS is a Bash shell script that executes commands in parallel on a set  
 of items, such as files in a directory, or lines in a file.
 
-This short summary only discuesses options for stand-alone mode. for all 
-options, run PPSS with the options --help
+This short summary only discusses options for stand-alone mode. for a 
+complete listing of all options, run PPSS with the options --help
 
 Usage ./ppss.sh [ options ]
 
