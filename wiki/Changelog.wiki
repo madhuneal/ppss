@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.41 ===
+
+  * Fixed some stupid bug that prevented distributed PPSS from functioning.
+
 === 2.40 ===
 
   * All usage screens have been overhauled to make it more readable.
