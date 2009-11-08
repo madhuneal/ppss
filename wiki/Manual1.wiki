@@ -60,7 +60,7 @@ Usage ./ppss.sh [ options ]
 --log | -l         Sets the name of the log file. The default is ppss-log.txt.
 
 --processes | -p   Start the specified number of processes. Ignore the number of available
-                   CPU's.
+                   CPUs.
 
 --delay | -D       Adds an initial random delay to the start of all parallel jobs to spread
                    the load. The delay is only used at the start of all 'threads'.
