@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.40"
+SCRIPT_VERSION="2.41"
 
 # The first argument to this script can be a mode.
 MODES="node start config stop pause continue deploy status erase kill"
@@ -117,7 +117,7 @@ showusage_short () {
     echo
     echo "usage: $0 [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> \"\$ITEM\"' ]"
     echo "                 [ -C <configfile> ]  [ -j ] [ -l <logfile> ] [ -p <# jobs> ]"
-    echo "                 [ -D <delay> ]"
+    echo "                 [ -D <delay> ] [ -h ] [ --help ]" 
     echo
     echo "Examples:"
     echo "                 $0 -d /dir/with/some/files -c 'gzip '" 
@@ -128,14 +128,13 @@ showusage_short () {
 showusage_normal () {
 
     echo 
-    echo "|P|P|S|S| - $SCRIPT_NAME -"
-    echo "Version: $SCRIPT_VERSION"
+    echo "|P|P|S|S| $SCRIPT_NAME $SCRIPT_VERSION"
     echo 
     echo "PPSS is a Bash shell script that executes commands in parallel on a set  "
     echo "of items, such as files in a directory, or lines in a file."
     echo 
-    echo "This short summary only discuesses options for stand-alone mode. for all "
-    echo "options, run PPSS with the options --help"
+    echo "This short summary only discusses options for stand-alone mode. for a "
+    echo "complete listing of all options, run PPSS with the options --help"
     echo
     echo "Usage $0 [ options ]"
     echo
@@ -159,7 +158,7 @@ showusage_normal () {
     echo -e "--log | -l         Sets the name of the log file. The default is ppss-log.txt."
     echo
     echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
-    echo -e "                   CPU's."
+    echo -e "                   CPUs."
     echo
     echo -e "--delay | -D       Adds an initial random delay to the start of all parallel jobs to spread"
     echo -e "                   the load. The delay is only used at the start of all 'threads'."
@@ -181,8 +180,7 @@ fi
 showusage_long () {
     
     echo 
-    echo "|P|P|S|S| - $SCRIPT_NAME -"
-    echo "Version: $SCRIPT_VERSION"
+    echo "|P|P|S|S| $SCRIPT_NAME $SCRIPT_VERSION"
     echo 
     echo "PPSS is a Bash shell script that executes commands in parallel on a set  "
     echo "of items, such as files in a directory, or lines in a file."
@@ -198,6 +196,7 @@ showusage_long () {
     echo " start        Starting PPSS on nodes."
     echo " pause        Pausing PPSS on all nodes."
     echo " stop         Stopping PPSS on all nodes."
+    echo " node         Running PPSS as a node, requires additional options."
     echo 
     echo "Options are:"
     echo 
@@ -221,7 +220,7 @@ showusage_long () {
     echo -e "--log | -l         Sets the name of the log file. The default is ppss-log.txt."
     echo
     echo -e "--processes | -p   Start the specified number of processes. Ignore the number of available"
-    echo -e "                   CPU's."
+    echo -e "                   CPUs."
     echo
     echo -e "--delay | -D       Adds an initial random delay to the start of all parallel jobs to spread"
     echo -e "                   the load. The delay is only used at the start of all 'threads'."
@@ -589,7 +588,7 @@ init_vars () {
 
     echo 0 > $ARRAY_POINTER_FILE
 
-    FIFO=$PPSS_DIR/fifo-$RANDOM-$RANDOM
+    FIFO=/tmp/ppss-fifo-$RANDOM-$RANDOM
 
     if [ ! -e "$FIFO" ]
     then    
@@ -864,6 +863,7 @@ deploy_ppss () {
                 log DEBUG "SSH SERVER $SSH_SERVER is also a node."
                 INSTALLED_ON_SSH_SERVER=1
                 exec_cmd "mkdir -p $PPSS_HOME_DIR/$JOB_LOG_DIR"
+                exec_cmd "mkdir -p $ITEM_LOCK_DIR"
             fi
         done
         if [ "$INSTALLED_ON_SSH_SERVER" == "0" ]
@@ -871,6 +871,7 @@ deploy_ppss () {
             log DEBUG "SSH SERVER $SSH_SERVER is not a node."
             deploy "$SSH_SERVER"
             exec_cmd "mkdir -p $PPSS_HOME_DIR/$JOB_LOG_DIR"
+            exec_cmd "mkdir -p $ITEM_LOCK_DIR"
         fi
     fi
 }
@@ -1084,6 +1085,7 @@ escape_item () {
             sed s/\\|/\\\\\\\\\\\\\\|/g | \
             sed s/\&/\\\\\\\\\\\\\\&/g | \
             sed s/\;/\\\\\\\\\\\\\\;/g | \
+            sed s/\\\//\\\\\\\\\\\\\\_/g | \
             sed s/\(/\\\\\\\\\\(/g | \
             sed s/\)/\\\\\\\\\\)/g ` 
 }
@@ -1217,13 +1219,13 @@ get_all_items () {
         if [ ! -z "$SSH_SERVER" ] # Are we running stand-alone or as a slave?"
         then
             log DEBUG "Running as slave, input file has been pushed (hopefully)."
-            if [ ! -e "$INPUT_FILE" ]
-            then
-                log ERROR "Input file $INPUT_FILE does not exist."
-                set_status "ERROR"
-                cleanup 
-                exit 1
-            fi
+        fi
+        if [ ! -e "$INPUT_FILE" ]
+        then
+            log ERROR "Input file $INPUT_FILE does not exist."
+            set_status "ERROR"
+            cleanup 
+            exit 1
         fi
     
         exec 10<"$INPUT_FILE"
