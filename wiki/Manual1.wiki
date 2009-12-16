@@ -92,7 +92,7 @@ Also, a directory is created, by default JOB_LOG. Within this directory a logfil
 
 Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form. In this example, some files are compressed with gzip. 
 
-`$ ./ppss.sh standalone -d /path/to/files -c 'gzip '`
+`$ ./ppss.sh -d /path/to/files -c 'gzip '`
 
 In this example, we can distinguish a 'mode' and two options. The mode speaks for itself: PPSS is not part of a cluster, it is just running on the host. 
 
@@ -102,15 +102,15 @@ The -c option specifies the command that will be executed by PPSS in parallel fo
 
 Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
 
-`$ ./ppss.sh standalone -d /path/to/files -c 'cp "$ITEM" /destination/dir'`
+`$ ./ppss.sh -d /path/to/files -c 'cp "$ITEM" /destination/dir'`
 
 Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
 
-`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q '` 
+`$ ./ppss.sh -f list-of-urls.txt -c 'wget -q '` 
 
 In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
 
-`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q "$ITEM"'` -p 5
+`$ ./ppss.sh -f list-of-urls.txt -c 'wget -q "$ITEM"'` -p 5
 
 *Advanced usage of the -c command option *
 
@@ -130,15 +130,14 @@ This option allows you to specify how many parallel proceses should be started. 
 
 * -j * (Disable hyper-threading )
 
-If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core 7i quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
+If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core i7 quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
 
-Please note that this mechanism depends on what /proc/cpu (linux) reports. For exampe, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why would you do that anyway) only one processor is used. So  test this option if you need it. 
+Please note that this mechanism depends on what /proc/cpu (linux) reports. For example, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why would you do that anyway) only one processor is used. So  test this option if you need it. 
 
 * -l <PPSS log file>*
 
 This option allows you to specify a custom name for the log file that is used by PPSS itself. 
  
-
 *setting the working directory*
 
 Prior to executing PPSS, set the working directory as follows:
@@ -155,7 +154,7 @@ A config file is created when PPSS is called with the 'config' mode.  In this mo
 
 This command creates a config file config.cfg that can be used in stead of re-entering the command line options like this:
 
-`./ppss.sh standalone -C config.cfg`
+`./ppss.sh -C config.cfg`
 
 == Advanced usage (by example) ==
 
@@ -163,7 +162,7 @@ This command creates a config file config.cfg that can be used in stead of re-en
 
 Unrarring some files in parallel can be as easy as:
 
-`./ppss.sh standalone -d ./dir-with-rars -c 'unrar x "$ITEM" ./output-dir'
+`./ppss.sh -d ./dir-with-rars -c 'unrar x "$ITEM" ./output-dir'
 
 However, this may result in the outcome that all extracted files are dumped in the directory output-dir. This may not be wat you want. If you want to extract the files contained within each RAR-file into it's own directory. We need to perform two steps:
 
@@ -261,12 +260,3 @@ PPSS skips items if an item log file is present in the Job_log directory. This a
 
 ppss.sh must be run inside a file system that support file locking. It
 can, however, the data to process can be in a non-locking file system.
-
-PPSS controller/intermediate output such as ppss.sh_is_running, JOB_LOG,
-PPSS_ directories, ppss-array-pointer etc will be created inside the same
-directory as ppss.sh, will be written to the current directory. This means one cannot share a copy of ppss.sh. Each ppss.sh run must be use its own copy of ppss.sh file.
-
-Q: Is it possible to modify the program to write
-all these files to a user-specified directory instead? 
-
-A: As requested, this feature will be implemented, one way or the other.
