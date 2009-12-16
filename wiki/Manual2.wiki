@@ -17,7 +17,7 @@ To use PPSS in a distributed fasion, The following steps must be performed:
 {{{
 bash-3.2$ ./ppss.sh --help
 
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.40
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.41
 
 PPSS is a Bash shell script that executes commands in parallel on a set  
 of items, such as files in a directory, or lines in a file.
@@ -286,8 +286,8 @@ By sourcing the config.cfg file of PPSS, this script can use the PPSS_LOCAL_OUTP
 
 *Rules when writing a script for usage with PPSS*
 
-  * As with any decent shell script, use exit codes. Exit code 0 reflects successful execution, any other value a faillure. 
-  * Echo some information about what the script is doing. If something fails, echo what is wrong. This is caught by PPSS and logged in the logfile of the item that is processed.
+  * As with any decent shell script, use exit codes. Exit code 0 reflects successful execution, any other value a failure. 
+  * Echo some information about what the script is doing. If something fails, echo what is wrong. This is caught by PPSS and logged in the log file of the item that is processed.
 
 For example, the above script results in this kind of output: 
 
