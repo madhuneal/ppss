@@ -1403,7 +1403,7 @@ commando () {
         ITEM="./$PPSS_LOCAL_TMPDIR/$ITEM_NO_PATH"
     fi
 
-    LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
+    LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g | sed s/\\ /_/g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
 
     OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$LOG_FILE_NAME"
