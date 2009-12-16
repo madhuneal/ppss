@@ -3,9 +3,9 @@
 
 = Introduction =
 
-Most computer systems that are bought over the last couple of years feature at least two processor cores or sometimes even more. Most programs and tasks do not benefit from these extra cpu cores because software must be written in such a way that it benefits from extra CPUs. Most of the time, only one cpu or cpu core is used.
+Most computer systems that are bought over the last couple of years feature at least two processor cores or sometimes even more. Most programs and tasks do not benefit from these extra CPU cores because software must be written in such a way that it benefits from extra CPUs. Most of the time, only one CPU or CPU core is used.
 
-Most users can't benefit from these extra cpu cores, because the programs they use are often not aware of the extra cpu cores. Often, the task they perform by itself cannot be distributed over multiple processors. For example, resizing a photo or converting a file into some different format.
+Most users can't benefit from these extra CPU cores, because the programs they use are often not aware of the extra cpu cores. Often, the task they perform by itself cannot be distributed over multiple processors. For example, resizing a photo or converting a file into some different format.
 
 Although many processes by themselves cannot be parallelized, if a large number of these processes must be executed on separate items (for example, files), they can be executed in parallel.
 
@@ -18,10 +18,10 @@ Features of PPSS are:
   * Very easy to use. You may be up and running within 5 minutes. 
   * Will run on any system that supports bash (although only tested on Linux and Mac OS X)
 
-  * Automatically detects the number of cpus and cpu cores and start a worker for each of them.
+  * Automatically detects the number of CPUs and CPU cores and start a worker for each of them.
   * Supports hyper-threading if available. 
   * All output of individual processes will be logged for your inspection.
-  * Actions performed by PPSS are logged to a logfile for your inspection.
+  * Actions performed by PPSS are logged to a log file for your inspection.
   * Can take a text file with one item per line. Items can be what you want. URLs, files, anything.
   * Can execute any command you like. Can execute your own scripts in parallel.
   * If interrupted, will by default continue where it was left, skipping processed files.
