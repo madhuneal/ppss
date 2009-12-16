@@ -55,7 +55,8 @@ done
 # export PPSS_DIR=/path/to/workingdir
 if [ -z "$PPSS_DIR" ]
 then
-    PPSS_DIR="ppss"
+    PWD=`pwd`
+    PPSS_DIR="$PWD/ppss"
 fi
 
 if [ ! -e "$PPSS_DIR" ]
@@ -174,6 +175,10 @@ showusage_normal () {
 if [ "$#" == "0" ]
 then
     showusage_short
+    if [ -e "$PPSS_DIR" ]
+    then
+        rm -rf "$PPSS_DIR" 
+    fi
     exit 1
 fi
 
@@ -449,9 +454,17 @@ do
 
                     -h )
                         showusage_normal
+                        if [ -e "$PPSS_DIR" ]
+                        then
+                            rm -rf "$PPSS_DIR" 
+                        fi
                         exit 1;;
                  --help)
                         showusage_long
+                        if [ -e "$PPSS_DIR" ]
+                        then
+                            rm -rf "$PPSS_DIR" 
+                        fi
                         exit 1;;
           --homedir|-H )
                         if [ ! -z "$2" ]
@@ -1362,7 +1375,9 @@ commando () {
         ITEM_NO_PATH=`basename "$ITEM"`
         escape_item "$ITEM_NO_PATH"
         OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_ESCAPED"
-        # This VAR can be used in scripts or command lines.
+        # ^
+        # | This VAR can be used in scripts or command lines.
+        #
         OUTPUT_FILE="$ITEM_ESCAPED"
     else
         DIRNAME=""
@@ -1372,14 +1387,15 @@ commando () {
     fi
 
     log DEBUG "Processing item $ITEM"
-
-    #Decide if an item must be transfered to the node.
-    #or be processed in-place (NFS / SMB mount?)
+    #
+    # Decide if an item must be transfered from server to the node.
+    # or be processed in-place (NFS / SMB mount?)
+    #
     if [ "$TRANSFER_TO_SLAVE" == "0" ]
     then
         if [ -z "$SRC_DIR" ] && [ ! -z "$INPUT_FILE" ]
         then
-            log DEBUG "Using item straight from INPUT FILE"
+            log DEBUG "Using item straight from the server."
         else
             ITEM="$SRC_DIR/$ITEM"
         fi
@@ -1399,33 +1415,32 @@ commando () {
     then
         log DEBUG "Skipping item $ITEM - already processed." 
     else
-        
         ERROR=""
-
+        #
         # Some formatting of item log files. 
+        #
         DATE=`date +%b\ %d\ %H:%M:%S`
         echo "===== PPSS Item Log File =====" > "$ITEM_LOG_FILE"
         echo -e "Host:\t\t$HOSTNAME" >> "$ITEM_LOG_FILE"
-        echo -e "Process:$PID" >> "$ITEM_LOG_FILE"
+        echo -e "Process:\t$PID" >> "$ITEM_LOG_FILE"
         echo -e "Item:\t\t$ITEM" >> "$ITEM_LOG_FILE"
         echo -e "Start date:\t$DATE" >> "$ITEM_LOG_FILE"
         echo -e "" >> "$ITEM_LOG_FILE"
         
+        #
         # The actual execution of the command.
+        #
+        BEFORE="$(date +%s)"
         TMP=`echo $COMMAND | grep -i '$ITEM'`
         if [ "$?" == "0"  ]
         then 
-            BEFORE="$(date +%s)"
             eval "$COMMAND" >> "$ITEM_LOG_FILE" 2>&1
             ERROR="$?"
-            AFTER="$(date +%s)"
         else
-            EXECME='$COMMAND$ITEM  >> "$ITEM_LOG_FILE" 2>&1'
-            BEFORE="$(date +%s)"
-            eval "$EXECME"
+            eval '$COMMAND"$ITEM"  >> "$ITEM_LOG_FILE" 2>&1'
             ERROR="$?"
-            AFTER="$(date +%s)"
         fi
+        AFTER="$(date +%s)"
 
         echo -e "" >> "$ITEM_LOG_FILE"
 
@@ -1520,6 +1535,7 @@ listen_for_job () {
             then
                 kill "$SSH_MASTER_PID" 
             fi
+            echo
             log INFO "Finished. Consult ./$JOB_LOG_DIR for job output."
             break
         else
