@@ -38,7 +38,7 @@ trap 'kill_process; ' INT
 
 # Setting some vars. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.41"
+SCRIPT_VERSION="2.45"
 
 # The first argument to this script can be a mode.
 MODES="node start config stop pause continue deploy status erase kill"
@@ -438,7 +438,7 @@ do
                         shift 2
                         ;;
           --command|-c ) 
-                        COMMAND=$2
+                        COMMAND="$2"
                         if [ "$MODE" == "config" ]
                         then
                             COMMAND=\'$COMMAND\'
@@ -1085,7 +1085,7 @@ escape_item () {
             sed s/\\|/\\\\\\\\\\\\\\|/g | \
             sed s/\&/\\\\\\\\\\\\\\&/g | \
             sed s/\;/\\\\\\\\\\\\\\;/g | \
-            sed s/\\\//\\\\\\\\\\\\\\_/g | \
+            sed s/\\\//\\\\\\\\\\\\\\ /g | \
             sed s/\(/\\\\\\\\\\(/g | \
             sed s/\)/\\\\\\\\\\)/g ` 
 }
@@ -1093,7 +1093,13 @@ escape_item () {
 download_item () {
 
     ITEM="$1"
-    ITEM_NO_PATH=`basename "$ITEM"`
+    if [ -e "$ITEM" ]
+    then
+        ITEM_NO_PATH=`basename "$ITEM"`
+    else
+        escape_item "$ITEM"
+        ITEM_NO_PATH="$ITEM_ESCAPED"
+    fi
 
     if [ "$TRANSFER_TO_SLAVE" == "1" ]
     then
@@ -1170,6 +1176,7 @@ lock_item () {
         sed s/\\\//\\\\\\ /g | \
         sed s/\\ /\\\\\\\\\\\\\\ /g | \
         sed s/\\'/\\\\\\\\\\\\\\'/g | \
+        sed s/\\\//\\\\\\\\\\\\\\ /g | \
         sed s/\&/\\\\\\\\\\\\\\&/g | \
         sed s/\;/\\\\\\\\\\\\\\;/g | \
         sed s/\(/\\\\\\\\\\(/g | \
@@ -1235,9 +1242,10 @@ get_all_items () {
             ARRAY[$count]=$LINE
             ((count++))
         done
+
+        exec 10>&-
   
     fi
-    exec 10>&-
 
     SIZE_OF_ARRAY="${#ARRAY[@]}"
     if [ "$SIZE_OF_ARRAY" -le "0" ]
@@ -1347,12 +1355,21 @@ elapsed () {
 commando () {
 
     ITEM="$1"
-    DIRNAME=`dirname "$ITEM"`
-    ITEM_NO_PATH=`basename "$ITEM"`
-    OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
 
-    # This VAR can be used in scripts or command lines.
-    OUTPUT_FILE="$ITEM_NO_PATH"
+    if [ -e "$ITEM" ]
+    then
+        DIRNAME=`dirname "$ITEM"`
+        ITEM_NO_PATH=`basename "$ITEM"`
+        escape_item "$ITEM_NO_PATH"
+        OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_ESCAPED"
+        # This VAR can be used in scripts or command lines.
+        OUTPUT_FILE="$ITEM_ESCAPED"
+    else
+        DIRNAME=""
+        escape_item "$ITEM"
+        ITEM_NO_PATH="$ITEM_ESCAPED"
+        OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$ITEM_NO_PATH"
+    fi
 
     log DEBUG "Processing item $ITEM"
 
@@ -1372,6 +1389,8 @@ commando () {
 
     LOG_FILE_NAME=`echo "$ITEM" | sed s/^\\\.//g | sed s/^\\\.\\\.//g | sed s/\\\///g`
     ITEM_LOG_FILE="$JOB_LOG_DIR/$LOG_FILE_NAME"
+
+    OUTPUT_DIR=$PPSS_LOCAL_OUTPUT/"$LOG_FILE_NAME"
 
     mkdir -p "$OUTPUT_DIR"
 
@@ -1401,7 +1420,7 @@ commando () {
             ERROR="$?"
             AFTER="$(date +%s)"
         else
-            EXECME='$COMMAND"$ITEM" >> "$ITEM_LOG_FILE" 2>&1'
+            EXECME='$COMMAND$ITEM  >> "$ITEM_LOG_FILE" 2>&1'
             BEFORE="$(date +%s)"
             eval "$EXECME"
             ERROR="$?"
@@ -1430,11 +1449,10 @@ commando () {
 
         fi
 
-        NEWDIR="$REMOTE_OUTPUT_DIR/$DIRNAME"
-        escape_item "$NEWDIR"
-        DIR_ESCAPED="$ITEM_ESCAPED"
+        escape_item "$DIRNAME"
+        ITEM_OUTPUT_DIR="$REMOTE_OUTPUT_DIR/$ITEM_ESCAPED"
 
-        exec_cmd "mkdir -p $DIR_ESCAPED"
+        exec_cmd "mkdir -p $ITEM_OUTPUT_DIR"
         if [ "$DIRNAME" == "." ]
         then
             DIRNAME=""
@@ -1510,9 +1528,11 @@ listen_for_job () {
             disown
         fi
 
+        get_global_lock
         SIZE_OF_ARRAY="${#ARRAY[@]}"
         ARRAY_POINTER=`cat $ARRAY_POINTER_FILE`
         PERCENT=$((100 * $ARRAY_POINTER / $SIZE_OF_ARRAY ))
+        release_global_lock
         if [ "$DIED" == "0" ] && [ "$FINISHED" == "0" ]
         then
             log INFO "Currently $PERCENT percent complete. Processed $ARRAY_POINTER of $SIZE_OF_ARRAY items." 
