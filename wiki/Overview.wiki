@@ -1,5 +1,5 @@
 #summary Introduction about PPSS and its features.
-#labels Phase-Requirements
+#labels Phase-Design
 
 = Introduction =
 
@@ -9,7 +9,9 @@ Most users can't benefit from these extra CPU cores, because the programs they u
 
 Although often, processes by themselves cannot be parallelized, if a large number of these processes must be executed on separate items (for example, files), they can most of the time be executed in parallel.
 
-The idea behind PPSS is that, you have a (large) number of items, files for example, and you want to perform some action on them. Instead of processing one item at at time, you want to process 4 items at a time, since you have a nice quad-core cpu. You will need a system that can keep keep track of running separate jobs, start new jobs if previous jobs finished and very important: keep track of which files have been processed. And wouldn't it be nice if any output of those processes is logged, so you can verify if all items are processes correctly? PPSS does this for you.
+The simple idea behind PPSS is that, you have a (large) number of items, files for example, and you want to perform some action on them. Instead of processing one item at at time, you want to process 4 items at a time, since you have a nice quad-core CPU. You will need a system that can keep keep track of running separate jobs, start new jobs if previous jobs finished and very important: keep track of which files have been processed. And wouldn't it be nice if any output of those processes is logged, so you can verify if all items are processes correctly? 
+
+PPSS does this for you.
 
 = Features = 
 
