@@ -172,7 +172,7 @@ However, this may result in the outcome that all extracted files are dumped in t
 
 Step 1: making directories based on the name of the RAR file:
 
-`/ppss.sh standalone -d ./dir-with-rars -c 'ITEM=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM"'`
+`/ppss.sh -d ./dir-with-rars -c 'ITEM=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM"'`
 
 Explanation: by default, each item consists of the full or relative path to that item. An item will expand as "./dir-with-rars/filename.rar". However, the directory name must be based only on the filename. So the unix build-in 'basename' is used to extract the filename from the item and use it to create the directory name.
 
@@ -180,13 +180,44 @@ As you can see, it is no problem to use multiple commands within the -c option, 
 
 Step 2: extracting the files of each RAR file into it's own directory. 
 
-`./ppss.sh standalone -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+`./ppss.sh -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
 
 In this example, we use the basename command again to be able to specify the output directory based on the supplied ITEM name.
 
 Ofcourse, it is possible to put this all in one command: 
 
-`./ppss.sh standalone -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM_DIR"; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+`./ppss.sh -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM_DIR"; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+
+*Execute commands in a file*
+
+Let's asume you have a file containing these lines"
+{{{
+/home/user/dosomething.sh 1
+/home/user/dosomething.sh 2
+/home/user/dosomething.sh 3
+/home/user/dosomething.sh 4
+/home/user/dosomething.sh 5
+}}}
+
+To execute this properly, the command as provided to the -c option is slightly altered:
+
+`./ppss -f afile.txt -c 'bash $ITEM'`
+
+Notice that in this case, you *must* supply the '$ITEM' variable *without* double quotes. If you omit the '$ITEM' variable or use '"$ITEM"' then the commands will fail like this:
+
+{{{
+===== PPSS Item Log File =====
+Host:		Core7i
+Process:	7905
+Item:		/home/user/ppss/dosomething.sh 1
+Start date:	Dec 16 16:32:00
+
+bash: /home/user/ppss/dosomething.sh 1: No such file or directory
+
+Status:		FAILURE
+Elapsed time (h:m:s): 0:0:0
+}}}
+
 
 == Logging (must read) == 
 
