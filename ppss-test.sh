@@ -2,6 +2,7 @@
 
 DEBUG="$1"
 VERSION=2.45
+TMP_DIR="ppss"
 
 cleanup () {
 
@@ -12,6 +13,16 @@ cleanup () {
             rm -r ./$x
         fi
     done
+}
+
+parseJobStatus () {
+
+    TMP_FILE="$1"
+
+    RES=`grep "Status:" "$JOBLOG/$TMP_FILE"`
+    STATUS=`echo "$RES" | awk '{ print $2 }'`
+    echo "$STATUS"
+
 }
 
 oneTimeSetUp () {
@@ -70,6 +81,39 @@ oneTimeTearDown () {
     fi
 }
 
+createDirectoryWithSomeFiles () {
+
+    A="File with Spaces"
+    B="File\With\Slashes"
+
+    mkdir "/tmp/$TMP_DIR"
+    for x in "$A" "$B"
+    do
+        TMP_FILE="/tmp/$TMP_DIR/$x"
+        touch "$TMP_FILE"
+    done
+}
+
+testSpacesInFilenames () {
+
+    createDirectoryWithSomeFiles
+
+    RES=$( { ./ppss.sh -d /tmp/$TMP_DIR -c 'ls -alh ' >> /dev/null ; } 2>&1 )  
+	assertEquals "PPSS did not execute properly." 0 "$?"
+
+    assertNull "PPSS retured some errors..." "$RES"
+    if [ ! "$?" == "0" ]
+    then
+        echo "RES IS $RES"
+    fi
+    
+    grep "SUCCESS" $JOBLOG/* >> /dev/null 2>&1
+    assertEquals "Found error with space in filename $TMP_FILE" "0" "$?"
+
+    rm -rf "/tmp/$TMP_DIR"   
+    rename-ppss-dir $FUNCNAME
+}
+
 testSpecialCharacterHandling () {
 
     RES=$( { ./ppss.sh -f "$INPUTFILESPECIAL" -c 'echo ' >> /dev/null ; } 2>&1 )  
@@ -90,6 +134,38 @@ testSpecialCharacterHandling () {
     assertEquals "RES1 $RES1 is not the same as RES2 $RES2" "$RES1" "$RES2"
 
     rename-ppss-dir $FUNCNAME
+}
+
+testSkippingOfProcessedItems () {
+
+    createDirectoryWithSomeFiles    
+
+    RES=$( { ./ppss.sh -d /tmp/$TMP_DIR -c 'echo ' >> /dev/null ; } 2>&1 )
+    assertEquals "PPSS did not execute properly." 0 "$?"
+    assertNull "PPSS retured some errors..." "$RES"
+
+    RES=$( { ./ppss.sh -d /tmp/$TMP_DIR -c 'echo ' >> /dev/null ; } 2>&1 )
+    assertEquals "PPSS did not execute properly." 0 "$?"
+    assertNull "PPSS retured some errors..." "$RES"
+
+    grep -i skip ./ppss/* >> /dev/null 2>&1
+    assertEquals "Skipping of items went wrong." 0 "$?"
+
+    rename-ppss-dir $FUNCNAME-1
+
+    RES=$( { ./ppss.sh -f $INPUTFILESPECIAL -c 'echo ' >> /dev/null ; } 2>&1 )
+    assertEquals "PPSS did not execute properly." 0 "$?"
+    assertNull "PPSS retured some errors..." "$RES"
+
+    RES=$( { ./ppss.sh -f $INPUTFILESPECIAL -c 'echo ' >> /dev/null ; } 2>&1 )
+    assertEquals "PPSS did not execute properly." 0 "$?"
+    assertNull "PPSS retured some errors..." "$RES"
+
+    grep -i skip ./ppss/* >> /dev/null 2>&1
+    assertEquals "Skipping of items went wrong." 0 "$?"
+
+    rm -rf "/tmp/$TMP_DIR"   
+    rename-ppss-dir $FUNCNAME-2
 }
 
 testExistLogFiles () {
@@ -121,8 +197,7 @@ getStatusOfJob () {
 
 	for x in $NORMALTESTFILES
 	do
-		RES=`grep "Status:" "$JOBLOG/$x"`
-        STATUS=`echo "$RES" | awk '{ print $2 }'`
+        STATUS=`parseJobStatus "$x"`
         assertEquals "FAILED WITH STATUS $STATUS." "$EXPECTED" "$STATUS"
     done
 
