@@ -1,6 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.50 (not yet released) ===
+
+  * Created a unit-test script using shunit2.
+  * Reworked the process management code.
+  * reworked some file name parsing issues.
+
 === 2.41 ===
 
   * Fixed some stupid bug that prevented distributed PPSS from functioning.
