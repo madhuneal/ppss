@@ -1,8 +1,10 @@
 #!/bin/bash
 
 DEBUG="$1"
-VERSION=2.50
+VERSION=2.51
 TMP_DIR="ppss"
+PPSS=ppss
+PPSS_DIR=ppss_dir
 
 cleanup () {
 
@@ -29,12 +31,12 @@ oneTimeSetUp () {
 
 	NORMALTESTFILES=`echo test-{a..z}`
     SPECIALTESTFILES="\'file-!@#$%^&*()_+=-0987654321~\' \'file-/\<>?:;'{}[]\' file-/\/\:\/!@#$%^&*()_+=-0987654321~ file-/\<>?:;'{}[] http://www.google.nl ftp://storage.nl"
-	JOBLOG=./ppss/job_log
+	JOBLOG=./$PPSS_DIR/job_log
 	INPUTFILENORMAL=test-normal.input
     INPUTFILESPECIAL=test-special.input
-    LOCALOUTPUT=ppss/PPSS_LOCAL_OUTPUT
+    LOCALOUTPUT=ppss_dir/PPSS_LOCAL_OUTPUT
 
-	REMOVEFILES="$INPUTFILENORMAL $INPUTFILESPECIAL ppss test-ppss-*"
+	REMOVEFILES="$INPUTFILENORMAL $INPUTFILESPECIAL $PPSS_DIR test-ppss-*"
 
     cleanup
 
@@ -51,7 +53,7 @@ oneTimeSetUp () {
 
 testVersion () {
 
-    RES=`./ppss.sh -v`
+    RES=`./$PPSS -v`
     
     for x in $RES
     do
@@ -67,9 +69,9 @@ rename-ppss-dir () {
 
 	TEST="$1"
 
-	if [ -e "ppss" ] && [ -d "ppss" ] && [ ! -z "$TEST" ]
+	if [ -e "$PPSS_DIR" ] && [ -d "$PPSS_DIR" ] && [ ! -z "$TEST" ]
 	then
-		mv ppss test-ppss-"$TEST"
+		mv "$PPSS_DIR" test-ppss-"$TEST"
 	fi
 }
 
@@ -98,7 +100,7 @@ testSpacesInFilenames () {
 
     createDirectoryWithSomeFiles
 
-    RES=$( { ./ppss.sh -d /tmp/$TMP_DIR -c 'ls -alh ' >> /dev/null ; } 2>&1 )  
+    RES=$( { ./$PPSS -d /tmp/$TMP_DIR -c 'ls -alh ' >> /dev/null ; } 2>&1 )  
 	assertEquals "PPSS did not execute properly." 0 "$?"
 
     assertNull "PPSS retured some errors..." "$RES"
@@ -116,7 +118,7 @@ testSpacesInFilenames () {
 
 testSpecialCharacterHandling () {
 
-    RES=$( { ./ppss.sh -f "$INPUTFILESPECIAL" -c 'echo ' >> /dev/null ; } 2>&1 )  
+    RES=$( { ./$PPSS -f "$INPUTFILESPECIAL" -c 'echo ' >> /dev/null ; } 2>&1 )  
 	assertEquals "PPSS did not execute properly." 0 "$?"
 
     assertNull "PPSS retured some errors..." "$RES"
@@ -125,7 +127,7 @@ testSpecialCharacterHandling () {
         echo "RES IS $RES"
     fi
 
-    RES=`find ppss/PPSS_LOCAL_OUTPUT | wc -l | sed 's/\ //g'`
+    RES=`find ppss_dir/PPSS_LOCAL_OUTPUT | wc -l | sed 's/\ //g'`
     assertEquals "To many lock files..." "7" "$RES"
 
     RES1=`ls -1 $JOBLOG`
@@ -140,28 +142,28 @@ testSkippingOfProcessedItems () {
 
     createDirectoryWithSomeFiles    
 
-    RES=$( { ./ppss.sh -d /tmp/$TMP_DIR -c 'echo ' >> /dev/null ; } 2>&1 )
+    RES=$( { ./$PPSS -d /tmp/$TMP_DIR -c 'echo ' >> /dev/null ; } 2>&1 )
     assertEquals "PPSS did not execute properly." 0 "$?"
     assertNull "PPSS retured some errors..." "$RES"
 
-    RES=$( { ./ppss.sh -d /tmp/$TMP_DIR -c 'echo ' >> /dev/null ; } 2>&1 )
+    RES=$( { ./$PPSS -d /tmp/$TMP_DIR -c 'echo ' >> /dev/null ; } 2>&1 )
     assertEquals "PPSS did not execute properly." 0 "$?"
     assertNull "PPSS retured some errors..." "$RES"
 
-    grep -i skip ./ppss/* >> /dev/null 2>&1
+    grep -i skip ./$PPSS_dir/* >> /dev/null 2>&1
     assertEquals "Skipping of items went wrong." 0 "$?"
 
     rename-ppss-dir $FUNCNAME-1
 
-    RES=$( { ./ppss.sh -f $INPUTFILESPECIAL -c 'echo ' >> /dev/null ; } 2>&1 )
+    RES=$( { ./$PPSS -f $INPUTFILESPECIAL -c 'echo ' >> /dev/null ; } 2>&1 )
     assertEquals "PPSS did not execute properly." 0 "$?"
     assertNull "PPSS retured some errors..." "$RES"
 
-    RES=$( { ./ppss.sh -f $INPUTFILESPECIAL -c 'echo ' >> /dev/null ; } 2>&1 )
+    RES=$( { ./$PPSS -f $INPUTFILESPECIAL -c 'echo ' >> /dev/null ; } 2>&1 )
     assertEquals "PPSS did not execute properly." 0 "$?"
     assertNull "PPSS retured some errors..." "$RES"
 
-    grep -i skip ./ppss/* >> /dev/null 2>&1
+    grep -i skip ./$PPSS_dir/* >> /dev/null 2>&1
     assertEquals "Skipping of items went wrong." 0 "$?"
 
     rm -rf "/tmp/$TMP_DIR"   
@@ -170,7 +172,7 @@ testSkippingOfProcessedItems () {
 
 testExistLogFiles () {
 
-	./ppss.sh -f "$INPUTFILENORMAL" -c 'echo "$ITEM"' >> /dev/null
+	./$PPSS -f "$INPUTFILENORMAL" -c 'echo "$ITEM"' >> /dev/null
 	assertEquals "PPSS did not execute properly." 0 "$?"
 
 	for x in $NORMALTESTFILES
@@ -187,11 +189,11 @@ getStatusOfJob () {
 
 	if [ "$EXPECTED" == "SUCCESS" ]
 	then
-		./ppss.sh -f "$INPUTFILENORMAL" -c 'echo ' >> /dev/null
+		./$PPSS -f "$INPUTFILENORMAL" -c 'echo ' >> /dev/null
         	assertEquals "PPSS did not execute properly." 0 "$?"
 	elif [ "$EXPECTED" == "FAILURE" ]
 	then
-		./ppss.sh -f "$INPUTFILENORMAL" -c 'thiscommandfails ' >> /dev/null
+		./$PPSS -f "$INPUTFILENORMAL" -c 'thiscommandfails ' >> /dev/null
         	assertEquals "PPSS did not execute properly." 0 "$?"
 	fi
 
