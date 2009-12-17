@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DEBUG="$1"
-VERSION=2.45
+VERSION=2.50
 TMP_DIR="ppss"
 
 cleanup () {
