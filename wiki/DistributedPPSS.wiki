@@ -20,7 +20,8 @@ PPSS is very flexible: the file server can be a different host than the PPSS ser
 Installing PPSS on a larger number of hosts will become an appalling boring repetitive and time consuming task if this is performed manually. Therefore, PPSS has a mode called 'deploy'. In this mode, PPSS connects to each node using SSH and deploys PPSS on this node. If you want to remove PPSS, use the mode 'erase'. 
 
 {{{
-bash-3.2$ ./ppss.sh deploy -C testconfig.cfg dec 17 16:36:17:  =========================================================
+bash-3.2$ ./ppss.sh deploy -C testconfig.cfg 
+dec 17 16:36:17:  =========================================================
 dec 17 16:36:17:                         |P|P|S|S|                         
 dec 17 16:36:17:  Distributed Parallel Processing Shell Script version 2.50
 dec 17 16:36:17:  =========================================================
