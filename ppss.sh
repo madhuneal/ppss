@@ -1428,7 +1428,8 @@ commando () {
         echo -e "" >> "$ITEM_LOG_FILE"
         
         #
-        # The actual execution of the command.
+        # The actual execution of the command as specified by
+        # the -c option.
         #
         BEFORE="$(date +%s)"
         TMP=`echo $COMMAND | grep -i '$ITEM'`
@@ -1454,7 +1455,10 @@ commando () {
            echo -e "Status:\t\tSUCCESS" >> "$ITEM_LOG_FILE"
         fi
 
-        #Remove the item after it has been processed as not to fill up disk space.
+        #
+        # If part of a cluster, remove the downloaded item after 
+        # it has been processed and uploaded as not to fill up disk space.
+        #
         if [ "$TRANSFER_TO_SLAVE" == "1" ]      
         then
             if [ -e "$ITEM" ]
@@ -1566,7 +1570,6 @@ listen_for_job () {
             then
                 kill "$SSH_MASTER_PID" 
             fi
-                log INFO "Finished. Consult $JOB_LOG_DIR for job output."
             break
         else
             commando "$event" &
@@ -1595,7 +1598,14 @@ listen_for_job () {
 
     set_status STOPPED
     log DEBUG "Listener stopped."
-    log INFO "Press ENTER to continue."
+    if [ ! "$PERCENT" == "100" ]
+    then
+        echo
+        log INFO "Finished. Consult $JOB_LOG_DIR for job output."
+        log INFO "Press ENTER to continue."
+    else
+        log INFO "Finished. Consult $JOB_LOG_DIR for job output."
+    fi
     cleanup
 }
 
