@@ -1,11 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.50 (not yet released) ===
+=== 2.50  ===
 
   * Created a unit-test script using shunit2.
   * Reworked the process management code. Management of child processes within a shell script is always a hassle. It could occur that when PPSS was interrupted and aborted with ctrl-c, some spawned processes would continue to run until finished. PPSS now identifies all processes by their ppid and pgid and kills the appropriate processes when ctrl-c is invoked.
   * reworked some file name parsing issues.
+  * A mistake prevented nodes from setting up a single SSH 'channel'. So every time a node wants to lock an item, an SSH connection must be made and teared down, which is too slow. This regression is now fixed.
 
 === 2.41 ===
 
