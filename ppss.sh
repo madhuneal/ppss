@@ -55,8 +55,7 @@ done
 # export PPSS_DIR=/path/to/workingdir
 if [ -z "$PPSS_DIR" ]
 then
-    PWD=`pwd`
-    PPSS_DIR="$PWD/ppss"
+    PPSS_DIR="./ppss"
 fi
 
 if [ ! -e "$PPSS_DIR" ]
@@ -1567,7 +1566,7 @@ listen_for_job () {
             then
                 kill "$SSH_MASTER_PID" 
             fi
-            log INFO "Press ENTER to continue."
+                log INFO "Finished. Consult $JOB_LOG_DIR for job output."
             break
         else
             commando "$event" &
@@ -1596,8 +1595,8 @@ listen_for_job () {
 
     set_status STOPPED
     log DEBUG "Listener stopped."
+    log INFO "Press ENTER to continue."
     cleanup
-    log INFO "Finished. Consult $JOB_LOG_DIR for job output."
 }
 
 # This starts an number of parallel workers based on the # of parallel jobs allowed.
