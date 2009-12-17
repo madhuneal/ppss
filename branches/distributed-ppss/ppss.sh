@@ -94,7 +94,7 @@ SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
                            -o Cipher=blowfish \
-                           -o ConnectTimeout=15 "
+                           -o ConnectTimeout=10 "
 
                                         # Blowfish is faster but still secure. 
 SSH_MASTER_PID=""
@@ -384,9 +384,9 @@ do
                         then
                             if [ -e "$CONFIG" ]
                             then
-                                echo "Do want to overwrite existing config file?"
+                                echo "Do want to overwrite existing config file? [y/n]"
                                 read yn
-                                if [ "$yn" == "y" ]
+                                if [ "$yn" == "y" ] || [ "$yn" == "yes" ]
                                 then
                                     rm "$CONFIG"
                                 else
@@ -551,7 +551,11 @@ do
                         exit 0
                         ;;
         * )
-                        showusage_normal
+                        
+                        showusage_short
+                        echo
+                        echo "Unknown option $1 "
+                        echo
                         exit 1;;
     esac
 done
@@ -893,21 +897,20 @@ start_ppss_on_node () {
     NODE="$1"
 
     log INFO "Starting PPSS on node $NODE."
-    ssh $SSH_KEY $USER@$NODE "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ~/$PPSS_HOME_DIR/$0 --config ~/$PPSS_HOME_DIR/$CONFIG" 
+    ssh $SSH_KEY $USER@$NODE -o ConnectTimeout=5 "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ~/$PPSS_HOME_DIR/$0 node --config ~/$PPSS_HOME_DIR/$CONFIG" 
 }
-
 
 test_server () {
 
     # Testing if the remote server works as expected.
     if [ ! -z "$SSH_SERVER" ] 
     then 
- 
         exec_cmd "date >> /dev/null"
         check_status "$?" "$FUNCNAME" "Server $SSH_SERVER could not be reached"
 
         ssh -N -M $SSH_OPTS $SSH_KEY $USER@$SSH_SERVER &
         SSH_MASTER_PID="$!"
+        log DEBUG "SSH Master pid is $SSH_MASTER_PID"
     else
         log DEBUG "No remote server specified, assuming stand-alone mode."
     fi
@@ -1806,8 +1809,8 @@ main () {
                     get_all_items
                     listen_for_job "$MAX_NO_OF_RUNNING_JOBS" & 2>&1 >> /dev/null
                     LISTENER_PID=$!
-                    log DEBUG "Master PID is $PID."
-                    log DEBUG "Listener PID is $LISTENER_PID."
+                    #log DEBUG "Master PID is $PID."
+                    #log DEBUG "Listener PID is $LISTENER_PID."
                     start_all_workers
                     ;;
 
