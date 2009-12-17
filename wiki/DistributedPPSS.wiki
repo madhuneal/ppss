@@ -5,7 +5,7 @@
 
 PPSS allows you to distribute jobs to multiple hosts, thus allowing for distributed processing. So a large number of host can be used to process items, not just a single host (node). These nodes will share a single list of items that they will process in parallel.
 
-To keep track of which items have been processed by a node, nodes must be able to communicate with each other. Therefore, a server is necessary. The primary role of the server is just a communication channel for nodes. Nodes use the server to signal to other nodes that an item is being processed or has been processed. So nodes will never process the same file. 
+To keep track of which items have been processed, nodes must be able to communicate with each other. Therefore, a server is necessary. The primary role of the server is just a communication channel for nodes. Nodes use the server to signal to other nodes that an item is being processed or has been processed. So nodes will never process the same file.
 
 http://home.quicknet.nl/mw/prive/nan1/img/ppss.png
 
