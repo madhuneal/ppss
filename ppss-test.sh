@@ -125,7 +125,7 @@ testSpecialCharacterHandling () {
         echo "RES IS $RES"
     fi
 
-    RES=`find ppss/PPSS_LOCAL_OUTPUT | wc -l`
+    RES=`find ppss/PPSS_LOCAL_OUTPUT | wc -l | sed 's/\ //g'`
     assertEquals "To many lock files..." "7" "$RES"
 
     RES1=`ls -1 $JOBLOG`
