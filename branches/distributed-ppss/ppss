@@ -38,7 +38,7 @@ trap 'kill_process' SIGINT
 
 # Setting some vars. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.51"
+SCRIPT_VERSION="2.54"
 
 # The first argument to this script can be a mode.
 MODES="node start config stop pause continue deploy status erase kill"
@@ -56,11 +56,6 @@ done
 if [ -z "$PPSS_DIR" ]
 then
     PPSS_DIR="./ppss_dir"
-fi
-
-if [ ! -e "$PPSS_DIR" ]
-then
-    mkdir -p "$PPSS_DIR"
 fi
 
 CONFIG=""
@@ -376,6 +371,7 @@ add_var_to_config () {
 while [ $# -gt 0 ]
 do
     case $1 in
+
         --config|-C )
                         CONFIG="$2"
 
@@ -408,17 +404,26 @@ do
 
                         if [ ! -e "./known_hosts" ]
                         then
-                            if [ -e $SSH_KNOWN_HOSTS ]
+                            if [ -e $SSH_KNOWN_HOSTS ] 
                             then
-                                cat $SSH_KNOWN_HOSTS > ./known_hosts
+                                if [ ! "$SSH_KNOWN_HOSTS" == "known_hosts" ] 
+                                then
+                                    cat $SSH_KNOWN_HOSTS > ./known_hosts
+                                fi
                             else
                                 echo "File $SSH_KNOWN_HOSTS does not exist."
                                 exit
                             fi
                         fi
-
                         shift 2
                         ;;
+
+      --working-dir|-w )
+                        PPSS_DIR="$2"
+                        add_var_to_config PPSS_DIR "$PPSS_DIR"
+                        shift 2
+                        ;;
+
              --node|-n ) 
                         NODES_FILE="$2"
                         add_var_to_config NODES_FILE "$NODES_FILE"
@@ -452,17 +457,9 @@ do
 
                     -h )
                         showusage_normal
-                        if [ -e "$PPSS_DIR" ]
-                        then
-                            rm -rf "$PPSS_DIR" 
-                        fi
                         exit 1;;
                  --help)
                         showusage_long
-                        if [ -e "$PPSS_DIR" ]
-                        then
-                            rm -rf "$PPSS_DIR" 
-                        fi
                         exit 1;;
           --homedir|-H )
                         if [ ! -z "$2" ]
@@ -571,10 +568,18 @@ display_header () {
     log INFO "---------------------------------------------------------"
 }
 
+create_working_directory () {
+
+    if [ ! -e "$PPSS_DIR" ]
+    then
+        mkdir -p "$PPSS_DIR"
+    fi
+}
 
 # Init all vars
 init_vars () {
 
+    create_working_directory
 
     if [ "$ARCH" == "Darwin" ]
     then
@@ -1736,6 +1741,7 @@ main () {
                     exit 0
                     ;;
         config )
+                    LOGFILE=/dev/null
                     display_header
                     log INFO "Generating configuration file $CONFIG"
                     add_var_to_config PPSS_LOCAL_TMPDIR "$PPSS_LOCAL_TMPDIR"
@@ -1745,6 +1751,7 @@ main () {
                     ;;
 
         stop )
+                    LOGFILE=/dev/null
                     display_header
                     log INFO "Stopping PPSS on all nodes."
                     exec_cmd "touch $STOP_SIGNAL"
@@ -1752,6 +1759,7 @@ main () {
                     exit
                     ;;
         pause )
+                    LOGFILE=/dev/null
                     display_header
                     log INFO "Pausing PPSS on all nodes."
                     exec_cmd "touch $PAUSE_SIGNAL"
@@ -1759,6 +1767,7 @@ main () {
                     exit
                     ;;
         continue )
+                    LOGFILE=/dev/null
                     display_header
                     if does_file_exist "$STOP_SIGNAL"
                     then
@@ -1774,6 +1783,7 @@ main () {
                     exit 0
                     ;;
         deploy )
+                    LOGFILE=/dev/null
                     display_header
                     log INFO "Deploying PPSS on nodes."
                     deploy_ppss
@@ -1782,12 +1792,14 @@ main () {
                     exit 0
                     ;;
         status )
+                    LOGFILE=/dev/null
                     display_header
                     show_status
                     cleanup
                     exit 0
                     ;;
         erase )
+                    LOGFILE=/dev/null
                     display_header
                     log INFO "Erasing PPSS from all nodes."
                     erase_ppss
@@ -1795,6 +1807,7 @@ main () {
                     exit 0
                     ;;
         kill )
+                    LOGFILE=/dev/null
                     for x in `ps ux | grep ppss | grep -v grep | grep bash | awk '{ print $2 }'`
                     do          
                          kill "$x"
