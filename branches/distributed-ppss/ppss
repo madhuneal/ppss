@@ -2,43 +2,30 @@
 #
 # PPSS, the Parallel Processing Shell Script
 # 
-# Copyright (c) 2009, Louwrentius
-# All rights reserved.
+# Copyright (c) 2010, Louwrentius
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#     * Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the <organization> nor the
-#       names of its contributors may be used to endorse or promote products
-#       derived from this software without specific prior written permission.
+# This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
 #
-# THIS SOFTWARE IS PROVIDED BY Louwrentius ''AS IS'' AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL Louwrentius BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-#------------------------------------------------------------------------------
-# It should not be necessary to edit antyhing in this script..
-# Ofcource you can if it is necessary for your needs.
-# Send a patch if your changes may benefit others.
-#------------------------------------------------------------------------------
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    See <http://www.gnu.org/licenses/>
+#    for a copy of the GNU General Public License
+#
+# "Patches or other contributions are always welcome!"
+#
 
 # Handling control-c for a clean shutdown.
 trap 'kill_process' SIGINT 
 
 # Setting some vars. 
 SCRIPT_NAME="Distributed Parallel Processing Shell Script"
-SCRIPT_VERSION="2.54"
+SCRIPT_VERSION="2.55"
 
 # The first argument to this script can be a mode.
 MODES="node start config stop pause continue deploy status erase kill"
@@ -84,7 +71,7 @@ KILL_KEY=$RANDOM$RANDOM$RANDOM
 SSH_SERVER=""                           # Remote server or 'master'.
 SSH_KEY=""                              # SSH key for ssh account.
 SSH_KNOWN_HOSTS=""
-SSH_SOCKET="$PPSS_DIR/PPSS_SSH_SOCKET"          # Multiplex multiple SSH connections over 1 master.
+SSH_SOCKET="/tmp/ppss_ssh_socket"          # Multiplex multiple SSH connections over 1 master.
 SSH_OPTS="-o BatchMode=yes -o ControlPath=$SSH_SOCKET \
                            -o GlobalKnownHostsFile=./known_hosts \
                            -o ControlMaster=auto \
@@ -168,10 +155,6 @@ showusage_normal () {
 if [ "$#" == "0" ]
 then
     showusage_short
-    if [ -e "$PPSS_DIR" ]
-    then
-        rm -rf "$PPSS_DIR" 
-    fi
     exit 1
 fi
 
@@ -899,7 +882,6 @@ deploy_ppss () {
 start_ppss_on_node () {
 
     NODE="$1"
-
     log INFO "Starting PPSS on node $NODE."
     ssh $SSH_KEY $USER@$NODE -o ConnectTimeout=5 "cd $PPSS_HOME_DIR ; screen -d -m -S PPSS ~/$PPSS_HOME_DIR/$0 node --config ~/$PPSS_HOME_DIR/$CONFIG" 
 }
@@ -1724,6 +1706,7 @@ main () {
                     ;;
              start )
                     # This option only starts all nodes.
+                    LOGFILE=/dev/null
                     display_header
                     if [ ! -e "$NODES_FILE" ]
                     then
