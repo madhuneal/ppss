@@ -106,6 +106,32 @@ Sometimes, the item should not be appended to the command, but inserted somewher
 
 Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
 
+For this example, create a file called numbers.txt and fill it wit this:
+
+{{{
+1
+2
+3
+4
+5
+}}}
+
+Next, try this example. 
+
+`$./ppss.sh -f numbers.txt -c 'touch '` 
+
+The result should be that five new files are 'touched' which have the name of the numbers you entered in the numbers.txt file. 
+
+This is the recommended way to use PPSS: put items in the files and specify a single command with the -c option. I often see people, as an example, fill the numbers.txt file with:
+
+{{{
+touch 1
+touch 2
+etc.
+}}}
+
+This is ofcourse perfectly fine, but not necessary. 
+
 `$ ./ppss.sh -f list-of-urls.txt -c 'wget -q '` 
 
 In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
