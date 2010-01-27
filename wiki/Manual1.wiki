@@ -130,6 +130,10 @@ touch 2
 etc.
 }}}
 
+...and then process the items like:
+
+`./ppss.sh -f numbers.txt -c 'bash $ITEM'`
+
 This is ofcourse perfectly fine, but not necessary. 
 
 `$ ./ppss.sh -f list-of-urls.txt -c 'wget -q '` 
