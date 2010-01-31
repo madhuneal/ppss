@@ -56,7 +56,7 @@ PAUSE_DELAY=60                                          # Polling every 1 minute
 STOP_SIGNAL="$PPSS_DIR/stop_signal"                     # Stop processing if this file is present.
 ARRAY_POINTER_FILE="$PPSS_DIR/ppss-array-pointer-$PID"  # Pointer for keeping track of processed items.
 JOB_LOG_DIR="$PPSS_DIR/job_log"                         # Directory containing log files of processed items.
-LOGFILE="$PPSS_DIR/ppss-log-$$.txt"                     # General PPSS log file. Contains lots of info.
+LOGFILE="$PPSS_DIR/ppss-log-$PID.txt"                     # General PPSS log file. Contains lots of info.
 STOP=0                                                  # STOP job.
 MAX_DELAY=0                                             # MAX DELAY between jobs.
 MAX_LOCK_DELAY=9                                        #
@@ -1317,6 +1317,12 @@ get_item () {
 
 start_single_worker () {
 
+        #
+        # This function sends an item to the fifo. This signals
+        # the listener process to execute a 'worker' on this
+        # item, using the 'commando' function.
+        # 
+
     get_item
     ERROR=$?
     if [ ! "$ERROR" == "0" ]
@@ -1355,6 +1361,20 @@ elapsed () {
 }
 
 commando () {
+
+    #
+    # This function will start a chain reaction of events.
+    #
+    # The commando executes a command on an item and, when finished,
+    # executes the start_single_worker. This function selects a new
+    # item and sends it to the fifo. The listener process receives
+    # the item and excutes this commando function on the item.
+    # So in essence, the commando function keeps calling itself 
+    # indirectly until no items are left. This will form a single
+    # working queue. By executing multiple start_single_worker 
+    # functions based on the CPU cores available, parallel processing
+    # is achieved, with a queue for each core.
+    #
 
     ITEM="$1"
 
