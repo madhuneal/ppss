@@ -1,5 +1,9 @@
 #summary Changelog of distributed PPSS
 #labels Featured
+=== 2.55  (not released, only in svn) ===
+
+  * Changed license from BSD to GPL. 
+  * Renamed ppss.sh to just 'ppss' to make it more like a regular Unix command.
 
 === 2.50  ===
 
