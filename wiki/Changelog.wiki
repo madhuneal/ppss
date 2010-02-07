@@ -4,7 +4,7 @@
 
   * Changed license from BSD to GPL. 
   * Renamed ppss.sh to just 'ppss' to make it more like a regular Unix command.
-  * The -d (directory) option now works differently. The option operates recursively, thus also processing all files within sub directories. This is the default. Recursion will be disabled as an option.
+  * The -d (directory) option now works differently. The option operates recursively, thus also processing all files within sub directories. This is the default. Recursion will be disabled as an option (which is not present yet).
   * Fixed a bug that prevented PPSS from properly handing files with special characters or paths.
   * Added an example script to svn that transcodes flac to mp3 in parallel using PPSS.
 
