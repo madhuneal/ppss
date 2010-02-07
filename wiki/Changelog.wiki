@@ -1,9 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
-=== 2.55  (not released, only in svn) ===
+=== 2.56  (not released, only in svn) ===
 
   * Changed license from BSD to GPL. 
   * Renamed ppss.sh to just 'ppss' to make it more like a regular Unix command.
+  * The -d (directory) option now works differently. The option operates recursively, thus also processing all files within sub directories. This is the default. Recursion will be disabled as an option.
+  * Fixed a bug that prevented PPSS from properly handing files with special characters or paths.
+  * Added an example script to svn that transcodes flac to mp3 in parallel using PPSS.
 
 === 2.50  ===
 
