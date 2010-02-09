@@ -1,5 +1,11 @@
 #summary Changelog of distributed PPSS
 #labels Featured
+=== 2.56b2 (BETA) ===
+
+  * Added new option '-r' that disables recursive traversal of directories.
+  * Fixed an error in the new recursion mechanism that prevented processing of symlinks (thanks John Lehr)
+  * Revamped logging there is now a better separation between messages that must be displayed, logged or only logged when debugging is enabled with 'export PPSSDEBUG=1'
+
 === 2.56b (BETA) ===
 
   * Changed license from BSD to GPL. 
