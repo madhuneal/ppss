@@ -8,7 +8,7 @@
 
 === 2.56b4 (BETA, NOT RELEASED) ===
 
-  * Distributed processing using SSH is fixed again.
+  * Distributed processing using SSH is fixed again, but it must be improved a bit.
   * PPSS now reports the total processing time, not only of individual items.
 
 === 2.56b2 (BETA) ===
