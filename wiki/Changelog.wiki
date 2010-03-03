@@ -3,8 +3,7 @@
 
 === 2.57b1 (BETA, NOT RELEASED) ===
  
-  * Incorporated the patch from Sean M. Collins that integrates the use of the EC2 platform of Amazon with PPSS.
-     Through this patch, PPSS can start EC2 instances and deploy PPSS on them. 
+  * Incorporated the patch from Sean M. Collins that integrates the use of the EC2 platform of Amazon with PPSS. Through this patch, PPSS can start EC2 instances and deploy PPSS on them. 
 
 === 2.56b4 (BETA, NOT RELEASED) ===
 
