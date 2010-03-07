@@ -17,12 +17,12 @@ To use PPSS in a distributed fasion, The following steps must be performed:
 {{{
 bash-3.2$ ./ppss.sh --help
 
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.41
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.60b1
 
 PPSS is a Bash shell script that executes commands in parallel on a set  
 of items, such as files in a directory, or lines in a file.
 
-Usage: ./ppss.sh [ MODE ] [ options ]
+Usage: ./ppss [ MODE ] [ options ]
 
 Modes are optional and mainly used for running in distributed mode. Modes are:
 
@@ -62,6 +62,10 @@ Options are:
 --delay | -D       Adds an initial random delay to the start of all parallel jobs to spread
                    the load. The delay is only used at the start of all 'threads'.
 
+--no-recursion|-r  By default, recursion of directories is enabled when the -d option is 
+                   used. If this is not prefered, this can be disabled with this option 
+                   Only files within the specified directory will be processed.
+
 The following options are used for distributed execution of PPSS.
 
 --master | -m      Specifies the SSH server that is used for communication between nodes.
@@ -85,8 +89,11 @@ The following options are used for distributed execution of PPSS.
                    execution through PPSS. Only used in the deploy mode.
                    This option should be specified if necessary when generating a config.
 
---transfer | -t    This option specifies that an item will be downloaded by the node 
+--download | -D    This option specifies that an item will be downloaded by the node 
                    from the server or share to the local node for processing.
+
+--upload | -U      This option specifies that the output file will be copied back to
+                   the server, the --outputdir option is mandaory.
 
 --no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a
                    network file system (NFS/SMB) is mounted under a local mountpoint.
@@ -100,15 +107,16 @@ The following options are used for distributed execution of PPSS.
 
 Example: encoding some wav files to mp3 using lame:
 
-./ppss.sh -c 'lame ' -d /path/to/wavfiles -j 
+./ppss -c 'lame ' -d /path/to/wavfiles -j 
 
 Running PPSS based on a configuration file.
 
-./ppss.sh -C config.cfg
+./ppss -C config.cfg
 
 Running PPSS on a client as part of a cluster.
 
-./ppss.sh -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key
+./ppss -d /somedir -c 'cp  /some/destination' -m 10.0.0.50 -u ppss -t -k ppss-key.key
+
 
 }}}
 
