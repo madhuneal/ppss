@@ -249,6 +249,14 @@ Status:		FAILURE
 Elapsed time (h:m:s): 0:0:0
 }}}
 
+== Specifying a different home directory ==
+
+By default, PPSS creates a directory in the current working directory which will contain all (temporary) files. 
+This directory can be changed by exporting the PPSS_DIR variable with another directory like this:
+
+export PPSS_DIR=/some/other/dir
+
+Next, just run PPSS as usual.
 
 == Logging (must read) == 
 
