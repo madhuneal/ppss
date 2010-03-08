@@ -92,7 +92,7 @@ Also, a directory is created, by default JOB_LOG. Within this directory a logfil
 
 Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form. In this example, some files are compressed with gzip. 
 
-`$ ./ppss.sh -d /path/to/files -c 'gzip '`
+`$ ./ppss -d /path/to/files -c 'gzip '`
 
 In this example, we can distinguish a 'mode' and two options. The mode speaks for itself: PPSS is not part of a cluster, it is just running on the host. 
 
@@ -102,7 +102,7 @@ The -c option specifies the command that will be executed by PPSS in parallel fo
 
 Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
 
-`$ ./ppss.sh -d /path/to/files -c 'cp "$ITEM" /destination/dir'`
+`$ ./ppss -d /path/to/files -c 'cp "$ITEM" /destination/dir'`
 
 Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
 
@@ -118,7 +118,7 @@ For this example, create a file called numbers.txt and fill it wit this:
 
 Next, try this example. 
 
-`$./ppss.sh -f numbers.txt -c 'touch '` 
+`$./ppss -f numbers.txt -c 'touch '` 
 
 The result should be that five new files are 'touched' which have the name of the numbers you entered in the numbers.txt file. 
 
@@ -132,15 +132,15 @@ etc.
 
 ...and then process the items like:
 
-`./ppss.sh -f numbers.txt -c 'bash $ITEM'`
+`./ppss -f numbers.txt -c 'bash $ITEM'`
 
 This is ofcourse perfectly fine, but not necessary. 
 
-`$ ./ppss.sh -f list-of-urls.txt -c 'wget -q '` 
+`$ ./ppss -f list-of-urls.txt -c 'wget -q '` 
 
 In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
 
-`$ ./ppss.sh -f list-of-urls.txt -c 'wget -q "$ITEM"'` -p 5
+`$ ./ppss -f list-of-urls.txt -c 'wget -q "$ITEM"'` -p 5
 
 *Tip*: please note that the double quotes around "$ITEM" may or may not be necessary depending on the situation. When using an input file with the -f option, they are often not necessary.
 
@@ -182,11 +182,11 @@ Next, if PPSS is executed, the aforementioned directory is used to store all (te
 
 A config file is created when PPSS is called with the 'config' mode.  In this mode, PPSS does not execute any job, instead, all command line options are used to create a config file. An example:
 
-`./ppss.sh create -C config.cfg -d /source/dir -c 'gzip ' -j` 
+`./ppss create -C config.cfg -d /source/dir -c 'gzip ' -j` 
 
 This command creates a config file config.cfg that can be used in stead of re-entering the command line options like this:
 
-`./ppss.sh -C config.cfg`
+`./ppss -C config.cfg`
 
 == Advanced usage (by example) ==
 
@@ -194,7 +194,7 @@ This command creates a config file config.cfg that can be used in stead of re-en
 
 Unrarring some files in parallel can be as easy as:
 
-`./ppss.sh -d ./dir-with-rars -c 'unrar x "$ITEM" ./output-dir'
+`./ppss -d ./dir-with-rars -c 'unrar x "$ITEM" ./output-dir'
 
 However, this may result in the outcome that all extracted files are dumped in the directory output-dir. This may not be wat you want. If you want to extract the files contained within each RAR-file into it's own directory. We need to perform two steps:
 
@@ -203,7 +203,7 @@ However, this may result in the outcome that all extracted files are dumped in t
 
 Step 1: making directories based on the name of the RAR file:
 
-`/ppss.sh -d ./dir-with-rars -c 'ITEM=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM"'`
+`/ppss -d ./dir-with-rars -c 'ITEM=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM"'`
 
 Explanation: by default, each item consists of the full or relative path to that item. An item will expand as "./dir-with-rars/filename.rar". However, the directory name must be based only on the filename. So the unix build-in 'basename' is used to extract the filename from the item and use it to create the directory name.
 
@@ -211,13 +211,13 @@ As you can see, it is no problem to use multiple commands within the -c option, 
 
 Step 2: extracting the files of each RAR file into it's own directory. 
 
-`./ppss.sh -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+`./ppss -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
 
 In this example, we use the basename command again to be able to specify the output directory based on the supplied ITEM name.
 
 Ofcourse, it is possible to put this all in one command: 
 
-`./ppss.sh -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM_DIR"; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+`./ppssh -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM_DIR"; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
 
 *Execute commands in a file*
 
@@ -290,5 +290,5 @@ PPSS skips items if an item log file is present in the Job_log directory. This a
 
 == Other things you should be aware of ==
 
-ppss.sh must be run inside a file system that support file locking. It
+ppss must be run inside a file system that support file locking. It
 can, however, the data to process can be in a non-locking file system.
