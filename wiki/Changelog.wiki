@@ -1,10 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.60b1 (BETA) ===
+=== 2.60b2 (BETA) ===
 
   * Fixed distributed computing. Many small bug fixes and changes.
   * Changed some command line parameters, beware. -t is gone, --upload and --download are new.
+  * Cleaned up help page. 
+  * Incorporated the help instructions on Amazon EC2 options.
 
 === 2.57b1 (BETA, NOT RELEASED) ===
  
