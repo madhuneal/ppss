@@ -15,4 +15,6 @@ PPSS Roadmap.
 
   * Use netcat and ncat (nmap.org) for client communication. This may be easier to setup than SSH. Although if security is really an issue, SSH will still be the way to go. 
 
+  * Providing RPMS and DEB packages for the popular operating systems.
+
 If you have any suggestions for additional features or improvements, let me know using commends or by creating an issue.
