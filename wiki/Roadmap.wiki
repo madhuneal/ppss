@@ -17,4 +17,6 @@ PPSS Roadmap.
 
   * Providing RPMS and DEB packages for the popular operating systems.
 
+  * Bootable LIVE image with pre-installed PPSS client for easy setup of a distributed computing environment.
+
 If you have any suggestions for additional features or improvements, let me know using commends or by creating an issue.
