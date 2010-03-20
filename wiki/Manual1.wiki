@@ -11,18 +11,19 @@ The following output is displayed by PPSS when executed without any options:
 
 {{{ 
 
-bash-3.2$ ./ppss.sh 
+bash-3.2$ ppss
 
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.40
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.60
 
-usage: ./ppss.sh [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> "$ITEM"' ]
-                 [ -C <configfile> ]  [ -j ] [ -l <logfile> ] [ -p <# jobs> ]
-                 [ -D <delay> ] [ -h ] [ --help ]
+usage: ./ppss [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> "$ITEM"' ]
+                 [ -C <configfile> ] [ -j ] [ -l <logfile> ] [ -p <# jobs> ]
+                 [ -D <delay> ] [ -h ] [ --help ] [ -r ] 
 
 Examples:
-                 ./ppss.sh -d /dir/with/some/files -c 'gzip '
-                 ./ppss.sh -d /dir/with/some/files -c 'gzip "$ITEM"' -D 5
-                 ./ppss.sh -d /dir/with/some/files -c 'cp "$ITEM" /tmp' -p 2
+                 ./ppss -d /dir/with/some/files -c 'gzip '
+                 ./ppss -d /dir/with/some/files -c 'cp "$ITEM" /tmp' -p 2
+                 ./ppss -f <file> -c 'wget -q -P /destination/directory "$ITEM"' -p 10
+
 }}}
 
 If PPSS is executed with -h, more options are displayed. 
