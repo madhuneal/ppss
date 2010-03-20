@@ -1,6 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.60  ===
+
+  * Cleaned up some code. 
+  * Added some comments.
+  * Released PPSS as a .deb Debian / Ubuntu package.
+
 === 2.60b2 (BETA) ===
 
   * Fixed distributed computing. Many small bug fixes and changes.
