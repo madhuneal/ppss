@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.61  ===
+
+  * Fixed compatibility with Sun Solaris 10.
+
 === 2.60  ===
 
   * Cleaned up some code. 
