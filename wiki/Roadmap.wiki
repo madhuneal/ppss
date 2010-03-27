@@ -13,9 +13,9 @@ PPSS Roadmap.
 
   * I am considering to add the option to specify a hosts that acts as the SSH fileserver. The PPSS master host and fileserver must be the same host currently. This should not be necessary. *(COMPLETED)*
 
-  * Use netcat and ncat (nmap.org) for client communication. This may be easier to setup than SSH. Although if security is really an issue, SSH will still be the way to go. 
+  * Use netcat and ncat (nmap.org) for client communication. This may be easier to setup than SSH. Although if security is really an issue, SSH will still be the way to go. (This idea may not be possible.)
 
-  * Providing RPMS and DEB packages for the popular operating systems.
+  * Providing RPMS and DEB packages for the popular operating systems. *(COMPLETED)*
 
   * Bootable LIVE image with pre-installed PPSS client for easy setup of a distributed computing environment.
 
