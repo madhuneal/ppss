@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.62  ===
+
+  * Added support for reading from stdin with -f -, as a suggestion of walkerj /at/ walkerj.de. You can now do stuff like:  cat /some/file | ppss -f - -c 'echo ' 
+
 === 2.61  ===
 
   * Fixed compatibility with Sun Solaris 10.
