@@ -19,4 +19,6 @@ PPSS Roadmap.
 
   * Bootable LIVE image with pre-installed PPSS client for easy setup of a distributed computing environment.
 
+  * Run PPSS as a daemon, monitoring a directory for (new) files to process.
+
 If you have any suggestions for additional features or improvements, let me know using commends or by creating an issue.
