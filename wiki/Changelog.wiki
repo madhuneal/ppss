@@ -4,6 +4,8 @@
 === 2.63 (not released yet) ===
 
   * Added support for quiet operation. Only a progress indicator is displayed.
+  * Some minor cosmetic cleanups (display of percentage mechanism).
+  * Added some improvement based on comments on the code (thanks!)
 
 === 2.62  ===
 
