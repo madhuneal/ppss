@@ -4,7 +4,7 @@
 === 2.63 (not released yet, available in SVN) ===
 
   * PPSS can now run as a daemon, watching a file or directory with --daemon. Read the docs (TODO) 
-     you must create a lock dir (default INPUT_LOCK) to make sure that files are not written while reading them.
+     you must create a lock dir  (default INPUT_LOCK) within the source directory (specified with -d)  to make sure that files are not written while reading them. After you finished placing items in this directory, you remove this lock directory.
   * Added support for quiet operation. Only a progress indicator is displayed.
   * Some minor cosmetic cleanups (display of percentage mechanism).
   * Added some improvement based on comments on the code (thanks!)
