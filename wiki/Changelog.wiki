@@ -1,12 +1,14 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.63 (not released yet) ===
+=== 2.63 (not released yet, available in SVN) ===
 
+  * PPSS can now run as a daemon, watching a file or directory with --daemon. Read the docs (TODO) 
+     you must create a lock dir (default INPUT_LOCK) to make sure that files are not written while reading them.
   * Added support for quiet operation. Only a progress indicator is displayed.
   * Some minor cosmetic cleanups (display of percentage mechanism).
   * Added some improvement based on comments on the code (thanks!)
-
+  
 === 2.62  ===
 
   * Added support for reading from stdin with -f -, as a suggestion of walkerj /at/ walkerj.de. You can now do stuff like:  cat /some/file | ppss -f - -c 'echo ' 
