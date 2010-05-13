@@ -282,7 +282,7 @@ while true
             sleep 5
         fi
     done
-}}}
+
 
 # 2 - do something here
 copy file /some/directory/
@@ -290,6 +290,7 @@ copy file /some/directory/
 # 3 - release lock
 rm -rf /some/directory/INPUT_LOCK
 
+}}}
 
 == Logging (must read) == 
 
