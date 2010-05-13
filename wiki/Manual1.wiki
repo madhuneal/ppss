@@ -259,6 +259,38 @@ export PPSS_DIR=/some/other/dir
 
 Next, just run PPSS as usual.
 
+== Daemon mode (2.63 and onward) ==
+
+PPSS can be run as a daemon, monitoring a file or directory for new items. If (new) input is found, it is processed. 
+
+Before you put a file in a directory monitored by PPSS, you must create a directory (mkdir) called "INPUT_LOCK" inside this directory. Once the file transfer is complete, you can remove this directory. This is required to prevent race conditions. It can get messy if PPSS starts processing a file while the file in question is still being copied into the directory. 
+
+Thus, in order to use the daemon feature of PPSS, you must insert a mkdir and remove dir command into your own scripts. But it gets nasty. 
+
+PPSS also locks the directory while processing items, to prevent race conditions. This implies that your script may fail if the lock of PPSS is present. So your script must contain something like this (almost identical code from PPSS):
+
+
+{{{
+# 1 - try to obtain lock.
+while true
+    do
+        mkdir "/some/directory/INPUT_LOCK" >> /dev/null 2>&1
+        if [ "$?" == "0" ]
+        then
+            break
+        else
+            sleep 5
+        fi
+    done
+}}}
+
+# 2 - do something here
+copy file /some/directory/
+
+# 3 - release lock
+rm -rf /some/directory/INPUT_LOCK
+
+
 == Logging (must read) == 
 
 There are two separate log mechanisms:
