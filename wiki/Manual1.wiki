@@ -263,6 +263,8 @@ Next, just run PPSS as usual.
 
 PPSS can be run as a daemon, monitoring a file or directory for new items. If (new) input is found, it is processed. 
 
+=== IMPORTANT ===
+
 Before you put a file in a directory monitored by PPSS, you must create a directory (mkdir) called "INPUT_LOCK" inside this directory. Once the file transfer is complete, you can remove this directory. This is required to prevent race conditions. It can get messy if PPSS starts processing a file while the file in question is still being copied into the directory. 
 
 Thus, in order to use the daemon feature of PPSS, you must insert a mkdir and remove dir command into your own scripts. But it gets nasty. 
@@ -289,6 +291,10 @@ copy file /some/directory/
 
 # 3 - release lock
 rm -rf /some/directory/INPUT_LOCK
+
+*Using a file as input*
+
+When using the -f option in DAEMON mode, you also need to specify a -d option, to specify a directory. This directory is used for the lock file, as described above.
 
 }}}
 
