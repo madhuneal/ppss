@@ -292,11 +292,11 @@ copy file /some/directory/
 # 3 - release lock
 rm -rf /some/directory/INPUT_LOCK
 
+}}}
+
 *Using a file as input*
 
 When using the -f option in DAEMON mode, you also need to specify a -d option, to specify a directory. This directory is used for the lock file, as described above.
-
-}}}
 
 == Logging (must read) == 
 
