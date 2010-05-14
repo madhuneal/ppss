@@ -10,7 +10,7 @@
 ./ppss_dir/job_log/b112de8ed197cfc738f76332b0c1d7cc
 }}}
  
-  * Fixed issue 32: some strange files appeared under certain conditions. 
+  * Fixed issue 31: some strange files appeared under certain conditions. 
   * Some fixes regarding distributed mode.
 
 === 2.63 (not released) ===
