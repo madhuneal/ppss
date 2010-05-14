@@ -1,6 +1,6 @@
 #summary Changelog of distributed PPSS
 #labels Featured
-=== 2.65 (not released yet) ===
+=== 2.65 ===
 
   * Major change: PPSS now generates unique file names for log files and item locks using MD5 hashes. Thus, job file names cannot be tracked back to items, but that should not be a problem. Just grep for SUCCESS or FAILURE to determine issues, or grep for the particular item, to find the actual file containing the output. 
 
