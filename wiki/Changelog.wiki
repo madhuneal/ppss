@@ -1,7 +1,19 @@
 #summary Changelog of distributed PPSS
 #labels Featured
+=== 2.65 (not released yet) ===
 
-=== 2.63 (not released yet, available in SVN) ===
+  * Major change: PPSS now generates unique file names for log files and item locks using MD5 hashes. Thus, job file names cannot be tracked back to items, but that should not be a problem. Just grep for SUCCESS or FAILURE to determine issues, or grep for the particular item, to find the actual file containing the output. 
+
+{{{
+./ppss_dir/job_log/51fbc529402f569855f0ec9c5edc33d1
+./ppss_dir/job_log/94af29775c416edbe6dc75c8d9ec6eb5
+./ppss_dir/job_log/b112de8ed197cfc738f76332b0c1d7cc
+}}}
+ 
+  * Fixed issue 32: some strange files appeared under certain conditions. 
+  * Some fixes regarding distributed mode.
+
+=== 2.63 (not released) ===
 
   * PPSS can now run as a daemon, watching a file or directory with --daemon. Read the docs (TODO) 
      you must create a lock dir  (default INPUT_LOCK) within the source directory (specified with -d)  to make sure that files are not written while reading them. After you finished placing items in this directory, you remove this lock directory.
