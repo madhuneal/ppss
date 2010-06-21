@@ -28,7 +28,7 @@ However, repeated tests have determined that communication between processes usi
 
 == Technical design ==
 
-http://home.quicknet.nl/mw/prive/nan1/got/process.png
+http://home.quicknet.nl/mw/prive/nan1/got/ppss-schema.png
 
 === Function: get_all_items ===
 
