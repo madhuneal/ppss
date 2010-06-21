@@ -22,9 +22,20 @@ For every item the specified command will be executed with the item supplied as 
   * Two parallel running processes should never interfere or collide with each other by processing the same item
   * PPSS should not poll but wait for events to occur and 'do nothing' if there is nothing to do.  
 
+
+== Communication between parent and child processes == 
+
 One of the main difficulties for shell scripts is inter-process communication. There is no communication mechanism for child and parent processes to communicate with each other. A solution might be the use of signals with the 'trap' command to catch events, however tests have proven that this is not reliable. The trap mechanism that bash employs is inherently unreliable (by design). During the time period the trap command is processing a trap,  additional traps are ignored. Therefore, it is not possible to create a reliable mechanism using signals. There is actually a parallel processing shell script available on the web that is based on signals, and suffers exactly from this problem, which makes it unreliable.
 
 However, repeated tests have determined that communication between processes using a FIFO named pipe is reliable and can be used for inter-process communication. 
+
+== Queue management ==
+
+A single listener process is constantly requesting items and starting processes to process these items. As processes end, an event is generated and send to to the FIFO that triggers the listener to start a new process. 
+
+Since the listener is the central process that requests items, no locking mechanism is required. Versions of PPSS before 2.80 had a cumbersome locking mechanism to prevent race conditions, however as of 2.80 this is no longer necessary. 
+
+Locking is only used in distributed mode. Single items are 'locked' or claimed by one of the nodes of the 'cluster' through SSH on the main server. This prevents other nodes from processing the same item.
 
 == Technical design ==
 
