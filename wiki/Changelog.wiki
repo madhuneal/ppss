@@ -1,6 +1,6 @@
 #summary Changelog of distributed PPSS
 #labels Featured
-=== 2.80 ===
+=== 2.80 (not yet released) ===
 
  This versions consists of some under-the-hood changes, no functionality added. Changes are significant however. 
 
