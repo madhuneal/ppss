@@ -5,6 +5,8 @@
 
 This wiki page describes how PPSS is designed, how it works and which techniques are used. 
 
+*Please note that the design has changed with version 2.80 and differs from older versions.*
+
 = Design =
 
 There are two main ingredients that must be supplied to PPSS
@@ -30,15 +32,17 @@ http://home.quicknet.nl/mw/prive/nan1/got/process.png
 
 === Function: get_all_items ===
 
-The first step of PPSS is to read all items that must be processed into an array. This array will be used by the get_item function. 
+The first step of PPSS is to read all items that must be processed into a special text file. Items are read from this file using 'sed' and fed to the get_item function.
 
 === Function: listen_for_job ===
 
 The second step is to start the listener. This is a process running in the background that listens on a FIFO special file (named pipe). 
 
-For every messages that is received, the listener will execute a function (called 'commando') as a background process (with '&') with the received message supplied as an argument to this function.
+For every messages that is received, the listener will execute the 'get_item' function to get an item. The commando function is then executed with this item as an argument. The commando function is run as a background process.
 
-The whole function is executed as a background process, not just the user-supplied command.
+If the list of items has been processed, the get_item function will return with a non-null return code, and the listen_for_job function will not start a new commando process. Thus over time, when commando jobs finish, all jobs die out. Once listen_for_job registers that all running jobs have died, it kills of PPSS itself.
+
+The whole listen_for_job function is executed as a background process, not just the user-supplied command. This function is the only permanent (while) loop running and is often blocked when no input is received, so it is doing nothing most of the time.
 
 === Function: start_all_workers ===
 
@@ -50,18 +54,16 @@ So the start_single_worker function is called, this function requests an item wi
 
 The command function performs the following tasks:
 
-  * check if a supplied item has been processed already, if so, skip it.
+  * check if a supplied item has been processed already, if so, skip it. If a job log exists, the item is skipped.
   * execute the user-supplied command with the item as an argument
   * execute the 'start_single_worker' function to start a new job for a new item.
 
-The third option is the most relevant. After the command finishes, it calls the start_single_worker function.
+The third option is the most relevant. After the command finishes, it calls the start_single_worker function. The snake biting-its-own-tail mechanism. 
 
 === start_single_worker function ===
 
-The start_single_worker function will request an item with the get_item function. If the get_item function returns an item, this item will be echoed to the FIFO special file that the listener is reading from. So that item will be picked up by the listener, and the whole cycle will repeat. 
-
-If the list of items have been processed, the get_item function will not return a value and exits with a non-nul return code. No new items will be echoed to the FIFO special file and the cycle will stop. Slowly all cycles that have been initiated by the start_all_workers function will die out.
+The start_single_worker function will send a message to the fifo to inform the listener process that a commando should be executed. 
 
 === get_item function ===
 
-All items are read from the user-supplied file or directory into an array. If an item is requested, an item will be read from the array and an array_pointer is increased, so the next time the function is executed, the next item on the list is returned.
+If called, an item will be read from the special input file and a file pointer is increased, so the next time the function is executed, the next item on the list is returned.
