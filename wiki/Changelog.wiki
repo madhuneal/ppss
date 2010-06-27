@@ -1,10 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
-=== 2.80 (not yet released) ===
+=== 2.80  ===
 
- This versions consists of some under-the-hood changes, no functionality added. Changes are significant however. 
+ This versions consists of many under-the-hood changes, no functionality added. Changes are significant however, some code has been cleaned up and some parts are removed. 
 
-  * PPSS does not use local locking of items anymore. The central listener process is the one that requests new items and start a new worker after the previous one finished. Locking is only used when operating in distributed mode.
+  * PPSS locks items locally to allow multiple PPSS instances processing the same data. However, a global locking mechanism has been removed. 
 
   * Fixed issue 32: when processing large number of items, lots of memory is consumed because all items are loaded into an array. This is no longer the case. PPSS now uses 'sed' to read a particular line from an input file containing all the items. Therefore, the memory footprint of PPSS remains small.
 
