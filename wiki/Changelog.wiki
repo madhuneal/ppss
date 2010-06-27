@@ -4,7 +4,7 @@
 
  This versions consists of many under-the-hood changes, no functionality added. Changes are significant however, some code has been cleaned up and some parts are removed. 
 
-  * PPSS locks items locally to allow multiple PPSS instances processing the same data. However, a global locking mechanism has been removed. 
+  * There was a global locking mechanism that was in-place for distributing items to worker processes. The listener process now handles distribution of items to worker processes, which is a single central process. Thus, locking is no longer an issue, since it is a single process. This provides a serious performance benefit.
 
   * Fixed issue 32: when processing large number of items, lots of memory is consumed because all items are loaded into an array. This is no longer the case. PPSS now uses 'sed' to read a particular line from an input file containing all the items. Therefore, the memory footprint of PPSS remains small.
 
