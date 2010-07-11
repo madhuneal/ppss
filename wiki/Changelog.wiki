@@ -1,5 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
+
+=== 2.81  (NOT RELEASED YET, available in SVN) ===
+
+ * This version will support the Linux inotify system. File system events are processed in real-time, asynchronously in daemon mode. Thus, if inotify is installed on the system, PPSS will detect this and use it to watch a specified directory for file system events. This allows PPSS to respond to file system events very quickly. It also does a way with the locking mechanism that is required if inotify is not used.
+
 === 2.80  ===
 
  This versions consists of many under-the-hood changes, no functionality added. Changes are significant however, some code has been cleaned up and some parts are removed. 
