@@ -3,7 +3,7 @@
 
 = Daemon mode (2.63 and onward) =
 
-PPSS can be run as a daemon, monitoring a file or directory for new items. If (new) input is found, it is processed. If multiple items are put into the directory at once, they are processed in parallel.
+PPSS can be run as a daemon, monitoring a file or directory for new items. If (new) input is found, it is processed. If multiple items are put into the directory at once, they are processed in parallel. In daemon mode, PPSS will show no output, but will perform some basic logging to its log file.
 
 When running as a daemon there is a risk that as soon PPSS detects a new file, it starts processing, while the file has not been fully written to disk. To prevent this risk, there are three options for running PPSS as a daemon:
 
@@ -13,7 +13,9 @@ When running as a daemon there is a risk that as soon PPSS detects a new file, i
 
 == Standard daemon mode ==
 
-In this mode PPSS uses the 'stat' command to determine the time since it was last modified. By default, a file must have an age of 4 seconds before it is processed. If you want to wait longer or a shorter time period, use the --file-age (seconds) parameter. The --polling-interval option allows you to specify how often PPSS should check for new files within the directory. The default is to check for new files every 10 seconds. 
+In this mode PPSS uses the 'stat' command to determine the time since it was last modified. By default, a file must have an age of 4 seconds before it is processed. If you want to wait longer or a shorter time period, use the --file-age (seconds) parameter. The --polling-interval option allows you to specify how often PPSS should check for new files within the directory. The default is to check for new files every 10 seconds. An example: 
+
+  ppss -d /some/directory -c 'gzip ' --daemon --polling-interval 30 --file-age 10
 
 Please note that checking for new files on a directory with many files will stress the CPU as PPSS must determine for each file found if it is processed or not. So it is advised to remove items from the directory once they are processed. Also, don't set the polling interval to short or the system is only busy polling and can't do any actual work. If a short polling interval is required, consider using the Linux inotify option as described below.
 
