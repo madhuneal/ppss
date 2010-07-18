@@ -1,0 +1,63 @@
+#summary running PPSS in daemon mode.
+#labels Featured
+
+= Daemon mode (2.63 and onward) =
+
+PPSS can be run as a daemon, monitoring a file or directory for new items. If (new) input is found, it is processed. If multiple items are put into the directory at once, they are processed in parallel.
+
+When running as a daemon there is a risk that as soon PPSS detects a new file, it starts processing, while the file has not been fully written to disk. To prevent this risk, there are three options for running PPSS as a daemon:
+
+- standard (default if inotify is not available)
+- with Linux inotify (default if available)
+- with manual locking
+
+== Standard daemon mode ==
+
+In this mode PPSS uses the 'stat' command to determine the time since it was last modified. By default, a file must have an age of 4 seconds before it is processed. If you want to wait longer or a shorter time period, use the --file-age (seconds) parameter. The --polling-interval option allows you to specify how often PPSS should check for new files within the directory. The default is to check for new files every 10 seconds. 
+
+Please note that checking for new files on a directory with many files will stress the CPU as PPSS must determine for each file found if it is processed or not. So it is advised to remove items from the directory once they are processed. Also, don't set the polling interval to short or the system is only busy polling and can't do any actual work. If a short polling interval is required, consider using the Linux inotify option as described below.
+
+== Linux inotify (2.82 and onward) ==
+
+A regular daemon just polls every x seconds for new files, but this polling is not very efficient. A robust and fast mechanism for monitoring of file system events is [http://en.wikipedia.org/wiki/Inotify inotify]. By default, the inotify program does nothing and just waits for a file system event to occur. Thus when using PPSS, PPSS will do absolutely nothing unless a file system event occurs. Only 'close' events are noticed by PPSS, making dead sure that only files are processed that have been closed and are not being operated upon.
+
+Inotify is enabled by default if PPSS detects that inotify is installed and PPSS is run as a daemon.
+
+To use inotify on a Linux system, you must install it first. For Debian-based operating systems, this can be done with:
+
+  apt-get install inotify-tools
+
+Inotify is regarded as the best option for running the daemon mode, however it requires additional software. The standard mechanism that just polls the directory at a regular interval and verifies the modification date of a file may be sufficient for many, so it is not required. The benefit of inotify is that it makes PPSS fast to respond to filesystem events. PPSS doesn't need to wait for the next polling event to pick up new items. They are processed as soon as they arrive.
+
+Inotify can be explicitly disabled with the --disable-inotify option.
+
+== Manual locking mechanism ==
+
+If you want to be dead sure that no race condition can occur and 'inotify' cannot be used, use the additional locking mechanism that is build-in into PPSS. The --enable-input-lock option forces PPSS to claim the input directory with a lock file called INPUT_LOCK. If this directory exists, PPSS will not process items. Once this directory is removed, PPSS will start processing. This way, you can lock the input directory in your script and make sure that all processes on files are finished before PPSS starts processing items.  For this feature, your script needs some additional logic like this (almost identical code from PPSS):
+
+{{{
+# 1 - try to obtain lock.
+while true
+    do
+        mkdir "/some/directory/INPUT_LOCK" >> /dev/null 2>&1
+        if [ "$?" == "0" ]
+        then
+            break
+        else
+            sleep 5
+        fi
+    done
+
+
+# 2 - do something here
+copy file /some/directory/
+
+# 3 - release lock
+rm -rf /some/directory/INPUT_LOCK
+
+}}}
+
+
+== Using a file as input == 
+
+When using the -f option in DAEMON mode, you also need to specify a -d option, to specify a directory. This directory is used for the lock file, as described above, if locking is used.
