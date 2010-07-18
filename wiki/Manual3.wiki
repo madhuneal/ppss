@@ -33,6 +33,8 @@ Inotify is regarded as the best option for running the daemon mode, however it r
 
 Inotify can be explicitly disabled with the --disable-inotify option.
 
+*Caveat* Inotify does not work on network file systems like NFS. Disable inotify in this case.
+
 == Manual locking mechanism ==
 
 If you want to be dead sure that no race condition can occur and 'inotify' cannot be used, use the additional locking mechanism that is build-in into PPSS. The --enable-input-lock option forces PPSS to claim the input directory with a lock file called INPUT_LOCK. If this directory exists, PPSS will not process items. Once this directory is removed, PPSS will start processing. This way, you can lock the input directory in your script and make sure that all processes on files are finished before PPSS starts processing items.  For this feature, your script needs some additional logic like this (almost identical code from PPSS):
