@@ -1,4 +1,4 @@
-#summary running PPSS in daemon mode.
+#summary PPSS in daemon mode.
 #labels Featured
 
 = Daemon mode (2.63 and onward) =
