@@ -7,9 +7,9 @@ PPSS can be run as a daemon, monitoring a file or directory for new items. If (n
 
 When running as a daemon there is a risk that as soon PPSS detects a new file, it starts processing, while the file has not been fully written to disk. To prevent this risk, there are three options for running PPSS as a daemon:
 
-- standard (default if inotify is not available)
-- with Linux inotify (default if available)
-- with manual locking
+  * standard (default if inotify is not available)
+  * with Linux inotify (default if available)
+  * with manual locking
 
 == Standard daemon mode ==
 
