@@ -269,7 +269,7 @@ There is a risk that as soon PPSS detects a new file, it starts processing, whil
 
 Please note that checking for new files on a directory with many files will stress the CPU as PPSS must determine for each file found if it is processed or not. So it is advised to remove items from the directory once they are processed. Also, don't set the polling interval to short or the system is only busy polling and can't do any actual work. If a short polling interval is required, consider using the Linux inotify option as described below.
 
-*Linux inotify*
+*Linux inotify (2.82 and onward)*
 
 A regular daemon just polls every x seconds for new files, but this polling is not very efficient. A robust and fast mechanism for monitoring of file system events is [http://en.wikipedia.org/wiki/Inotify inotify]. By default, the inotify program does nothing and just waits for a file system event to occur. Thus when using PPSS, PPSS will do absolutely nothing unless a file system event occurs. Only 'close' events are noticed by PPSS, making dead sure that only files are processed that have been closed and are not being operated upon.
 
