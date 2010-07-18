@@ -78,6 +78,6 @@ The command function performs the following tasks:
 
 The third option is the most relevant. After the command finishes, it calls the start_single_worker function. The snake biting-its-own-tail mechanism. Essentially, a running thread keeps itself running by starting a new thread after it finishes, until there are no items to process.
 
-=== start_single_worker function ===
+=== start_new_worker function ===
 
-The start_single_worker function will send a message to the fifo to inform the listener process that a commando should be executed. 
+The start_new_worker function will send a message to the fifo to inform the listener process that a commando should be executed. 
