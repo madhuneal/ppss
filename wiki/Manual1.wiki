@@ -30,16 +30,7 @@ If PPSS is executed with -h, more options are displayed.
 
 {{{
 bash-3.2$ ./ppss.sh -h
-
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.40
-
-PPSS is a Bash shell script that executes commands in parallel on a set  
-of items, such as files in a directory, or lines in a file.
-
-This short summary only discusses options for stand-alone mode. for a 
-complete listing of all options, run PPSS with the options --help
-
-Usage ./ppss.sh [ options ]
+Usage ./ppss [ options ]
 
 --command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
                    Example: -c 'ls -alh '. It is also possible to specify where an item 
@@ -49,28 +40,55 @@ Usage ./ppss.sh [ options ]
                    are fed as an argument to the command that has been specified with -c.
 
 --sourcefile | -f  Each single line of the supplied file will be fed as an item to the
-                   command that has been specified with -c.
+                   command that has been specified with -c. Read input from stdin with
+                   -f -
 
 --config | -C      If the mode is config, a config file with the specified name will be
                    generated based on all the options specified. In the other modes.
                    this option will result in PPSS reading the config file and start
                    processing items based on the settings of this file.
 
---enable-ht | -j   Enable hyperthreading. Is disabled by default.
+--disable-ht | -j  Disable hyper threading. Is enabled by default.
 
 --log | -l         Sets the name of the log file. The default is ppss-log.txt.
 
 --processes | -p   Start the specified number of processes. Ignore the number of available
                    CPUs.
 
+--quiet | -q       Shows no output except for a progress indication using percents.
+
 --delay | -D       Adds an initial random delay to the start of all parallel jobs to spread
                    the load. The delay is only used at the start of all 'threads'.
 
+--daemon           Daemon mode. Do not exit after items are professed, but keep looking 
+                   for new items and process them. Read the manual how to use this!
+
+--interval         Specifies the polling interval when running in daemon mode. Polls every
+                   x seconds for new items to process.
+
+--file-age         When not using inotify in daemon mode, specify how many seconds must 
+                   have passed before a file may be processed to prevent files being 
+                   processed while being written to.
+
+--enable-input-lock     When PPSS is run in daemon mode, create a directory INPUT_LOCK to
+                   signal that items are processed and may not be touched by PPSS.
+                   Once this directory is removed, PPSS will start processing items.
+
+--disable-inotify  If for some reason, inotify must not be used, use this option to disable
+                    usage of inotify. Regular polling will be used.
+
+--no-recursion|-r  By default, recursion of directories is enabled when the -d option is 
+                   used. If this is not prefered, this can be disabled with this option 
+                   Only files within the specified directory will be processed.
+
+--help             Extended help, including options for distributed mode and Amazon EC2.
+
 Example: encoding some wav files to mp3 using lame:
 
-./ppss.sh -d /path/to/wavfiles -c 'lame '
+./ppss -d /path/to/wavfiles -c 'lame '
 
 Extended usage: use --help
+
 
 }}}
 
