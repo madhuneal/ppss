@@ -21,4 +21,8 @@ PPSS Roadmap.
 
   * Run PPSS as a daemon, monitoring a directory for (new) files to process. *(COMPLETED)*
 
+  * Send email notifications when:  *(Pending completion)*
+  # PPSS has finished processing all items.
+  # When processing an item returns an error, including the error message.
+
 If you have any suggestions for additional features or improvements, let me know using commends or by creating an issue.
