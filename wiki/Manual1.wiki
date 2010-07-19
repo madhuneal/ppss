@@ -185,6 +185,7 @@ Please note that this mechanism depends on what /proc/cpu (linux) reports. For e
 
 This option allows you to specify a custom name for the log file that is used by PPSS itself. 
  
+
 *setting the working directory*
 
 Prior to executing PPSS, set the working directory as follows:
