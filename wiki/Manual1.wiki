@@ -29,7 +29,17 @@ Examples:
 If PPSS is executed with -h, more options are displayed. 
 
 {{{
-bash-3.2$ ./ppss.sh -h
+bash-3.2$ ./ppss -h
+
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.83
+
+PPSS is a Bash shell script that executes commands in parallel on a set
+of items, such as files in a directory, or lines in a file. The purpose
+of PPSS is to make it simple to benefit from multiple CPUs or CPU cores.
+
+This short summary only discusses options for stand-alone mode. For a
+full listing of all options, run PPSS with the options --help
+
 Usage ./ppss [ options ]
 
 --command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
@@ -62,20 +72,7 @@ Usage ./ppss [ options ]
 
 --daemon           Daemon mode. Do not exit after items are professed, but keep looking 
                    for new items and process them. Read the manual how to use this!
-
---interval         Specifies the polling interval when running in daemon mode. Polls every
-                   x seconds for new items to process.
-
---file-age         When not using inotify in daemon mode, specify how many seconds must 
-                   have passed before a file may be processed to prevent files being 
-                   processed while being written to.
-
---enable-input-lock     When PPSS is run in daemon mode, create a directory INPUT_LOCK to
-                   signal that items are processed and may not be touched by PPSS.
-                   Once this directory is removed, PPSS will start processing items.
-
---disable-inotify  If for some reason, inotify must not be used, use this option to disable
-                    usage of inotify. Regular polling will be used.
+                   See --help for important additional options regarding daemon mode.
 
 --no-recursion|-r  By default, recursion of directories is enabled when the -d option is 
                    used. If this is not prefered, this can be disabled with this option 
@@ -88,7 +85,6 @@ Example: encoding some wav files to mp3 using lame:
 ./ppss -d /path/to/wavfiles -c 'lame '
 
 Extended usage: use --help
-
 
 }}}
 
