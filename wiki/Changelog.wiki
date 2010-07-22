@@ -3,7 +3,7 @@
 
 === 2.83  ===
 
- * Fixed iss 33: Daemon mode crashes if inotify is not installed. This version is available as an attachment to this issue.
+ * Fixed issue 33: Daemon mode crashes if inotify is not installed. This version is available as an attachment to this issue.
 
 === 2.82  ===
 
