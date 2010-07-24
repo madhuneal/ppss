@@ -4,7 +4,7 @@
 === 2.83  ===
 
  * Fixed issue 33: Daemon mode crashes if inotify is not installed. This version is available as an attachment to this issue.
-*  Fixed issue 34: Daemon mode does not process new items under certain conditions.
+ *  Fixed issue 34: Daemon mode does not process new items under certain conditions.
 
 === 2.82  ===
 
