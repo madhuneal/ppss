@@ -4,6 +4,7 @@
 === 2.84 (not released) ===
 
 * Fixed issue 35: Total processing time not shown or logged.
+* PPSS now estimates when PPSS will be finished (ETA).
 
 === 2.83  ===
 
