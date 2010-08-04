@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.84  ===
+
+* Fixed issue 35: Total processing time not shown or logged.
+
 === 2.83  ===
 
  * Fixed issue 33: Daemon mode crashes if inotify is not installed. This version is available as an attachment to this issue.
