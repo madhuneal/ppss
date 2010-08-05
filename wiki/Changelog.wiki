@@ -5,6 +5,7 @@
 
 * Fixed issue 35: Total processing time not shown or logged.
 * PPSS now estimates when PPSS will be finished (ETA).
+* removed dead function get_status (thanks Mr. Hartman).
 
 === 2.83  ===
 
