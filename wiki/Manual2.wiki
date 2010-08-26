@@ -158,7 +158,7 @@ This is the most important part of setting up distributed PPSS. It is exactly th
 
 The best way to explain how to create a configuration file for distributed PPSS is to provide an example. In this example, a script is used to encode WAV files to MP3. This script is called 'encode.sh' and takes a filename as an argument. 
 
-`./ppss config -C config.cfg -c 'encode.sh ' -d /source/dir -m 192.168.1.100 -u ppss -k ppss-key.key -S ./encode.sh -n nodes.txt  -o /some/output/dir --upload --download` 
+`./ppss config -C config.cfg -c 'encode.sh ' -d /source/dir -m 192.168.1.100 -u ppss -k ppss.key -S ./encode.sh -n nodes.txt  -o /some/output/dir --upload --download` 
 
 It is quite a long command line, however, it is executed only once. Afther that, the config file config.cfg can be used for all further commands. 
 
@@ -182,7 +182,7 @@ This option specifies the location on the *server* where the files reside that m
 
 The -m option specifies the SSH server that acts as both fileserver and SSH server for communication between nodes.  The SSH server is mainly used for file-locking: nodes know that locked files are already processed or being processed, so another unlocked file must be selected.
 
-If the server acts both as a file server and SSH server, it is not recommended to use it also as a node, in this case for encoding. Filetransers using SSH can take quite some processing power. Using different hosts as a file server (through SCP) and master is currently not possible (yet).
+If the server acts both as a file server and SSH server, it is not recommended to use it also as a node, in this case for encoding. File transfers using SSH can take quite some processing power. Using different hosts as a file server (through SCP) and master is currently not possible (yet).
 
 *User name*
 
@@ -202,9 +202,9 @@ The -n option specifies the file containing all nodes. For every node, PPSS will
 
 *Transfer files to local host*
 
---download: If this option is specified, the file is copied from the source directory to a local temporary working directory for local processing. This is necessary if SCP is used to access files that must be processed. 
+--download: If this option is specified, the file that is to be processed is copied from the source directory to a local temporary working directory for local processing. This is necessary if SCP is used to access files that must be processed. 
 
-If files are distributed over NFS or SMB, the files seem to be present on the local system, because it is just a mount point and thus just a part of the local file system. In this case, the --download option can be omitted. 
+If files are distributed over NFS or SMB, the files look like they are present on the local system, because it is just a mount point and thus just a part of the local file system. In this case, the --download option can be omitted. 
 
 *The output directory*
 
