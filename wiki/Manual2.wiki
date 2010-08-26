@@ -4,6 +4,7 @@
 = Design overview = 
 
 *SSH for communication*
+
 The basis for communication between master and nodes is SSH. This requires the setup of SSH keys. 
 
   # Nodes must be able to login onto the master server for actual distributed operation.
