@@ -1,7 +1,17 @@
 #summary PPSS Manual (Distributed)
 #labels Featured
 
-= Introduction =
+= Design overview = 
+
+*SSH for communication*
+The basis for communication between master and nodes is SSH. This requires the setup of SSH keys. 
+
+  # Nodes must be able to login onto the master server for actual distributed operation.
+  # The master server must be able to login onto the nodes for deployment of PPSS and all required files. 
+
+The second option is not mandatory. Any other computer system can be used, as long as it has proper SSH key material to logon into the nodes. 
+
+= Installation steps in a nutshell =
 
 To use PPSS in a distributed fasion, The following steps must be performed:
 
@@ -12,24 +22,15 @@ To use PPSS in a distributed fasion, The following steps must be performed:
  # Deploy PPSS to the nodes.
  # Start PPSS on all nodes. 
  
-= A list of all configuration options = 
+= A list of all relevant configuration options = 
 
 {{{
-bash-3.2$ ./ppss --help
-
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.60b2
-
-PPSS is a Bash shell script that executes commands in parallel on a set  
-of items, such as files in a directory, or lines in a file.
-
-Usage: ./ppss [ MODE ] [ options ]
 
 Modes are optional and mainly used for running in distributed mode. Modes are:
 
  config       Generate a config file based on the supplied option parameters.
  deploy       Deploy PPSS and related files on the specified nodes.
  erase        Erase PPSS and related files from the specified nodes.
- ec2          Start up Amazon EC2 instances and deploy PPSS on nodes.
 
  start        Starting PPSS on nodes.
  pause        Pausing PPSS on all nodes.
@@ -38,34 +39,10 @@ Modes are optional and mainly used for running in distributed mode. Modes are:
 
 Options are:
 
---command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
-                   Example: -c 'ls -alh '. It is also possible to specify where an item 
-                   must be inserted: 'cp "$ITEM" /somedir'.
-
---sourcedir | -d   Directory that contains files that must be processed. Individual files
-                   are fed as an argument to the command that has been specified with -c.
-
---sourcefile | -f  Each single line of the supplied file will be fed as an item to the
-                   command that has been specified with -c.
-
 --config | -C      If the mode is config, a config file with the specified name will be
                    generated based on all the options specified. In the other modes.
                    this option will result in PPSS reading the config file and start
                    processing items based on the settings of this file.
-
---enable-ht | -j   Enable hyperthreading. Is disabled by default.
-
---log | -l         Sets the name of the log file. The default is ppss-log.txt.
-
---processes | -p   Start the specified number of processes. Ignore the number of available
-                   CPUs.
-
---delay | -D       Adds an initial random delay to the start of all parallel jobs to spread
-                   the load. The delay is only used at the start of all 'threads'.
-
---no-recursion|-r  By default, recursion of directories is enabled when the -d option is 
-                   used. If this is not prefered, this can be disabled with this option 
-                   Only files within the specified directory will be processed.
 
 The following options are used for distributed execution of PPSS.
 
@@ -105,40 +82,6 @@ The following options are used for distributed execution of PPSS.
 
 --homedir | -H     Directory in which directory PPSS is installed on the node.
                    Default is 'ppss-home'.
-
-Amazon EC2 platform specific options:
-
---awskeypair | -P  The Amazon EC2 SSH keypair that new instances should use
-
---AMI    | -A      The Amazon Machine Image that should be used to create new running instances
-
---type   | -T      The type of EC2 instance that should be created.
-                   Example: c1.xlarge or m1.medium
-
---security   | -G  The security group that should be used for networking access
-
---instances  | -I  The number of instances that should be started
-
-
-Example: encoding some wav files to mp3 using lame:
-
-./ppss -c 'lame ' -d /path/to/wavfiles -j 
-
-Running PPSS based on a configuration file.
-
-./ppss -C config.cfg
-
-Generating a configuration file. Wavs are converted to mp3. SCP is used for data transfer.
-
-./ppss config -C ppss-config.cfg -d /some/dir -o output --download --upload -K known_hosts \
--k ppss-key.dsa -n nodes.txt -m 10.0.0.100 \
--c 'lame --quiet "$ITEM" -o "$OUTPUT_DIR/$OUTPUT_FILE".mp3' 
-
-Running PPSS on a client as part of a cluster.
-
-./ppss node -d /somedir -c 'cp "$ITEM" /some/destination' -m 10.0.0.50 -u ppss -k ppss-key.key
-
-
 }}}
 
 = Preparation of server and nodes =
@@ -149,43 +92,46 @@ The following preparations must be made in order to use PPSS in a distributed fa
   * Create an unprivileged user 'ppss' on each node.
   * Generate a SSH key without a pass phrase.
 
+*Important*
+The SSH key will be used for nodes to logon into the server AND for the server to logon into the nodes. So in this example the same key material is used both on the nodes as on the server. 
+
 Example:
 
-`ssh-keygen -f ppss-private.key`
+`ssh-keygen -f ppss.key`
 
 {{{
 Generating public/private rsa key pair.
 Enter passphrase (empty for no passphrase): 
 Enter same passphrase again: 
-Your identification has been saved in ppss-private.key.
-Your public key has been saved in ppss-private.key.pub.
+Your identification has been saved in ppss.key.
+Your public key has been saved in ppss.key.pub.
 The key fingerprint is:
 ....
 bash-3.2$ ls -alh
 total 16
 drwxr-xr-x   4 ppss  staff   136B 15 mrt 00:09 .
 drwxr-xr-x+ 51 ppss  staff   1,7K 14 mrt 17:45 ..
--rw-------   1 ppss  staff   1,6K 15 mrt 00:09 ppss-private.key
--rw-r--r--   1 ppss  staff   401B 15 mrt 00:09 ppss-private.key.pub
+-rw-------   1 ppss  staff   1,6K 15 mrt 00:09 ppss.key
+-rw-r--r--   1 ppss  staff   401B 15 mrt 00:09 ppss.key.pub
 }}}
 
 The result is a private and a public key (.pub). The private key is the key that needs to be distributed to all nodes in order to be able to logon to the server.
 
-  * Add the public SSH key to the authorized_keys file of the 'ppss' user on the server.
+  * Add the _public_ SSH key to the authorized_keys file of the 'ppss' user on the server.
 
-Thus, put the contents of ppss-private.key.pub into a file called authorized_keys and place this file into the directory .ssh in the home directory of the PPSS user on the server.
+Thus, put the contents of ppss.key.pub into a file called authorized_keys and place this file into the directory .ssh in the home directory of the PPSS user on the server.
 
-  * Add the public SSH key to the authorized_keys file of the 'ppss' user on the client. 
+  * Add the public SSH key to the authorized_keys file of the 'ppss' user on the nodes. 
 
-This is necessary if you want to deploy PPSS on the nodes using PPSS in an automated fashion. The alternative is to manually copy PPSS and all necessary files to each node by hand.
+This is necessary if you want to deploy PPSS on the nodes using PPSS in an automated fashion(./ppss deploy -C config.cfg). The alternative is to manually copy PPSS and all necessary files to each node by hand.
 
   * Create a 'known_hosts' file containing the public key of the server.  *Important*
 
 When a node connects to the server for the first time, SSH wil show you the fingerprint of the server and ask if it is ok to connect to this host. To prevent this question, you must perform one of these actions:
 
-  * Logon to each node manually and connect once to the server and manually accept the server signature
-  * Manually upload a known_hosts file to each node and place it in the ~/.ssh directory of the ppss user.
-  * Create a file called "known_hosts" and put the server public key in this file. *Recommended*
+  # Logon to each node manually and connect once to the server and manually accept the server signature
+  # Manually upload a known_hosts file to each node and place it in the ~/.ssh directory of the ppss user.
+  # Create a file called "known_hosts" and put the server public key in this file. *Recommended*
 
 You may already have the server public key in the ~/.ssh/known_hosts file of a system that has been used to logon to the server. Thus use the -K option to generate your own ./known_hosts file for usage with PPSS. If a known_hosts file exists within the same directory in which PPSS resides, this file will automatically be used and deployed to nodes. So if you manually create a file called known_hosts with the appropriate content, the -K option can be omitted.
  
