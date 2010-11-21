@@ -1,7 +1,11 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.84 (not released) ===
+=== 2.85 (NOT RELEASED) ===
+
+  * Fixed issue 38: daemon mode lockup when using inotify
+
+=== 2.84 ===
 
   * Fixed issue 35: Total processing time not shown or logged.
   * PPSS now estimates when PPSS will be finished (ETA).
