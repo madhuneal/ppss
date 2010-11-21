@@ -61,7 +61,12 @@ rm -rf /some/directory/INPUT_LOCK
 
 }}}
 
-
 == Using a file as input == 
 
 When using the -f option in DAEMON mode, you also need to specify a -d option, to specify a directory. This directory is used for the lock file, as described above, if locking is used.
+
+== NFS and inotify ==
+
+NFS does not work well with inotify. If a directory is exported through NFS and an NFS client writes to this directory through NFS, this creates thousands of CLOSE events instead of a single event.
+
+Therefore inotify cannot be used on a directory exported through NFS. PPSS tries to detect this by reading /etc/exports. If the source directory resides in a directory as found in /etc/exports, inotify is disabled.
