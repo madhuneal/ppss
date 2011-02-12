@@ -1,6 +1,12 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.86 (not yet released) ===
+
+  * Fixed issue 40. FreeBSD is detected and then the bash shell is explicitly called. Is not tested, do'nt have BSD.
+
+  * Fiexed issue 41: the status file of a node is not status.txt but $hostname-status.txt. So each status file is now unique, assuming that each system has an unique hostname. 
+
 === 2.85 ===
 
   * Fixed issue 38: daemon mode lockup when using inotify
