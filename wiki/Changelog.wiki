@@ -10,7 +10,7 @@ The version may not have changed much but PPSS has.
   * Fixed issue 41: the status file of a node is not status.txt but $hostname-status.txt. So each status file is now unique, assuming that each system has an unique hostname. 
   * Nodes now upload their status to the ssh server. A 'ppss status' now just polls the ssh server and does not need to contact every individual client anymore.
 
-  * Fixed the deprecated usage of find -d instead of -depth
+  * Fixed issue 54: the deprecated usage of find -d instead of -depth
   
   * Fixed issue 56: exit codes. Exit 1 is now used where appropriate.
 
