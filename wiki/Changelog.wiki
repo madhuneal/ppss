@@ -1,12 +1,18 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.90 (not yet released) ===
+=== 2.90 (not yet released) ===o
+
+The version may not have changed much but PPSS has.
 
   * Fixed issue 40. FreeBSD is detected and then the bash shell is explicitly called. Is not tested, do'nt have BSD.
 
   * Fixed issue 41: the status file of a node is not status.txt but $hostname-status.txt. So each status file is now unique, assuming that each system has an unique hostname. 
   * Nodes now upload their status to the ssh server. A 'ppss status' now just polls the ssh server and does not need to contact every individual client anymore.
+
+  * Fixed the deprecated usage of find -d instead of -depth
+  
+  * Fixed exit codes. Exit 1 is now used where appropriate.
 
 === 2.85 ===
 
