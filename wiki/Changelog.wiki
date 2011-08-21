@@ -12,7 +12,9 @@ The version may not have changed much but PPSS has.
 
   * Fixed issue 54: the deprecated usage of find -d instead of -depth
   
-  * Fixed issue 56: exit codes. Exit 1 is now used where appropriate.
+  * Fixed issue 56: exit codes. Exit now returns non-0 when PPSS itself fails or it failed to process an item.
+
+
 
 === 2.85 ===
 
