@@ -78,7 +78,11 @@ Usage ./ppss [ options ]
                    used. If this is not prefered, this can be disabled with this option 
                    Only files within the specified directory will be processed.
 
---help             Extended help, including options for distributed mode and Amazon EC2.
+--md5|-M           Use MD5 to create unique file names for locking and log file names.
+                   PPSS strips al non [:alnum:] characters of an item string and this may
+                   cause collisions. String ABC!@# and ABC^&* will become both ABC___
+
+--help             Extended help, including options for distributed mode.
 
 Example: encoding some wav files to mp3 using lame:
 
