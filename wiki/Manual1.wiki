@@ -317,8 +317,9 @@ If you tailor your command the right way, or create a (small) script, it is very
 
 *Important:* 
 
-PPSS skips items if an item log file is present in the Job_log directory. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
+1) PPSS skips items if an item log file is present in the Job_log directory. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job_log directory. 
 
+2) The -M or --md5 option allows you to inform PPSS to use MD5 hashes of the items as file names to be 100% sure to avoid collisions. This may be important when processing items that are not file names.
 
 == Other things you should be aware of ==
 
