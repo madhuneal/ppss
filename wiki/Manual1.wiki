@@ -163,6 +163,10 @@ In this example, a list of URLs is provided by the file list.txt. These urls are
 
 *Tip*: please note that the double quotes around "$ITEM" may or may not be necessary depending on the situation. When using an input file with the -f option, they are often not necessary.
 
+PPSS also supports input from STDIN:
+
+`$ cat list-of-urls.txt | ppss -f - -c 'wget -q '`
+
 *Advanced usage of the -c command option *
 
 Some commands require that you specify an output file. An example of such a command or program is the Lame mp3 encoder. Since the output file must be unique for each item, the output file name must be based on a variable. Like this:
