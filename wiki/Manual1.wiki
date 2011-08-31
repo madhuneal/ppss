@@ -113,11 +113,11 @@ Before discussing the full list of command line options, an example will be give
 
 `$ ./ppss -d /path/to/files -c 'gzip '`
 
-In this example, we can distinguish a 'mode' and two options. The mode speaks for itself: PPSS is not part of a cluster, it is just running on the host. 
+In this example, we can distinguish two options.
 
 The -d option specifies the directory where the files reside that must be processed. 
 
-The -c option specifies the command that will be executed by PPSS in parallel for each file within the directory specified by -d. In this example the command has a *trailing space*, which is necessary since the command will expand to 'gzip example.tar' when executed. If the space is omitted, an error will occur. 
+The -c option specifies the command that will be executed by PPSS in parallel for each file within the directory specified by -d. In this example the command has a *trailing space*, which is necessary since the command will expand to 'gzip file01.tar' when executed. If the space is omitted, an error will occur. 
 
 Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
 
