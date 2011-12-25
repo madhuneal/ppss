@@ -1,7 +1,7 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.95 ===
+=== 2.96 ===
 
   * Fixed many minor issues, small tweaks
   * Fixed issues with daemon mode not properly handling NFS mounted shares.
@@ -18,6 +18,14 @@
   * Fixed issue 57: PPSS now keeps track of failed items. It reports if items have failed or not. Works also in distributed mode.
 
   * Added feature for distributed mode: every node gets the same list of items. Nodes then try to process them by 'claiming' them through locking. At a certain moment, all items will be locked and it is not necessary for nodes to mindlessly continue to try and obtain a lock on all items. PPSS will now detect this and make the node finish and quit. It does this by comparing the number of item locks on the SSH server and the total number of items to process.
+
+* Fixed issue 41
+* Fixed issue 42
+* Fixed issue 46
+* Fixed issue 47
+* Fixed issue 52
+* Fixed issue 60
+* Fixed issue 61
 
 === 2.85 ===
 
