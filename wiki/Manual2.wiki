@@ -214,7 +214,7 @@ If the --upload option is used, the -o option specifies the destination director
 
 The following example does the exact same thing as the encode script. 
 
-`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -m 192.168.1.100 -u ppss -k ppss-key.key -K /path/to/known_hosts_file -S ./encode.sh -n nodes.txt -o /some/output/dir --download --upload` 
+`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -m 192.168.1.100 -u ppss -k ppss-key.key -K /path/to/known_hosts_file -n nodes.txt -o /some/output/dir --download --upload` 
 
 The OUTPUT_DIR and OUTPUT_FILE variables are special. It tells your command where to store the output. This is important if you want to transfer the results of your command back to the server. 
 
