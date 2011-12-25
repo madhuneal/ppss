@@ -1,10 +1,11 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.90 (not yet released) ===
+=== 2.95 (not yet released) ===
 
-The version may not have changed much but PPSS has.
-
+  * Fixed many minor issues, small tweaks
+  * Fixed issues with daemon mode not properly handling NFS mounted shares.
+  * Fixed issue when running in distributed mode
   * Fixed issue 40. FreeBSD is detected and then the bash shell is explicitly called. Is not tested, do'nt have BSD.
 
   * Fixed issue 41: the status file of a node is not status.txt but $hostname-status.txt. So each status file is now unique, assuming that each system has an unique hostname. 
