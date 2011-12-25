@@ -19,13 +19,13 @@
 
   * Added feature for distributed mode: every node gets the same list of items. Nodes then try to process them by 'claiming' them through locking. At a certain moment, all items will be locked and it is not necessary for nodes to mindlessly continue to try and obtain a lock on all items. PPSS will now detect this and make the node finish and quit. It does this by comparing the number of item locks on the SSH server and the total number of items to process.
 
-* Fixed issue 41
-* Fixed issue 42
-* Fixed issue 46
-* Fixed issue 47
-* Fixed issue 52
-* Fixed issue 60
-* Fixed issue 61
+  * Fixed issue 41
+  * Fixed issue 42
+  * Fixed issue 46
+  * Fixed issue 47
+  * Fixed issue 52
+  * Fixed issue 60
+  * Fixed issue 61
 
 === 2.85 ===
 
