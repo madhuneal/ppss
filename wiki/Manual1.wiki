@@ -31,7 +31,7 @@ If PPSS is executed with -h, more options are displayed.
 {{{
 bash-3.2$ ./ppss -h
 
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.90
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.95
 
 PPSS is a Bash shell script that executes commands in parallel on a set
 of items, such as files in a directory, or lines in a file. The purpose
@@ -68,19 +68,24 @@ Usage ./ppss [ options ]
 --quiet | -q       Shows no output except for a progress indication using percents.
 
 --delay | -D       Adds an initial random delay to the start of all parallel jobs to spread
-                   the load. The delay is only used at the start of all 'threads'.
+                   the load. The delay (seconds) is only used at the start of all 'threads'.
 
 --daemon           Daemon mode. Do not exit after items are professed, but keep looking 
                    for new items and process them. Read the manual how to use this!
                    See --help for important additional options regarding daemon mode.
 
+--disable-inotify  Linux users can use real-time inotify filesystem events when using
+                   daemon mode. Requires inotify-tools. Enabled by default if available.
+                   Automatically disabled if NFS is used as the daeon source dir.
+
 --no-recursion|-r  By default, recursion of directories is enabled when the -d option is 
                    used. If this is not prefered, this can be disabled with this option 
                    Only files within the specified directory will be processed.
 
---md5|-M           Use MD5 to create unique file names for locking and log file names.
-                   PPSS strips al non [:alnum:] characters of an item string and this may
-                   cause collisions. String ABC!@# and ABC^&* will become both ABC___
+--email | -e       PPSS sends an e-mail if PPSS has finished. It is also used if processing
+                   of an item has failed (configurable, see -h). 
+
+--debug            Enable debugging output to the |P|P|S|S| log file.
 
 --help             Extended help, including options for distributed mode.
 
