@@ -69,4 +69,4 @@ When using the -f option in DAEMON mode, you also need to specify a -d option, t
 
 NFS does not work well with inotify. If a directory is exported through NFS and an NFS client writes to this directory through NFS, this creates thousands of CLOSE events instead of a single event.
 
-Therefore inotify cannot be used on a directory exported through NFS. PPSS tries to detect this by reading /etc/exports. If the source directory resides in a directory as found in /etc/exports, inotify is disabled.
+Therefore inotify cannot be used on a directory exported through NFS. PPSS tries to detect this by parsing the output of the 'mount' command.
