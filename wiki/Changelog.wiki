@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.97 (unreleased)===
+
+  * Fixed some suggested improvements of issue 39, such as removing use of backtics. using [[ for tests.
+
 === 2.96 ===
 
   * Fixed many minor issues, small tweaks
