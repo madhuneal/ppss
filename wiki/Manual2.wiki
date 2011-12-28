@@ -46,13 +46,13 @@ Options are:
                    processing items based on the settings of this file.
 
 The following options are used for distributed execution of PPSS.
-
 --master | -m      Specifies the SSH server that is used for communication between nodes.
                    Using SSH, file locks are created, informing other nodes that an item 
-                   is locked. Also, often items, such as files, reside on this host. SCP 
-                   is used to transfer files from this host to nodes for local procesing.
+                   is locked. If items are files that must be processed, they must reside
+                   on this host. SCP is used to transfer files from this host to nodes
+                   for local procesing.
 
---node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS 
+--node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS
                    name per line.
 
 --key | -k         The SSH key that a node uses to connect to the master.
@@ -61,28 +61,35 @@ The following options are used for distributed execution of PPSS.
                    hosts that already once connected to the server. See the file 
                    ~/.ssh/known_hosts or else, manualy connect once and check this file.
 
---user | -u        The SSH user name that is used when logging in into the master SSH
-                   server.
+--user | -u        The SSH user name that is used by the node when logging in into the
+                   master SSH server.
 
---script | -S      Specifies the script/program that must be copied to the nodes for 
+--script | -S      Specifies the script/program that must be copied to the nodes for
                    execution through PPSS. Only used in the deploy mode.
                    This option should be specified if necessary when generating a config.
 
---download         This option specifies that an item will be downloaded by the node 
+--download         This option specifies that an item will be downloaded by the node
                    from the server or share to the local node for processing.
 
 --upload           This option specifies that the output file will be copied back to
                    the server, the --outputdir option is mandatory.
 
 --no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a
-                   network file system (NFS/SMB) is mounted under a local mountpoint.
+                   network file system (NFS/SMB) is mounted under a local mount point.
 
 --outputdir | -o   Directory on server where processed files are put. If the result of 
                    encoding a wav file is an mp3 file, the mp3 file is put in the 
                    directory specified with this option.
 
---homedir | -H     Directory in which directory PPSS is installed on the node.
+--homedir | -H     Directory in which PPSS is installed on the node.
                    Default is 'ppss-home'.
+
+--script | -S      Script to run on the node. PPSS must copy this script to the node.
+
+--randomize | -R   Randomise which items to process by the client in distributed mode.
+                   This makes sure that with many nodes, it is prevented that some
+                   clients spend all their time trying to get a lock on an item.
+
 }}}
 
 = Preparation of server and nodes =
