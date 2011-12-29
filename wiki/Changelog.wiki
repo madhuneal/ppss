@@ -7,6 +7,8 @@
 
 === 2.96 ===
 
+DO NOT USE THIS VERSION - IT IS BROKEN
+
   * Fixed many minor issues, small tweaks
   * Fixed issues with daemon mode not properly handling NFS mounted shares.
   * Fixed issue when running in distributed mode
