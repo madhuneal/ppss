@@ -1,7 +1,7 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
-=== 2.97 (unreleased)===
+=== 2.97 ===
 
   * Fixed some suggested improvements of issue 39, such as removing use of backtics. using [[ for tests.
   * Fixed issue with copying files to local node when using regular 'cp'.
