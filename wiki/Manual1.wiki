@@ -12,26 +12,7 @@ The following output is displayed by PPSS when executed without any options:
 {{{ 
 
 bash-3.2$ ppss
-
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.60
-
-usage: ./ppss [ -d <sourcedir> | -f <sourcefile> ]  [ -c '<command> "$ITEM"' ]
-                 [ -C <configfile> ] [ -j ] [ -l <logfile> ] [ -p <# jobs> ]
-                 [ -D <delay> ] [ -h ] [ --help ] [ -r ] 
-
-Examples:
-                 ./ppss -d /dir/with/some/files -c 'gzip '
-                 ./ppss -d /dir/with/some/files -c 'cp "$ITEM" /tmp' -p 2
-                 ./ppss -f <file> -c 'wget -q -P /destination/directory "$ITEM"' -p 10
-
-}}}
-
-If PPSS is executed with -h, more options are displayed. 
-
-{{{
-bash-3.2$ ./ppss -h
-
-|P|P|S|S| Distributed Parallel Processing Shell Script 2.95
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.97
 
 PPSS is a Bash shell script that executes commands in parallel on a set
 of items, such as files in a directory, or lines in a file. The purpose
@@ -40,7 +21,7 @@ of PPSS is to make it simple to benefit from multiple CPUs or CPU cores.
 This short summary only discusses options for stand-alone mode. For a
 full listing of all options, run PPSS with the options --help
 
-Usage ./ppss [ options ]
+Usage ./ppss [[ options ]] 
 
 --command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
                    Example: -c 'ls -alh '. It is also possible to specify where an item 
@@ -78,9 +59,11 @@ Usage ./ppss [ options ]
                    daemon mode. Requires inotify-tools. Enabled by default if available.
                    Automatically disabled if NFS is used as the daeon source dir.
 
---no-recursion|-r  By default, recursion of directories is enabled when the -d option is 
-                   used. If this is not prefered, this can be disabled with this option 
-                   Only files within the specified directory will be processed.
+--no-traversal|-r  By default, PPSS uses the regular 'find' command to list all files
+                   within the directory specified by the -d option. If you do not wish
+                   for PPSS to process files in sub directories, use this option.
+                   Only files within the specified directory will be processed. Any
+                   subdirectories will then be ignored.
 
 --email | -e       PPSS sends an e-mail if PPSS has finished. It is also used if processing
                    of an item has failed (configurable, see -h). 
@@ -94,6 +77,7 @@ Example: encoding some wav files to mp3 using lame:
 ./ppss -d /path/to/wavfiles -c 'lame '
 
 Extended usage: use --help
+
 
 }}}
 
