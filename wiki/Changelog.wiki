@@ -4,12 +4,9 @@
 === 2.97 (unreleased)===
 
   * Fixed some suggested improvements of issue 39, such as removing use of backtics. using [[ for tests.
-  * Fixed severe issue introduced in 2.96 that prevents PPSS from interpreting the ITEM variable. Fixed in svn.
   * Fixed issue with copying files to local node when using regular 'cp'.
 
 === 2.96 ===
-
-DO NOT USE THIS VERSION - IT IS BROKEN
 
   * Fixed many minor issues, small tweaks
   * Fixed issues with daemon mode not properly handling NFS mounted shares.
