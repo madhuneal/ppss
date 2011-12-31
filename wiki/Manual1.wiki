@@ -12,6 +12,7 @@ The following output is displayed by PPSS when executed without any options:
 {{{ 
 
 bash-3.2$ ppss
+
 |P|P|S|S| Distributed Parallel Processing Shell Script 2.97
 
 PPSS is a Bash shell script that executes commands in parallel on a set
