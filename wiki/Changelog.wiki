@@ -1,6 +1,10 @@
 #summary Changelog of distributed PPSS
 #labels Featured
 
+=== 2.98 (not released yet, available in SVN) ===
+
+  * Decided that the locking file name is based on MD5 hash of item. The log file name is based on the item itself unless the MD5 option is specified.
+
 === 2.97 ===
 
   * Fixed some suggested improvements of issue 39, such as removing use of backtics. using [[ for tests.
