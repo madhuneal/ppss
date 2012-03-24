@@ -4,6 +4,7 @@
 === 2.98 (not released yet, available in SVN) ===
 
   * Decided that the locking file name is based on MD5 hash of item. The log file name is based on the item itself unless the MD5 option is specified.
+  * Resolved issue 66 regarding (lack of) support of Solaris.
 
 === 2.97 ===
 
