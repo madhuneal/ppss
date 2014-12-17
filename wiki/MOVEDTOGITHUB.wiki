@@ -1,3 +1,4 @@
 #summary This project has moved to github.
+#labels Featured
 
 https://github.com/louwrentius/PPSS
