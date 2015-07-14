@@ -1,0 +1,99 @@
+# Introduction #
+
+PPSS allows you to distribute jobs to multiple hosts, thus allowing for distributed processing. So a large number of host can be used to process items, not just a single host (node). These nodes will share a single list of items that they will process in parallel.
+
+To keep track of which items have been processed, nodes must be able to communicate with each other. Therefore, a server is necessary. The primary role of the server is just a communication channel for nodes. Nodes use the server to signal to other nodes that an item is being processed or has been processed. So nodes will never process the same file.
+
+![http://home.quicknet.nl/mw/prive/nan1/img/ppss.png](http://home.quicknet.nl/mw/prive/nan1/img/ppss.png)
+
+The secondary role of the server is to act as a file server. Assuming that files are processed, files stored on the PPSS server are transferred to the node, that will process a file and store the result back on the server.
+
+PPSS is very flexible: the file server can be a different host than the PPSS server that is used for inter-node communication. Beware: currently, this is only possible based on NFS/SMB shares, not for usage of SSH/SCP.
+
+# Design considerations #
+
+## Node installation ##
+
+Installing PPSS on a larger number of hosts will become an appalling boring repetitive and time consuming task if this is performed manually. Therefore, PPSS has a mode called 'deploy'. In this mode, PPSS connects to each node using SSH and deploys PPSS on this node. If you want to remove PPSS, use the mode 'erase'.
+
+```
+bash-3.2$ ./ppss.sh deploy -C testconfig.cfg 
+dec 17 16:36:17:  =========================================================
+dec 17 16:36:17:                         |P|P|S|S|                         
+dec 17 16:36:17:  Distributed Parallel Processing Shell Script version 2.50
+dec 17 16:36:17:  =========================================================
+dec 17 16:36:17:  Hostname:		MacBoek.local
+dec 17 16:36:17:  ---------------------------------------------------------
+dec 17 16:36:17:  Deploying PPSS on nodes.
+dec 17 16:36:19:  PPSS installed on node 10.0.0.4.
+dec 17 16:36:19:  PPSS installed on node 10.0.0.14.
+dec 17 16:36:19:  PPSS installed on node 10.0.0.1.
+
+```
+
+## Node control ##
+
+If a larger number of nodes are used, say more than five to ten, it will be a hassle to control these nodes individually by hand. The question is how to control all nodes without having to access nodes manually. Starting new jobs, pausing and stopping jobs should be controlled from a central location.
+
+The modes 'start', 'pause', and 'stop', implement this functionality. They signal to nodes that PPSS must start, pause or stop.
+
+## Node status ##
+
+If a larger number of nodes are used, it would be nice if some simple overview could be generated about the current status of nodes and the overal progress of the entire process.
+
+The current status screen polls the status of each host ( running, paused, stopped, finished ) and informs you about how many items have been processed by each host.
+
+```
+bash-3.2$ ./ppss.sh status -C testconfig.cfg 
+dec 17 16:39:15:  =========================================================
+dec 17 16:39:15:                         |P|P|S|S|                         
+dec 17 16:39:15:  Distributed Parallel Processing Shell Script version 2.50
+dec 17 16:39:15:  =========================================================
+dec 17 16:39:15:  Hostname:		MacBoek.local
+dec 17 16:39:15:  ---------------------------------------------------------
+dec 17 16:39:15:  Status:		56 percent complete.
+dec 17 16:39:15:  Nodes:	        3
+dec 17 16:39:15:  Items:		100
+dec 17 16:39:15:  ---------------------------------------------------------
+dec 17 16:39:15:  IP-address       Hostname            Processed     Status
+dec 17 16:39:15:  ---------------------------------------------------------
+dec 17 16:39:16:  10.0.0.4         server                      8    RUNNING
+dec 17 16:39:16:  10.0.0.14        Core7i                     32    RUNNING
+dec 17 16:39:17:  10.0.0.1         Mini                        8    RUNNING
+dec 17 16:39:17:  ---------------------------------------------------------
+dec 17 16:39:17:  Total processed:                            48
+
+```
+
+## Item (file) distribution ##
+
+If items are files that need to be processed, they can be accessed in two ways:
+
+  * using a network file system such as NFS or SMB or other. The -d option must point to the mountpoint of this share.
+
+  * using scp within scripts to (securely) copy items (files) to the local host and copy the processed items back to the server. Please note that copying files using scp is more resource intensive (CPU) than SMB or NFS.
+
+When using PPSS in a distributed fashion, it should be decided if files can be processed in-place on the file server through the share, or that they must be copied to the node first before being processed. The latter is the most robust solution.
+
+# Technical background #
+
+## Locking of items through SSH ##
+
+According to many sources on the Internet, the only reliable solution to **atomic** locking is to use the 'mkdir' command to create a file. The fun thing is that this is also true if 'mkdir' is executed through SSH.
+
+So a node tries to lock a file by issueing a mkdir on the server through SSH. If this mkdir fails, the directory and thus the lock already exists and the next item in the list is tried.
+
+## Requirements ##
+
+  * A central server for inter-node communication (item locking).
+    * Accessible through SSH.
+
+  * A central server for file distribution (optional).
+    * Sufficient bandwidth (gigabit? totally depends on your needs.).
+    * SCP / NFS / SMB share for distributing files.
+
+  * One or more nodes.
+    * Accessible through SSH.
+    * Must support Bash shell.
+
+Although it is not necessary to run PPSS on the master SSH server, it must be installed on the master SSH server. This is done automatically by PPSS when the deploy command is issued.

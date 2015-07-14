@@ -1,0 +1,3 @@
+Some person (GBI) has written a HowToForge document about PPSS:
+
+http://www.howtoforge.com/fully-utilizing-your-x-core-cpu

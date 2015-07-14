@@ -1,0 +1,189 @@
+# Introduction #
+
+This page discusses the usage of PPSS on a single host. Examples show how PPSS is used.
+
+# Overview of modes and options #
+
+The following output is displayed by PPSS when executed without any options:
+
+```
+
+'Distributed Parallel Processing Shell Script
+Version: 2.0
+
+PPSS is a Bash shell script that executes commands in parallel on a set  
+of items, such as files, or lines in a file.
+
+Usage: ./ppss.sh MODE [ options ]
+ or 
+Usage: ./ppss.sh MODE -c <config file>
+
+Modes are:
+
+ standalone   For execution of PPSS on a single host.
+ node         For execution of PPSS on a node, that is part of a 'cluster'.
+ config       Generate a config file based on the supplied option parameters.
+ deploy       Deploy PPSS and related files on the specified nodes.
+ erase        Erase PPSS and related files from the specified nodes.
+
+ start        Starting PPSS on nodes.
+ pause        Pausing PPSS on all nodes.
+ stop         Stopping PPSS on all nodes.
+
+Options are:
+
+--command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
+                   Example: -c 'ls -alh '. It is also possible to specify where an item 
+                   must be inserted: 'cp "$ITEM" /somedir'.
+
+--sourcedir | -d   Directory that contains files that must be processed. Individual files
+                   are fed as an argument to the command that has been specified with -c.
+
+--sourcefile | -f  Each single line of the supplied file will be fed as an item to the
+                   command that has been specified with -c.
+
+--config | -c      If the mode is config, a config file with the specified name will be
+                   generated based on all the options specified. In the other modes.
+                   this option will result in PPSS reading the config file and start
+                   processing items based on the settings of this file.
+
+--disable-ht | -j   Disable hyperthreading. Is enabled by default.
+
+--log | -l         Sets the name of the log file. The default is ppss-log.txt.
+
+--processes | -p   Start the specified number of processes. Ignore the number of available
+                   CPUs.
+
+The following options are used for distributed execution of PPSS.
+
+--server | -s      Specifies the SSH server that is used for communication between nodes.
+                   Using SSH, file locks are created, informing other nodes that an item 
+                   is locked. Also, often items, such as files, reside on this host. SCP 
+                   is used to transfer files from this host to nodes for local procesing.
+
+--node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS 
+                   name per line.
+
+--key | -k         The SSH key that a node uses to connect to the server.
+
+--user | -u        The SSH user name that is used when logging in into the master SSH
+                   server.
+
+--script | -s      Specifies the script/program that must be copied to the nodes for 
+                   execution through PPSS. Only used in the deploy mode.
+                   This option should be specified if necessary when generating a config.
+
+--transfer | -t    This option specifies that an item will be downloaded by the node 
+                   from the server or share to the local node for processing.
+
+--no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a
+                   network file system (NFS/SMB) is mounted under a local mountpoint.
+
+--outputdir | -o   Directory on server where processed files are put. If the result of 
+                   encoding a wav file is an mp3 file, the mp3 file is put in the 
+                   directory specified with this option.
+
+Example: encoding some wav files to mp3 using lame:
+
+./ppss.sh standalone -c 'lame ' -d /path/to/wavfiles -j 
+
+Running PPSS based on a configuration file.
+
+./ppss.sh node -C config.cfg
+
+Running PPSS on a client as part of a cluster.
+
+./ppss.sh node -d /somedir -c 'cp  /some/destination' -s 10.0.0.50 -u ppss -t -k ppss-key.key'
+```
+A detailed explanation based on examples will follow.
+
+# How to use PPSS #
+
+PPSS allows a user to execute commands, scripts or programs in parallel. That's it. It's sole purpose is to turn a batch job into a parallel batch job. This is relevant, since modern day processors are almost always multi-core and are designed to process jobs in parallel, so why not use it?
+
+Items can be two things:
+
+  * files within a user-specified directory
+  * arbitrary lines of text within a file
+
+When PPSS has finished, it has produced a log file of its operation. By default, this file is called ppss-log.txt.
+
+Also, a directory is created, by default JOB\_LOG. Within this directory a logfile exists for each item that has been processed. If a log file is present for an item, and PPSS is re-run, these items will be skipped.
+
+## Basic command line options ##
+
+Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form. In this example, some files are compressed with gzip.
+
+`$ ./ppss.sh standalone -d /path/to/files -c 'gzip '`
+
+In this example, we can distinguish a 'mode' and two options. The mode speaks for itself: PPSS is not part of a cluster, it is just running on the host.
+
+The -d option specifies the directory where the files reside that must be processed.
+
+The -c option specifies the command that will be executed by PPSS in parallel for each file within the directory specified by -d. In this example the command has a **trailing space**, which is necessary since the command will expand to 'gzip example.tar' when executed. If the space is omitted, an error will occur.
+
+Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
+
+`$ ./ppss.sh standalone -d /path/to/files -c 'cp "$ITEM" /destination/dir '`
+
+Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
+
+`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q '`
+
+In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
+
+`$ ./ppss.sh standalone -f list-of-urls.txt -c 'wget -q "$ITEM"'`
+
+
+## Advanced command line options ##
+
+In this paragraph, some additional options are discussed.
+
+**-p <configure manually number of parallel processes>**
+
+This option allows you to specify how many parallel proceses should be started. Thus, automatic detection of CPUs and cores is overruled. This is useful, for example, when downloading a bunch of files in parallel, or other tasks that are not bound by the number of available CPUs.
+
+**-j <disable hyper threading>**
+
+If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core 7i quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
+
+Please note that this mechanism depends on what /proc/cpu (linux) reports. For exampe, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why whould you do that anyway) only one processor is used. So  test this option if you need it.
+
+**-l <PPSS log file>**
+
+This option allows you to specify a custom name for the log file that is used by PPSS itself.
+
+## Logging (must read) ##
+
+There are two separate log mechanisms:
+
+  * the log file of PPSS itself
+  * the log file of each individual item that is processed
+
+_PPSS log file_
+
+
+The logfile of PPSS is by default ppss-log.txt. A different name can be chosen with the -l option. It contains all relevant information about what PPSS is doing.
+
+
+_Item log file_
+
+When an item is processed, any output that is generated is logged within its individual log file. This logfile resides within the directory job\_log. This directory is created from where PPSS is executed.
+
+An example of the output of a single log file for a single item is shown below:
+
+```
+===== PPSS Item Log File =====
+Host:		imac-2.local
+Item:		PPSS_LOCAL_TMPDIR/20080602.wav
+Start date:	Mar 03 00:10:32
+
+Encode of PPSS_LOCAL_TMPDIR/20080602.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:4:48
+```
+
+If you tailor your command the right way, or create a (small) script, it is very easy to determine which items have not been processed correctly. A simple grep on 'error' might already give a clue.
+
+**Important:** If a log file exists for an item, within the job\_log directory, and PPSS is run again, that item will be skipped. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job\_log directory.

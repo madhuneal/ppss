@@ -1,0 +1,27 @@
+# Introduction #
+
+Most recent computer systems  feature at least two processor cores or sometimes even more. Most programs and tasks do not benefit from these extra CPU cores because software must be (re)written in such a way that it benefits from extra CPU cores. Most of the time, only one CPU or CPU core is used. This is a waste of resources.
+
+Most users can't benefit from these extra CPU cores, because the programs they use are often not aware of the extra cpu cores. To support parallel processing, software must often be substantially be rewritten, which is often not done.  So only one core can be used and the other core(s) are just idling, while if they could also be used, the job could be done in half (dual-core) or a quarter (quad-core) or even less (distributed cluster) of the time.
+
+The solution is to just run the application multiple times in parallel. This is of cource only beneficiary if you have more than one file or item to process. And that is the principle behind PPSS.
+
+The simple idea behind PPSS is that, you have a (large) number of items, files for example, and you want to perform some action on them. Instead of processing one item at at time, you want to process 4 items at a time, since you have a nice quad-core CPU. A program is required that starts a process for every core, and when a process finishes, starts a new one. And some logging of the result (success or failure?) would also be nice.
+
+PPSS does this for you.
+
+# Features #
+
+Features of PPSS are:
+
+  * Very easy to use. You may be up and running within 5 minutes.
+  * Will run on any system that supports bash (although only tested on Linux and Mac OS X)
+
+  * Automatically detects the number of CPUs and CPU cores and start a worker process for each of them.
+  * Supports hyper-threading if available.
+  * All output of individual processes will be logged for your inspection (where there errors? How long did it take?).
+  * Actions performed by PPSS are logged to a log file for your inspection.
+  * Can process a text file with one item per line. Items can be what you want. URLs, files, anything. Each line is fed to the command you specify.
+  * Can execute any command you like. Can execute your own scripts in parallel.
+  * If interrupted, will by default continue where it was left, skipping processed files.
+  * Can be run in distributed mode as a cluster over multiple computer systems using SSH.

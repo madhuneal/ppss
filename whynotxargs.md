@@ -1,0 +1,18 @@
+# Introduction #
+
+It is suggested that the command 'xargs' - that is often found on unix-like systems by default - does exactly the same as PPSS does when used with the -p option.
+
+In it's most basic form, this is true to some extend. Xargs processes items and keeps an x number of jobs running in parallel. I think that there may be cases that xargs is sufficient for your task at hand. A simple example that demonstrates how xargs can be used:
+
+`$ touch 10 15 20 25 30 35 40`
+
+`$ ls -1 | xargs -n1 -P 4 sleep`
+
+The additional value of PPSS is that it:
+
+  * provides logging (for free)
+  * provides a progress indicator
+  * is simpler to use (my own opinion)
+  * does not process items that already have been processed if interrupted.
+
+However, use the tool that best fits the job at hand.

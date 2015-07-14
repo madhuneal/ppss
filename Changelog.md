@@ -1,0 +1,322 @@
+### 2.98 (not released yet, available in SVN) ###
+
+  * Decided that the locking file name is based on MD5 hash of item. The log file name is based on the item itself unless the MD5 option is specified.
+  * Resolved [issue 66](https://code.google.com/p/ppss/issues/detail?id=66) regarding (lack of) support of Solaris.
+
+### 2.97 ###
+
+  * Fixed some suggested improvements of [issue 39](https://code.google.com/p/ppss/issues/detail?id=39), such as removing use of backtics. using [[ for tests.
+  * Fixed issue with copying files to local node when using regular 'cp'.
+
+### 2.96 ###
+
+  * Fixed many minor issues, small tweaks
+  * Fixed issues with daemon mode not properly handling NFS mounted shares.
+  * Fixed issue when running in distributed mode
+  * Fixed [issue 40](https://code.google.com/p/ppss/issues/detail?id=40). FreeBSD is detected and then the bash shell is explicitly called. Is not tested, do'nt have BSD.
+
+  * Fixed [issue 41](https://code.google.com/p/ppss/issues/detail?id=41): the status file of a node is not status.txt but $hostname-status.txt. So each status file is now unique, assuming that each system has an unique hostname.
+  * Nodes now upload their status to the ssh server. A 'ppss status' now just polls the ssh server and does not need to contact every individual client anymore.
+
+  * Fixed [issue 54](https://code.google.com/p/ppss/issues/detail?id=54): the deprecated usage of find -d instead of -depth
+
+  * Fixed [issue 56](https://code.google.com/p/ppss/issues/detail?id=56): exit codes. Exit now returns non-0 when PPSS itself fails or it failed to process an item.
+
+  * Fixed [issue 57](https://code.google.com/p/ppss/issues/detail?id=57): PPSS now keeps track of failed items. It reports if items have failed or not. Works also in distributed mode.
+
+  * Added feature for distributed mode: every node gets the same list of items. Nodes then try to process them by 'claiming' them through locking. At a certain moment, all items will be locked and it is not necessary for nodes to mindlessly continue to try and obtain a lock on all items. PPSS will now detect this and make the node finish and quit. It does this by comparing the number of item locks on the SSH server and the total number of items to process.
+
+  * Fixed [issue 41](https://code.google.com/p/ppss/issues/detail?id=41)
+  * Fixed [issue 42](https://code.google.com/p/ppss/issues/detail?id=42)
+  * Fixed [issue 46](https://code.google.com/p/ppss/issues/detail?id=46)
+  * Fixed [issue 47](https://code.google.com/p/ppss/issues/detail?id=47)
+  * Fixed [issue 52](https://code.google.com/p/ppss/issues/detail?id=52)
+  * Fixed [issue 60](https://code.google.com/p/ppss/issues/detail?id=60)
+  * Fixed [issue 61](https://code.google.com/p/ppss/issues/detail?id=61)
+
+### 2.85 ###
+
+  * Fixed [issue 38](https://code.google.com/p/ppss/issues/detail?id=38): daemon mode lockup when using inotify
+
+### 2.84 ###
+
+  * Fixed [issue 35](https://code.google.com/p/ppss/issues/detail?id=35): Total processing time not shown or logged.
+  * PPSS now estimates when PPSS will be finished (ETA).
+  * removed dead function get\_status (thanks Mr. Hartman).
+  * Improved error handling.
+
+### 2.83 ###
+
+  * Fixed [issue 33](https://code.google.com/p/ppss/issues/detail?id=33): Daemon mode crashes if inotify is not installed. This version is available as an attachment to this issue.
+  * Fixed [issue 34](https://code.google.com/p/ppss/issues/detail?id=34): Daemon mode does not process new items under certain conditions.
+
+### 2.82 ###
+
+  * This version will support the Linux inotify system. File system events are processed in real-time, asynchronously in daemon mode. Thus, if inotify is installed on the system, PPSS will detect this and use it to watch a specified directory for file system events. This allows PPSS to respond to file system events very quickly. It also does a way with the locking mechanism that is required if inotify is not used. To use inotify, you must install it first (inotify-tools).
+
+  * Daemon mode now checks modification date of files to prevent processing of files while they are still being written to if inotify is not used or not installed.
+  * Some under the hood code improvements.
+
+### 2.80 ###
+
+> This versions consists of many under-the-hood changes, no functionality added. Changes are significant however, some code has been cleaned up and some parts are removed.
+
+  * There was a global locking mechanism that was in-place for distributing items to worker processes. The listener process now handles distribution of items to worker processes, which is a single central process. Thus, locking is no longer an issue, since it is a single process. This provides a serious performance benefit.
+
+  * Fixed [issue 32](https://code.google.com/p/ppss/issues/detail?id=32): when processing large number of items, lots of memory is consumed because all items are loaded into an array. This is no longer the case. PPSS now uses 'sed' to read a particular line from an input file containing all the items. Therefore, the memory footprint of PPSS remains small.
+
+### 2.65 ###
+
+  * Major change: PPSS now generates unique file names for log files and item locks using MD5 hashes. Thus, job file names cannot be tracked back to items, but that should not be a problem. Just grep for SUCCESS or FAILURE to determine issues, or grep for the particular item, to find the actual file containing the output.
+
+```
+./ppss_dir/job_log/51fbc529402f569855f0ec9c5edc33d1
+./ppss_dir/job_log/94af29775c416edbe6dc75c8d9ec6eb5
+./ppss_dir/job_log/b112de8ed197cfc738f76332b0c1d7cc
+```
+
+  * Fixed [issue 31](https://code.google.com/p/ppss/issues/detail?id=31): some strange files appeared under certain conditions.
+  * Some fixes regarding distributed mode.
+
+### 2.63 (not released) ###
+
+  * PPSS can now run as a daemon, watching a file or directory with --daemon. Read the docs (TODO)
+> > you must create a lock dir  (default INPUT\_LOCK) within the source directory (specified with -d)  to make sure that files are not written while reading them. After you finished placing items in this directory, you remove this lock directory.
+  * Added support for quiet operation. Only a progress indicator is displayed.
+  * Some minor cosmetic cleanups (display of percentage mechanism).
+  * Added some improvement based on comments on the code (thanks!)
+
+### 2.62 ###
+
+  * Added support for reading from stdin with -f -, as a suggestion of walkerj /at/ walkerj.de. You can now do stuff like:  cat /some/file | ppss -f - -c 'echo '
+
+### 2.61 ###
+
+  * Fixed compatibility with Sun Solaris 10.
+
+### 2.60 ###
+
+  * Cleaned up some code.
+  * Added some comments.
+  * Released PPSS as a .deb Debian / Ubuntu package.
+
+### 2.60b2 (BETA) ###
+
+  * Fixed distributed computing. Many small bug fixes and changes.
+  * Changed some command line parameters, beware. -t is gone, --upload and --download are new.
+  * Cleaned up help page.
+  * Incorporated the help instructions on Amazon EC2 options.
+
+### 2.57b1 (BETA, NOT RELEASED) ###
+
+  * Incorporated the patch from Sean M. Collins that integrates the use of the EC2 platform of Amazon with PPSS. Through this patch, PPSS can start EC2 instances and deploy PPSS on them.
+
+### 2.56b4 (BETA, NOT RELEASED) ###
+
+  * Distributed processing using SSH is fixed partially, but it must be improved.
+  * PPSS now reports the total processing time, not only of individual items.
+
+### 2.56b2 (BETA) ###
+
+  * Added new option '-r' that disables recursive traversal of directories.
+  * Fixed an error in the new recursion mechanism that prevented processing of symlinks (thanks John Lehr)
+  * Revamped logging there is now a better separation between messages that must be displayed, logged or only logged when debugging is enabled with 'export PPSSDEBUG=1'
+  * Distributed processing using SSH is BROKEN in this version.
+
+### 2.56b (BETA) ###
+
+  * Changed license from BSD to GPL.
+  * Renamed ppss.sh to just 'ppss' to make it more like a regular Unix command.
+  * The -d (directory) option now works differently. The option operates recursively, thus also processing all files within sub directories. This is the default. Recursion will be disabled as an option (which is not present yet).
+  * Fixed a bug that prevented PPSS from properly handing files with special characters or paths.
+  * Added an example script to svn that transcodes flac to mp3 in parallel using PPSS.
+
+### 2.50 ###
+
+  * Created a unit-test script using shunit2.
+  * Reworked the process management code. Management of child processes within a shell script is always a hassle. It could occur that when PPSS was interrupted and aborted with ctrl-c, some spawned processes would continue to run until finished. PPSS now identifies all processes by their ppid and pgid and kills the appropriate processes when ctrl-c is invoked.
+  * Reworked some file name parsing issues.
+  * A mistake prevented nodes from setting up a single SSH 'channel'. So every time a node wants to lock an item, an SSH connection must be made and teared down, which is too slow. This regression is now fixed.
+
+### 2.41 ###
+
+  * Fixed some stupid bug that prevented distributed PPSS from functioning.
+
+### 2.40 ###
+
+  * All usage screens have been overhauled to make it more readable.
+  * Reworked the distributed stuff.
+  * PPSS now keeps track of processes and kills them gracefully.
+  * Bugs in process handling have been removed.
+
+### 2.34 ###
+
+  * PPSS now works on Solaris if Bash is installed.
+  * PPSS can now be run simultaneously within the same directory. If multiple instances are started of PPSS with the same arguments, they work together. If other arguments are used, they work separately.
+  * Cleaned stuff up a bit.
+
+```
+Oct 21 16:38:48:  =========================================================
+Oct 21 16:38:48:                         |P|P|S|S|                         
+Oct 21 16:38:48:  Distributed Parallel Processing Shell Script version 2.34
+Oct 21 16:38:48:  =========================================================
+Oct 21 16:38:48:  Hostname:             opensolaris-vm
+Oct 21 16:38:48:  ---------------------------------------------------------
+Oct 21 16:38:49:  Processor architecture: i386 @ 3600 MHz.
+Oct 21 16:38:49:  Found 2 logic processors.
+Oct 21 16:38:49:  Starting 2 parallel workers.
+Oct 21 16:38:49:  ---------------------------------------------------------
+```
+
+### 2.31 ###
+
+  * The status screen in distributed mode is now working properly again.
+
+### 2.30 ###
+
+  * PPSS now operates fully asynchronous. There are no polling mechanisms, every action is almost realtime.
+
+### 2.21 ###
+
+  * Fixed bug in new mechanism for detecting multiple PPSS instances. (My fault).
+
+  * By default now PPSS creates a directory 'ppss' in the current working dir of PPSS.
+> > By using 'export PPSS\_DIR=/some/dir' you can change the directory used.
+
+### 2.20 ###
+
+  * PPSS did not take into account that different users can run PPSS on a single system. This has been fixed. Thanks to Cinly Ooi
+
+  * If a user is starting another instance of PPSS, the second instance will abort unless the -F option is specified.
+Please note that if you run multiple instances of PPSS under the same user account, all instances will process items but fail to terminate.
+
+  * Improved error reporting.
+
+### 2.19 ###
+
+  * Improved filename sanitization.
+
+  * Fixed typo.
+
+### 2.18 ###
+
+  * PPSS now also record CPU model of Mac OS X devices.
+
+```
+mrt 29 23:11:56: INFO  =========================================================
+mrt 29 23:11:56: INFO                         |P|P|S|S|                         
+mrt 29 23:11:56: INFO  Distributed Parallel Processing Shell Script version 2.18
+mrt 29 23:11:56: INFO  =========================================================
+mrt 29 23:11:56: INFO  Hostname:	MacBoek.local
+mrt 29 23:11:56: INFO  ---------------------------------------------------------
+mrt 29 23:11:56: INFO  Found 2 logic processors.
+mrt 29 23:11:56: INFO  CPU:  Intel Core 2 Duo  2.16 GHz
+mrt 29 23:11:56: INFO  Starting 2 workers.
+mrt 29 23:11:56: INFO  ---------------------------------------------------------
+
+```
+
+```
+Mar 29 23:19:12: INFO  =========================================================
+Mar 29 23:19:12: INFO                         |P|P|S|S|                         
+Mar 29 23:19:12: INFO  Distributed Parallel Processing Shell Script version 2.18
+Mar 29 23:19:12: INFO  =========================================================
+Mar 29 23:19:12: INFO  Hostname:	MINI.local
+Mar 29 23:19:12: INFO  ---------------------------------------------------------
+Mar 29 23:19:13: INFO  Found 2 logic processors.
+Mar 29 23:19:14: INFO  CPU:  Intel Core Duo  1.66 GHz
+Mar 29 23:19:14: INFO  Starting 2 workers.
+Mar 29 23:19:14: INFO  ---------------------------------------------------------
+
+```
+
+### 2.17 ###
+
+  * Implemented nifty status screen for distributed mode.
+
+```
+mrt 29 22:18:27: INFO  =========================================================
+mrt 29 22:18:27: INFO                         |P|P|S|S|                         
+mrt 29 22:18:27: INFO  Distributed Parallel Processing Shell Script version 2.17
+mrt 29 22:18:27: INFO  =========================================================
+mrt 29 22:18:27: INFO  Hostname:	MacBoek.local
+mrt 29 22:18:27: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  Status:		100 percent complete.
+mrt 29 22:18:28: INFO  Nodes:	        7
+mrt 29 22:18:28: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  IP-address       Hostname            Processed     Status
+mrt 29 22:18:28: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  192.168.0.4      Core7i                    155   FINISHED
+mrt 29 22:18:29: INFO  192.168.0.2      MINI.local                 34   FINISHED
+mrt 29 22:18:29: INFO  192.168.0.5      server                     29   FINISHED
+mrt 29 22:18:30: INFO  192.168.0.63     host3                       6   FINISHED
+mrt 29 22:18:31: INFO  192.168.0.64     host4                       6   FINISHED
+mrt 29 22:18:31: INFO  192.168.0.20     imac-2.local               34   FINISHED
+mrt 29 22:18:32: INFO  192.168.0.1      router                      7   FINISHED
+mrt 29 22:18:32: INFO  ---------------------------------------------------------
+mrt 29 22:18:32: INFO  Total processed:                           271
+
+```
+
+### 2.16 ###
+
+  * Cleaned up output to screen.
+  * Deployment of ppss to nodes uses a single SSH connection for file transfer.
+  * Deployment of ppss to nodes is done in parallel.
+
+### 2.15 ###
+
+When using PPSS in distributed mode, it is now possible to obtain the status of individual nodes.
+
+```
+bash-3.2$ ./ppss.sh status -C config.cfg
+mrt 29 01:22:04: INFO   - ---------------------------------------------------------
+mrt 29 01:22:04: INFO   - Distributed Parallel Processing Shell Script version 2.15
+mrt 29 01:22:04: INFO   - Hostname: MacBoek.local
+mrt 29 01:22:04: INFO   - 77 percent complete.
+mrt 29 01:22:04: INFO   - 10.0.0.14:	PAUZED (Core7i)
+mrt 29 01:22:04: INFO   - 10.0.0.12:	RUNNING (MINI.local)
+mrt 29 01:22:05: INFO   - 10.0.0.4:	PAUZED (server)
+mrt 29 01:22:05: INFO   - 10.0.0.30:	PAUZED (host3)
+mrt 29 01:22:05: INFO   - 10.0.0.31:	RUNNING (host4)
+mrt 29 01:22:06: INFO   - 10.0.0.50:	PAUZED (imac-2.local)
+mrt 29 01:22:06: INFO   - 10.0.0.1:	PAUZED (router)
+
+```
+
+  * Also, the ; character is now supported in filenames.
+
+### 2.14 ###
+
+Major rework on path and filename handling. Filenames are now properly sanitized for special characters such as ',& and ( ).
+
+Also, PPSS recreates the directory structure of the source location of files, based on the -f option.
+
+### 2.10 ###
+
+Fixed important bugs when using an input file instead of an input directory.
+
+### 2.09 ###
+
+Fixed important bug: when deploying a key must be used to logon to the nodes using scp.
+
+### 2.08 ###
+
+Fixed some bugs...
+
+### 2.07 ###
+
+  * User can now specify the known\_hosts file with option -K. The fact that a known\_hosts file must exist when distributing PPSS to nodes was not documented.
+
+### 2.06 ###
+
+  * Forgot to update the version number within the script.
+
+### 2.05 ###
+
+  * Deployment of PPSS to nodes is now performed in parallel, by executing the deploy function with &."
+  * It is now possible to specify the output directory and/or output filename within the -c option.
+
+### 2.04 and older ###
+
+I didn't realise that a changelog might be relevant until 2.05.

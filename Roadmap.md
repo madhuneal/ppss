@@ -1,0 +1,26 @@
+# Introduction #
+
+PPSS Roadmap.
+
+
+# Details #
+
+  * The distributed mechanism basically requires some script to be written in order to be able to upload content back to the server. This shouldt not be a requirement. The same must be accomplished by just using the -c command line option. **(COMPLETED)**
+
+  * Better status monitoring of nodes. Nodes should periodically write some status information to the server, that can provide some insight in the current status of the jobs that are running. UPDATE: nodes write status information to their own disk and this is spidered by the computer running PPSS to control the nodes. **(COMPLETED)**
+
+  * I am considering to add the option to specify a hosts that acts as the SSH fileserver. The PPSS master host and fileserver must be the same host currently. This should not be necessary. **(COMPLETED)**
+
+  * Use netcat and ncat (nmap.org) for client communication. This may be easier to setup than SSH. Although if security is really an issue, SSH will still be the way to go. (This idea may not be possible.)
+
+  * Providing RPMS and DEB packages for the popular operating systems. **(COMPLETED)**
+
+  * Bootable LIVE image with pre-installed PPSS client for easy setup of a distributed computing environment.
+
+  * Run PPSS as a daemon, monitoring a directory for (new) files to process. **(COMPLETED)**
+
+  * Send email notifications when:  **(Pending completion)**
+  1. PPSS has finished processing all items.
+  1. When processing an item returns an error, including the error message.
+
+If you have any suggestions for additional features or improvements, let me know using commends or by creating an issue.

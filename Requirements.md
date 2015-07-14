@@ -1,0 +1,20 @@
+The sole requirement for PPSS to work is the Bash shell and the availability of the mkfifo command. PPSS is written using features that are specific to the Bash shell and is thus not portable to shells like dash and ksh.
+
+For distributed PPSS, a host with SSH access is necessary, that will act as a server. Also, clients and server must be configured in order to use SSH keys and "Screen" must be available.
+
+## Requirements for stand-alone usage of PPSS on single host ##
+
+  * Bash
+  * mkfifo
+  * md5sum
+  * sed
+
+## Requirements for distributed usage of PPSS on multiple hosts ##
+
+This is additional to the requirements for stand-alone.
+
+  * SSH(D)
+  * Screen
+
+  * On both node and server, an unprivileged user is required.
+  * SSH key with no passphrase for node -> server connection.

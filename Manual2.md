@@ -1,0 +1,434 @@
+# Design overview #
+
+**SSH for communication**
+
+The basis for communication between master and nodes is SSH. This requires the setup of SSH keys.
+
+  1. Nodes must be able to login onto the master server for actual distributed operation.
+  1. The master server must be able to login onto the nodes for deployment of PPSS and all required files.
+
+The second option is not mandatory. Any other computer system can be used, as long as it has proper SSH key material to logon into the nodes.
+
+# Installation steps in a nutshell #
+
+To use PPSS in a distributed fasion, The following steps must be performed:
+
+  1. Setup SSH access on server and nodes.
+  1. Create a list of all nodes.
+  1. Create a configuration file for PPSS, that will be distributed to nodes.
+  1. Optional: create a custom script to be executed.
+  1. Deploy PPSS to the nodes.
+  1. Start PPSS on all nodes.
+
+# A list of all relevant configuration options #
+
+```
+
+Modes are optional and mainly used for running in distributed mode. Modes are:
+
+ config       Generate a config file based on the supplied option parameters.
+ deploy       Deploy PPSS and related files on the specified nodes.
+ erase        Erase PPSS and related files from the specified nodes.
+
+ start        Starting PPSS on nodes.
+ pause        Pausing PPSS on all nodes.
+ stop         Stopping PPSS on all nodes.
+ node         Running PPSS as a node, requires additional options.
+
+Options are:
+
+--config | -C      If the mode is config, a config file with the specified name will be
+                   generated based on all the options specified. In the other modes.
+                   this option will result in PPSS reading the config file and start
+                   processing items based on the settings of this file.
+
+The following options are used for distributed execution of PPSS.
+--master | -m      Specifies the SSH server that is used for communication between nodes.
+                   Using SSH, file locks are created, informing other nodes that an item 
+                   is locked. If items are files that must be processed, they must reside
+                   on this host. SCP is used to transfer files from this host to nodes
+                   for local procesing.
+
+--node | -n        File containig a list of nodes that act as PPSS clients. One IP / DNS
+                   name per line.
+
+--key | -k         The SSH key that a node uses to connect to the master.
+
+--known-hosts | -K The file that contains the server public key. Can often be found on  
+                   hosts that already once connected to the server. See the file 
+                   ~/.ssh/known_hosts or else, manualy connect once and check this file.
+
+--user | -u        The SSH user name that is used by the node when logging in into the
+                   master SSH server.
+
+--script | -S      Specifies the script/program that must be copied to the nodes for
+                   execution through PPSS. Only used in the deploy mode.
+                   This option should be specified if necessary when generating a config.
+
+--download         This option specifies that an item will be downloaded by the node
+                   from the server or share to the local node for processing.
+
+--upload           This option specifies that the output file will be copied back to
+                   the server, the --outputdir option is mandatory.
+
+--no-scp | -b      Do not use scp for downloading items. Use cp instead. Assumes that a
+                   network file system (NFS/SMB) is mounted under a local mount point.
+
+--outputdir | -o   Directory on server where processed files are put. If the result of 
+                   encoding a wav file is an mp3 file, the mp3 file is put in the 
+                   directory specified with this option.
+
+--homedir | -H     Directory in which PPSS is installed on the node.
+                   Default is 'ppss-home'.
+
+--script | -S      Script to run on the node. PPSS must copy this script to the node.
+
+--randomize | -R   Randomise which items to process by the client in distributed mode.
+                   This makes sure that with many nodes, it is prevented that some
+                   clients spend all their time trying to get a lock on an item.
+
+```
+
+# Preparation of server and nodes #
+
+The following preparations must be made in order to use PPSS in a distributed fasion:
+
+  * Create an unprivileged user 'ppss' on the server.
+  * Create an unprivileged user 'ppss' on each node.
+  * Generate a SSH key without a pass phrase.
+
+**Important**
+The SSH key will be used for nodes to logon into the server AND for the server to logon into the nodes. So in this example the same key material is used both on the nodes as on the server.
+
+Example:
+
+`ssh-keygen -f ppss.key`
+
+```
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in ppss.key.
+Your public key has been saved in ppss.key.pub.
+The key fingerprint is:
+....
+bash-3.2$ ls -alh
+total 16
+drwxr-xr-x   4 ppss  staff   136B 15 mrt 00:09 .
+drwxr-xr-x+ 51 ppss  staff   1,7K 14 mrt 17:45 ..
+-rw-------   1 ppss  staff   1,6K 15 mrt 00:09 ppss.key
+-rw-r--r--   1 ppss  staff   401B 15 mrt 00:09 ppss.key.pub
+```
+
+The result is a private and a public key (.pub). The private key is the key that needs to be distributed to all nodes in order to be able to logon to the server.
+
+  * Add the _public_ SSH key to the authorized\_keys file of the 'ppss' user on the server.
+
+Thus, put the contents of ppss.key.pub into a file called authorized\_keys and place this file into the directory .ssh in the home directory of the PPSS user on the server.
+
+  * Add the public SSH key to the authorized\_keys file of the 'ppss' user on the nodes.
+
+This is necessary if you want to deploy PPSS on the nodes using PPSS in an automated fashion(./ppss deploy -C config.cfg). The alternative is to manually copy PPSS and all necessary files to each node by hand.
+
+  * Create a 'known\_hosts' file containing the public key of the server.  **Important**
+
+When a node connects to the server for the first time, SSH wil show you the fingerprint of the server and ask if it is ok to connect to this host. To prevent this question, you must perform one of these actions:
+
+  1. Logon to each node manually and connect once to the server and manually accept the server signature
+  1. Manually upload a known\_hosts file to each node and place it in the ~/.ssh directory of the ppss user.
+  1. Create a file called "known\_hosts" and put the server public key in this file. **Recommended**
+
+You may already have the server public key in the ~/.ssh/known\_hosts file of a system that has been used to logon to the server. Thus use the -K option to generate your own ./known\_hosts file for usage with PPSS. If a known\_hosts file exists within the same directory in which PPSS resides, this file will automatically be used and deployed to nodes. So if you manually create a file called known\_hosts with the appropriate content, the -K option can be omitted.
+
+  * Place PPSS on the server within the PPSS home directory.
+
+**Security**
+Please note that usage of SSH keys without pass phrases may pose a security threat if the machines are shared with other users. You must decide for yourself if the security risk that is associated with this setup is acceptable for your environment. For example, if a node is compromised, the attacker will have (initially unprivileged) access to the server.
+
+# Create a list of nodes #
+
+A file must be created containing the hostnames (DNS) and/or IP-addresses of all nodes. The file must contain one node per line, such as:
+
+```
+192.168.0.100
+192.168.0.101
+host.domain.com
+...
+```
+
+# Create a PPSS configuration file #
+
+This is the most important part of setting up distributed PPSS. It is exactly the same as setting up a configuration file for standalone mode, except that more options are necessary.
+
+The best way to explain how to create a configuration file for distributed PPSS is to provide an example. In this example, a script is used to encode WAV files to MP3. This script is called 'encode.sh' and takes a filename as an argument.
+
+`./ppss config -C config.cfg -c 'encode.sh ' -d /source/dir -m 192.168.1.100 -u ppss -k ppss.key -S ./encode.sh -n nodes.txt  -o /some/output/dir --upload --download`
+
+It is quite a long command line, however, it is executed only once. Afther that, the config file config.cfg can be used for all further commands.
+
+**Mode**
+
+The first option sets the mode, in this case 'config' to generate a configuration file.
+
+**Configuration file**
+
+The second option, -C, specifies the name of the configuration file to be created.
+
+**Command**
+
+The third option, -c,  specifies the command to be executed. **Please take special note of the single quotes and the space behind the command.** You can read -c 'encode.sh ' also as -c 'encode.sh "$ITEM"'.
+
+**Source directory**
+
+This option specifies the location on the **server** where the files reside that must be processed. These files will be transfered using SCP to the nodes for local processing.
+
+**Server**
+
+The -m option specifies the SSH server that acts as both fileserver and SSH server for communication between nodes.  The SSH server is mainly used for file-locking: nodes know that locked files are already processed or being processed, so another unlocked file must be selected.
+
+If the server acts both as a file server and SSH server, it is not recommended to use it also as a node, in this case for encoding. File transfers using SSH can take quite some processing power. Using different hosts as a file server (through SCP) and master is currently not possible (yet).
+
+**User name**
+
+This is the name of the local system user that is used by the nodes to logon to the server with SSH. For deployment, such a user must also be present on the nodes.
+
+**SSH Key**
+
+Scripts using SSH require an SSH key withouth a passphrase. This key must be uploaded to the nodes an the nodes must know which key to use, so it must be specified.
+
+**Script or program that must be uploaded**
+
+The -S option specifies the script or program that should be uploaded to the node because it must be executed by the node for distributed computing. In this case, the encode.sh script must be deployed on all nodes and thus specified.
+
+**List of nodes**
+
+The -n option specifies the file containing all nodes. For every node, PPSS will perform actions such as deploy, start, stop and pause.
+
+**Transfer files to local host**
+
+--download: If this option is specified, the file that is to be processed is copied from the source directory to a local temporary working directory for local processing. This is necessary if SCP is used to access files that must be processed.
+
+If files are distributed over NFS or SMB, the files look like they are present on the local system, because it is just a mount point and thus just a part of the local file system. In this case, the --download option can be omitted.
+
+**The output directory**
+
+If the --upload option is used, the -o option specifies the destination directory on the server. The results are uploaded to this directory.
+
+**More examples**
+
+The following example does the exact same thing as the encode script.
+
+`./ppss config -C config.cfg -c 'lame -a "$ITEM" "$OUTPUT_DIR/$OUTPUT_FILE.mp3" --preset standard --quiet' -d /source/dir -m 192.168.1.100 -u ppss -k ppss-key.key -K /path/to/known_hosts_file -n nodes.txt -o /some/output/dir --download --upload`
+
+The OUTPUT\_DIR and OUTPUT\_FILE variables are special. It tells your command where to store the output. This is important if you want to transfer the results of your command back to the server.
+
+In this example, Lame requires that the user specifies an output file. PPSS generates the name of this output file for you, based on the name of the Item. This example shows that you don't need to create your own shell scripts in order to be able to use PPSS.
+
+-K = optional. If you created a file called 'known\_hosts', this file will automatically be used. Warning: if you specify a different file with the -K option, the curent known\_hosts file will be replaced by this file. If you manually create a file called known\_hosts with the appropriate content, the -K option can be omitted.
+
+# Create a script #
+
+**Entirely optional!**
+
+This section is optional. It is possible to execute commands just by using the -c option and the appropriate variables.
+
+PPSS transfers files to the node and uploads the output back to the server. In order to be able to upload output back to the server, PPSS must know where this output can be found.
+
+by default output is stored in the directory specified by $PPSS\_LOCAL\_OUTPUT. Ofcource, you can hard-code the PPSS\_LOCAL\_OUTPUT path, however, it is much easier to just source the ppss configuration file and use the already defined variables, that are used by PPSS anyway.
+
+An example script that uses the settings of the PPSS configuration file is shown below, that has actually been used to encode 400 GB of WAV files.
+
+```
+#!/bin/bash
+
+ITEM="$1"
+TMP=`basename $ITEM`
+
+source config.cfg
+
+lame -a "$ITEM" "$PPSS_LOCAL_OUTPUT/$TMP/$TMP.mp3" --preset standard --quiet
+ERROR="$?"
+
+if [ "$ERROR" == "0" ]
+then
+    echo "Encode of $ITEM successful."
+    exit 0
+else
+    echo "Error when encoding $ITEM."
+    exit 1
+fi
+```
+
+Take notice of the basename command. Items are provided with full path. Basename strips this path from the filename and uses just the filename in this script.
+
+By sourcing the config.cfg file of PPSS, this script can use the PPSS\_LOCAL\_OUTPUT variable, or any other variable contained within the configuration file.
+
+**Rules when writing a script for usage with PPSS**
+
+  * As with any decent shell script, use exit codes. Exit code 0 reflects successful execution, any other value a failure.
+  * Echo some information about what the script is doing. If something fails, echo what is wrong. This is caught by PPSS and logged in the log file of the item that is processed.
+
+For example, the above script results in this kind of output:
+
+```
+===== PPSS Item Log File =====
+Host:		Beest
+Item:		PPSS_LOCAL_TMPDIR/20060907.wav
+Start date:	Mar 10 23:54:04
+
+Encode of PPSS_LOCAL_TMPDIR/20060907.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:1:44
+```
+
+**TIP**
+
+All variables specified when generating a configuration script can be used within your own script when sourcing the configuration file.
+
+## Deploy PPSS to nodes ##
+
+Once SSH access is setup and the configuration file is generated, PPSS can be deployed to the nodes. This is very simple, as this example demonstrates:
+
+`./ppss deploy -C config.cfg
+
+During the phase when we generated the configuration file, a nodes file was specified. Thus PPSS knows, just by reading this configuration file, which file contains a list of nodes.
+
+```
+bash-3.2$ ./ppss.sh deploy -C config.cfg
+mrt 30 23:20:00: INFO  =========================================================
+mrt 30 23:20:00: INFO                         |P|P|S|S|                         
+mrt 30 23:20:00: INFO  Distributed Parallel Processing Shell Script version 2.18
+mrt 30 23:20:00: INFO  =========================================================
+mrt 30 23:20:00: INFO  Hostname:	MacBoek.local
+mrt 30 23:20:00: INFO  ---------------------------------------------------------
+mrt 30 23:20:00: INFO  Deploying PPSS on nodes.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.18.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.6.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.4.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.1.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.15.
+mrt 30 23:20:01: INFO  PPSS installed on node 192.168.0.33.
+mrt 30 23:20:05: INFO  Cannot connect to node 192.168.0.20.
+
+```
+
+Deployment of PPSS is executed in parallel for each host.
+
+## Start PPSS on nodes ##
+
+Just as simple as deploying PPSS, PPSS is started on all nodes.
+
+`./ppss start -C config`
+
+```
+mrt 12 22:21:17: INFO   - ---------------------------------------------------------
+mrt 12 22:21:17: INFO   - Distributed Parallel Processing Shell Script version 2.03
+mrt 12 22:21:17: INFO   - Hostname: MacBoek.local
+mrt 12 22:21:17: INFO   - Starting PPSS on node 10.0.0.14.
+mrt 12 22:21:17: INFO   - Starting PPSS on node 10.0.0.12.
+mrt 12 22:21:20: INFO   - Starting PPSS on node 10.0.0.4.
+mrt 12 22:21:20: INFO   - Starting PPSS on node 10.0.0.31.
+```
+
+## Stop pause and continue PPSS on nodes ##
+
+To stop, pause or continue processing on all nodes, use the following commands:
+
+`./ppss stop -C config.cfg`
+`./ppss pause -C config.cfg`
+`./ppss continue -C config.cfg`
+
+Please note that nodes will continue processing the current item they are working on, they just stop processing new items if stop or pause is selected.
+
+## Show progress ##
+
+The overall process of the 'cluster' is determined by the number of files present in the input and output directories on the server.
+
+```
+
+bash-3.2$ ./ppss.sh status -C config.cfg
+mrt 29 22:18:27: INFO  =========================================================
+mrt 29 22:18:27: INFO                         |P|P|S|S|                         
+mrt 29 22:18:27: INFO  Distributed Parallel Processing Shell Script version 2.17
+mrt 29 22:18:27: INFO  =========================================================
+mrt 29 22:18:27: INFO  Hostname:	MacBoek.local
+mrt 29 22:18:27: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  Status:		100 percent complete.
+mrt 29 22:18:28: INFO  Nodes:	        7
+mrt 29 22:18:28: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  IP-address       Hostname            Processed     Status
+mrt 29 22:18:28: INFO  ---------------------------------------------------------
+mrt 29 22:18:28: INFO  192.168.0.4      Core7i                    155   FINISHED
+mrt 29 22:18:29: INFO  192.168.0.2      MINI.local                 34   FINISHED
+mrt 29 22:18:29: INFO  192.168.0.5      server                     29   FINISHED
+mrt 29 22:18:30: INFO  192.168.0.63     host3                       6   FINISHED
+mrt 29 22:18:31: INFO  192.168.0.64     host4                       6   FINISHED
+mrt 29 22:18:31: INFO  192.168.0.20     imac-2.local               34   FINISHED
+mrt 29 22:18:32: INFO  192.168.0.1      router                      7   FINISHED
+mrt 29 22:18:32: INFO  ---------------------------------------------------------
+mrt 29 22:18:32: INFO  Total processed:                           271
+
+```
+
+## Logging ##
+
+An important feature of PPSS is its extensive logging. There are two types of log files.
+
+  * A single log file created by PPSS itself. This file is found on the local nodes. Using tail -f on these files, it is possible to monitor what PPSS is currently doing.
+
+```
+Mar 12 22:57:19: INFO   - ---------------------------------------------------------
+Mar 12 22:57:19: INFO   - Distributed Parallel Processing Shell Script version 2.03
+Mar 12 22:57:19: INDO   - ---------------------------------------------------------
+Mar 12 22:57:19: INFO   - Hostname: Beest
+Mar 12 22:57:19: DEBUG  - Found 8 logic processors.
+Mar 12 22:57:19: INFO   - CPU: Intel(R) Core(TM) i7 CPU         920  @ 2.67GHz
+Mar 12 22:57:19: INFO   - ---------------------------------------------------------
+Mar 12 22:57:19: DEBUG  - Job log directory JOB_LOG exists.
+Mar 12 22:57:20: INFO   - Listener started.
+Mar 12 22:57:20: INFO   - Starting 8 workers.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 0 of 625 items.
+Mar 12 22:57:20: DEBUG  - Trying to lock item 20060731.wav.
+Mar 12 22:57:20: DEBUG  - Item 20060731.wav is locked.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 1 of 625 items.
+Mar 12 22:57:20: DEBUG  - Trying to lock item 20060801.wav.
+Mar 12 22:57:20: DEBUG  - Item 20060801.wav is locked.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 2 of 625 items.
+Mar 12 22:57:20: DEBUG  - Trying to lock item 20060802.wav.
+Mar 12 22:57:20: DEBUG  - Item 20060802.wav is locked.
+Mar 12 22:57:20: INFO   - Currently 0 percent complete. Processed 3 of 625 items.
+
+............
+mrt 10 23:51:23: DEBUG  - Item 20060830.wav is locked.
+mrt 10 23:51:23: INFO   - Currently 3 percent complete. Processed 23 of 625 items.
+mrt 10 23:51:23: DEBUG  - Trying to lock item 20060831.wav.
+mrt 10 23:51:23: DEBUG  - Got lock on 20060831.wav, processing.
+mrt 10 23:51:23: DEBUG  - Transfering item 20060831.wav to local disk.
+mrt 10 23:52:18: DEBUG  - Exit code of transfer is 0
+mrt 10 23:52:18: DEBUG  - Processing item 20060831.wav
+
+```
+
+  * An individual log file containing information and output of each processed item. these files are uploaded to the SSH server to the 'job\_log' directory. For every item, a log file must be present.
+
+```
+===== PPSS Item Log File =====
+Host:		MacBoek.local
+Item:		PPSS_LOCAL_TMPDIR/20060831.wav
+Start date:	mrt 10 23:52:18
+
+Encode of PPSS_LOCAL_TMPDIR/20060831.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:5:23
+
+```
+
+As you can see, with a few simple grep commands, it is possible to quickly determine which items have failed to process. Also, you can see that my MacBook took 5 minutes and 23 seconds to process this WAV file.
+
+Please note that the "Encode of..." part is output of the script that is executed on an item. The other content is generated by PPSS.
+
+# To wrap it up #
+
+I am convinced that PPSS is very easy to use and tailored to your needs. If you have questions and/or suggestions, don't hesitate to send an e-mail. If you find bugs, please report them using the issue tracker. Feedback is greatly appreciated.

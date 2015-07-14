@@ -1,0 +1,317 @@
+# Introduction #
+
+This page discusses the usage of PPSS on a single host. Examples show how PPSS is used.
+
+# Overview of modes and options #
+
+The following output is displayed by PPSS when executed without any options:
+
+```
+
+bash-3.2$ ppss
+
+|P|P|S|S| Distributed Parallel Processing Shell Script 2.97
+
+PPSS is a Bash shell script that executes commands in parallel on a set
+of items, such as files in a directory, or lines in a file. The purpose
+of PPSS is to make it simple to benefit from multiple CPUs or CPU cores.
+
+This short summary only discusses options for stand-alone mode. For a
+full listing of all options, run PPSS with the options --help
+
+Usage ./ppss [[ options ]] 
+
+--command | -c     Command to execute. Syntax: '<command> ' including the single quotes.
+                   Example: -c 'ls -alh '. It is also possible to specify where an item 
+                   must be inserted: 'cp "$ITEM" /somedir'.
+
+--sourcedir | -d   Directory that contains files that must be processed. Individual files
+                   are fed as an argument to the command that has been specified with -c.
+
+--sourcefile | -f  Each single line of the supplied file will be fed as an item to the
+                   command that has been specified with -c. Read input from stdin with
+                   -f -
+
+--config | -C      If the mode is config, a config file with the specified name will be
+                   generated based on all the options specified. In the other modes.
+                   this option will result in PPSS reading the config file and start
+                   processing items based on the settings of this file.
+
+--disable-ht | -j  Disable hyper threading. Is enabled by default.
+
+--log | -l         Sets the name of the log file. The default is ppss-log.txt.
+
+--processes | -p   Start the specified number of processes. Ignore the number of available
+                   CPUs.
+
+--quiet | -q       Shows no output except for a progress indication using percents.
+
+--delay | -D       Adds an initial random delay to the start of all parallel jobs to spread
+                   the load. The delay (seconds) is only used at the start of all 'threads'.
+
+--daemon           Daemon mode. Do not exit after items are professed, but keep looking 
+                   for new items and process them. Read the manual how to use this!
+                   See --help for important additional options regarding daemon mode.
+
+--disable-inotify  Linux users can use real-time inotify filesystem events when using
+                   daemon mode. Requires inotify-tools. Enabled by default if available.
+                   Automatically disabled if NFS is used as the daeon source dir.
+
+--no-traversal|-r  By default, PPSS uses the regular 'find' command to list all files
+                   within the directory specified by the -d option. If you do not wish
+                   for PPSS to process files in sub directories, use this option.
+                   Only files within the specified directory will be processed. Any
+                   subdirectories will then be ignored.
+
+--email | -e       PPSS sends an e-mail if PPSS has finished. It is also used if processing
+                   of an item has failed (configurable, see -h). 
+
+--debug            Enable debugging output to the |P|P|S|S| log file.
+
+--help             Extended help, including options for distributed mode.
+
+Example: encoding some wav files to mp3 using lame:
+
+./ppss -d /path/to/wavfiles -c 'lame '
+
+Extended usage: use --help
+
+
+```
+
+A detailed explanation based on examples will follow.
+
+# How to use PPSS #
+
+PPSS allows a user to execute commands, scripts or programs in parallel. That's it. It's sole purpose is to turn a batch job into a parallel batch job. This is relevant, since modern day processors are almost always multi-core and are designed to process jobs in parallel, so why not use it?
+
+Items can be two things:
+
+  * files within a user-specified directory
+  * arbitrary lines of text within a file
+
+When PPSS has finished, it has produced a log file of its operation. By default, this file is called ppss-log.txt.
+
+Also, a directory is created, by default JOB\_LOG. Within this directory a logfile exists for each item that has been processed. If a log file is present for an item, and PPSS is re-run, these items will be skipped.
+
+## Basic command line options ##
+
+Before discussing the full list of command line options, an example will be given how to run PPSS with the least amount of options, in it's simplest form. In this example, some files are compressed with gzip.
+
+`$ ./ppss -d /path/to/files -c 'gzip '`
+
+In this example, we can distinguish two options.
+
+The -d option specifies the directory where the files reside that must be processed.
+
+The -c option specifies the command that will be executed by PPSS in parallel for each file within the directory specified by -d. In this example the command has a **trailing space**, which is necessary since the command will expand to 'gzip file01.tar' when executed. If the space is omitted, an error will occur.
+
+Sometimes, the item should not be appended to the command, but inserted somewhere in the middle. This is possible by using the placeholder "$ITEM". See the following example:
+
+`$ ./ppss -d /path/to/files -c 'cp "$ITEM" /destination/dir'`
+
+Another example is the use of an input file instead of a directory. Such a file is specified with the -f option.
+
+For this example, create a file called numbers.txt and fill it wit this:
+
+```
+1
+2
+3
+4
+5
+```
+
+Next, try this example.
+
+`$./ppss -f numbers.txt -c 'touch '`
+
+The result should be that five new files are 'touched' which have the name of the numbers you entered in the numbers.txt file.
+
+This is the recommended way to use PPSS: put items in the files and specify a single command with the -c option. I often see people, as an example, fill the numbers.txt file with:
+
+```
+touch 1
+touch 2
+etc.
+```
+
+...and then process the items like:
+
+`./ppss -f numbers.txt -c 'bash $ITEM'`
+
+This is ofcourse perfectly fine, but not necessary.
+
+`$ ./ppss -f list-of-urls.txt -c 'wget -q '`
+
+In this example, a list of URLs is provided by the file list.txt. These urls are fed to wget, which will retrieve the specified URLs. The -p option specifies that 5 parallel downloads or threads should be started.  Ofcourse, this command can also be written like this:
+
+`$ ./ppss -f list-of-urls.txt -c 'wget -q "$ITEM"'` -p 5
+
+**Tip**: please note that the double quotes around "$ITEM" may or may not be necessary depending on the situation. When using an input file with the -f option, they are often not necessary.
+
+PPSS also supports input from STDIN:
+
+`$ cat list-of-urls.txt | ppss -f - -c 'wget -q '`
+
+**Advanced usage of the -c command option**
+
+Some commands require that you specify an output file. An example of such a command or program is the Lame mp3 encoder. Since the output file must be unique for each item, the output file name must be based on a variable. Like this:
+
+`-c 'lame -a "$ITEM" "/some/path/$ITEM.mp3" --preset standard --quiet'`
+
+The filename of the item is reused to create the output file name.
+
+## Advanced command line options ##
+
+In this paragraph, some additional options are discussed.
+
+**-p <configure manually number of parallel processes>**
+
+This option allows you to specify how many parallel proceses should be started. Thus, automatic detection of CPUs and cores is overruled. This is useful, for example, when downloading a bunch of files in parallel, or other tasks that are not bound by the number of available CPUs.
+
+**-j** (Disable hyper-threading )
+
+If a CPU is found that supports hyper threading, the additional cores are used. For example, an Intel Core i7 quad-core processor supports HT, thus has effectively 8 cores. When HT is enabled, not 4 but 8 parallel jobs are started.
+
+Please note that this mechanism depends on what /proc/cpu (linux) reports. For example, an old dual CPU P3 doesn't report the 'physical id' section, thus if HT is disabled (why would you do that anyway) only one processor is used. So  test this option if you need it.
+
+**-l <PPSS log file>**
+
+This option allows you to specify a custom name for the log file that is used by PPSS itself.
+
+
+**setting the working directory**
+
+Prior to executing PPSS, set the working directory as follows:
+
+`export PPSS_DIR=/path/to/dir`
+
+Next, if PPSS is executed, the aforementioned directory is used to store all (temporary) files.
+
+## Creating and using a config file ##
+
+A config file is created when PPSS is called with the 'config' mode.  In this mode, PPSS does not execute any job, instead, all command line options are used to create a config file. An example:
+
+`./ppss create -C config.cfg -d /source/dir -c 'gzip ' -j`
+
+This command creates a config file config.cfg that can be used in stead of re-entering the command line options like this:
+
+`./ppss -C config.cfg`
+
+## Advanced usage (by example) ##
+
+**Unrar files in parallel**
+
+Unrarring some files in parallel can be as easy as:
+
+`./ppss -d ./dir-with-rars -c 'unrar x "$ITEM" ./output-dir'
+
+However, this may result in the outcome that all extracted files are dumped in the directory output-dir. This may not be wat you want. If you want to extract the files contained within each RAR-file into it's own directory. We need to perform two steps:
+
+  1. Create a directory for each item in /output-dir
+  1. Unrar the files into the individual directories.
+
+Step 1: making directories based on the name of the RAR file:
+
+`/ppss -d ./dir-with-rars -c 'ITEM=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM"'`
+
+Explanation: by default, each item consists of the full or relative path to that item. An item will expand as "./dir-with-rars/filename.rar". However, the directory name must be based only on the filename. So the unix build-in 'basename' is used to extract the filename from the item and use it to create the directory name.
+
+As you can see, it is no problem to use multiple commands within the -c option, by using ';'.
+
+Step 2: extracting the files of each RAR file into it's own directory.
+
+`./ppss -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+
+In this example, we use the basename command again to be able to specify the output directory based on the supplied ITEM name.
+
+Ofcourse, it is possible to put this all in one command:
+
+`./ppssh -d ./dir-with-rars -c 'ITEM_DIR=`basename "$ITEM"`; mkdir ./output-dir/"$ITEM_DIR"; unrar x "$ITEM" ./output-dir/"$ITEM_DIR"'`
+
+**Execute commands in a file**
+
+Let's asume you have a file containing these lines"
+```
+/home/user/dosomething.sh 1
+/home/user/dosomething.sh 2
+/home/user/dosomething.sh 3
+/home/user/dosomething.sh 4
+/home/user/dosomething.sh 5
+```
+
+To execute this properly, the command as provided to the -c option is slightly altered:
+
+`./ppss -f afile.txt -c 'bash $ITEM'`
+
+Notice that in this case, you **must** supply the '$ITEM' variable **without** double quotes. If you omit the '$ITEM' variable or use '"$ITEM"' then the commands will fail like this:
+
+```
+===== PPSS Item Log File =====
+Host:		Core7i
+Process:	7905
+Item:		/home/user/ppss/dosomething.sh 1
+Start date:	Dec 16 16:32:00
+
+bash: /home/user/ppss/dosomething.sh 1: No such file or directory
+
+Status:		FAILURE
+Elapsed time (h:m:s): 0:0:0
+```
+
+## Specifying a different home directory ##
+
+By default, PPSS creates a directory in the current working directory which will contain all (temporary) files.
+This directory can be changed by exporting the PPSS\_DIR variable with another directory like this:
+
+export PPSS\_DIR=/some/other/dir
+
+Next, just run PPSS as usual.
+
+## Daemon mode ##
+
+This mode is discussed at it's own manual page http://code.google.com/p/ppss/wiki/Manual3
+
+## Logging (must read) ##
+
+There are two separate log mechanisms:
+
+  * the log file of PPSS itself
+  * the log file of each individual item that is processed
+
+_PPSS log file_
+
+
+The logfile of PPSS is by default ppss-log.txt. A different name can be chosen with the -l option. It contains all relevant information about what PPSS is doing.
+
+
+_Item log file_
+
+When an item is processed, any output that is generated is logged within its individual log file. This logfile resides within the directory job\_log. This directory is created from where PPSS is executed.
+
+An example of the output of a single log file for a single item is shown below:
+
+```
+===== PPSS Item Log File =====
+Host:		imac-2.local
+Item:		PPSS_LOCAL_TMPDIR/20080602.wav
+Start date:	Mar 03 00:10:32
+
+Encode of PPSS_LOCAL_TMPDIR/20080602.wav successful.
+
+Status:		Succes - item has been processed.
+Elapsed time (h:m:s): 0:4:48
+```
+
+If you tailor your command the right way, or create a (small) script, it is very easy to determine which items have not been processed correctly. A simple grep on 'error' might already give a clue.
+
+**Important:**
+
+1) PPSS skips items if an item log file is present in the Job\_log directory. This allows you to interrupt PPSS and continue where you left off. If you want to process all items again, just remove the job\_log directory.
+
+2) The -M or --md5 option allows you to inform PPSS to use MD5 hashes of the items as file names to be 100% sure to avoid collisions. This may be important when processing items that are not file names.
+
+## Other things you should be aware of ##
+
+ppss must be run inside a file system that support file locking. The data that must be processed can be in a non-locking file system.
